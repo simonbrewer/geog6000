@@ -1,0 +1,12 @@
+model {
+  for(i in 1:N) {
+    weight[i] ~ dnorm(beta0[role[i]] + beta1*height[i], sigma^(-2))
+  }
+  for(j in 1:J) {
+    beta0[j] ~ dnorm(mu, sigmab^(-2))
+  }
+  mu ~ dnorm(0, 0.0001)
+  beta1 ~ dnorm(0, 0.0001)
+  sigma ~ dgamma(1, 1)
+  sigmab ~ dgamma(1, 1)
+}

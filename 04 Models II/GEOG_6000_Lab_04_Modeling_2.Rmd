@@ -1,0 +1,411 @@
+---
+title: "GEOG 6000 Lab 04 Modeling II"
+author: "Simon Brewer"
+date: "September 09, 2018"
+output: pdf_document
+header-includes:
+   - \usepackage{tabularx}
+---
+In this lab, we will look at how to build basic models in R, how to extend them to include some simple terms and how to perform some simple diagnostics. We will be using the following files for these examples:
+
+- A dataset of runoff in Southern California and upstream snowfall from 6 sites: *SoCal_Runoffm.csv*
+- A dataset of child and mother's IQ: *kidiq.csv*
+- Body temperature dataset: *normtemp.csv*
+- A dataset with state characteristics, (U.S. Department of Commerce, 1977): *statedata.csv*
+- A dataset from a study of Irish schoolchildren *irished.csv*
+
+Things to remember:
+
+- The following font conventions are used:
+    - Normal font = text, comments etc
+    - `Courier font` = R commands
+    - *Italic font* = file names
+- R is case-sensitive for variables and functions. Iris is not the same as iris or IRIS.
+- `#` indicates comments - no need to type these
+- **Remember to change your R working directory to where your files are stored**
+
+**With all the examples given, it is important to not just type in the code, but to try changing the parameters and re-running the functions multiple times to get an idea of their effect.** Help on the parameters can be obtained by typing `help(functionname)` or `?functionname`. 
+
+## Scripting
+As you do more in R, it is easier to use a script to record your commands, rather than entering them all at the command line. This is particularly true of commands that may span multiple lines as, if you make a mistake, it will be necessary to reenter each line. R comes with an in-built scripting editor, which is integrated into RStudio. Open a new script from the file menu, and type of copy the following commands to it:
+```{r results='hide', fig.keep='none'}
+irished <- read.csv("irished.csv")
+irished$sex <- factor(irished$sex, levels = c(1, 2),
+    labels = c("male", "female"))
+hist(irished$DVRT, main="DVRT", breaks=20,
+     xlab="DVRT Scores", col='darkorange')
+```
+
+To run these commands, you can copy-paste them to the command window, or (in RStudio) you can run them directly by clicking on the line in the editor, then pressing Ctrl-R (Cmd-Return on Mac OSX). If you want to run all commands in the script, save the script from the file menu, giving it the name *plotIrish.r*. Now the script can be run using the `source()` command (or by clicking on the `Source' button in the top-right of the editor window).
+```{r results='hide', eval=FALSE}
+source("plotIrish.r")
+```
+And R will read through the script, executing each command in turn. Now if there are any mistakes or changes to be made, you can simply edit the script and re-run it.
+
+### Programming flow
+R contains the usual commands to control the flow of a program (`if()`, `for()`, `while()`).
+You can write a simple for loop as follows:
+```{r results='hide'}
+for (i in 1:10) {print(i)}
+```
+This runs a loop ten times, each time printing out the value of the iterator `i`. Note the format of the loop: the details of the loop are given in parentheses, and the commands to execute at each iteration are given between the curly brackets.
+
+A slightly more complex example is given in the script *cointoss.r* (on Canvas).
+```{r results='hide', eval=FALSE}
+source("cointoss.r")
+```
+
+This uses a for loop to simulate 100 coin tosses. In each iteration, a random number (between 0 and 1) is created, if this is over 0.5, this is taken to be 'heads' and a counter is increased by 1. Finally, the script prints out the number of 'heads' and the number of tails. The script uses a number of new functions: `runif()`, which selects a number from a uniform random distribution between 0 and 1, and `paste()` which pastes together character strings and variables for screen output.
+
+Try to extend the script by increasing the number of loops, and by calculating the proportion of heads from the total number of loops at the end. 
+
+### Creating your own functions
+Once you have some experience with R, it is fairly easy to create your own functions. This is particularly useful if you need to repeat a set of analyses several times. The following code creates a function to calculate the standard deviation. 
+```{r results='hide'}
+mySD <- function(x) { sqrt(var(x)) }
+```
+Once created, this exists as an object in the R workspace. Type `ls()` to see this. It can now be used in the same way as other functions
+```{r}
+mySD(iris$Sepal.Length)  # compare to sd(sl)
+sd(iris$Sepal.Length)
+```
+
+## Multiple Linear Regression
+We will use the California run off dataset to look at relationships between upstream snowfall and runoff. Download the data from Canvas and load it into R. 
+
+```{r results='markup', fig.keep='none'}
+runoff <- read.csv("SoCal_Runoff.csv")
+summary(runoff)
+pairs(runoff)
+```
+
+Note that the dataset includes a column listing the dates that observations were taken. Remove this prior to subsequent analysis:
+```{r}
+runoff <- runoff[,-1]
+```
+
+Now build and examine the full model - use the '.' operator to represent the full model. The runoff is recorded in column labeled 'RUNOFF'.
+```{r results='hide'}
+mod.1 <- lm(RUNOFF ~ ., data=runoff)
+anova(mod.1)
+summary(mod.1)
+```
+
+Look at the various diagnostic outputs from the model
+
+- Is the $r^2$ high?
+- Which of the coefficients are significantly different from zero?
+- What is the result of the $F$-test?
+
+### Variance inflation
+The independent variables used in this model show strong evidence of collinearity (i.e. correlations between the X variables). To check this make a correlation matrix as follows:
+
+```{r results='hide'}
+cor(runoff)
+```
+
+The three snowfall sites coded 'AP\*' appear tightly correlated, as do the three that are coded 'OP\*'. Each set of three sites are closely located in space, and the high correlations reflect the fact that they receive very similar snowfall values. 
+
+The effect of this on a model can be examined by looking at the variance inflation factor. This is a measure of how much the variance associated with a coefficient has been amplified by the correlation between independent variables. The add-on package **car** has a function (`vif()`) that will allow you to calculate this directly:
+
+```{r eval=FALSE}
+install.packages("car")
+library(car)
+vif(mod.1)
+```
+
+If you are feeling brave, the appendix explains how you can write your own function calculate this. 
+
+To reduce this effect, we'll make a second model, using a subset of the variables used in the full model (snowfall from just two of the sites, one from each of the correlated groups):
+```{r results='hide'}
+mod.2 <- lm(RUNOFF ~ AP3 + OP3, data=runoff)
+summary(mod.2)
+```
+
+### Comparing models
+Use the `summary()` function to examine the two models (`mod.1` and `mod.2`). Which of these appears to a better model? Remember model comparison should be based on goodness-of-fit (Regression Sum of Squares vs. Error Sum-of-Squares) and the number of parameters. 
+
+Instead of trying to assess model fits manually, we can use an ANOVA to compare them, using the `anova()` function. This compares the residual sum-of-squares ($\approx$ the variance that is not explained) between the two models. The null hypothesis is that there is no significant difference in this between the two models, and so the subset is an equally good model. If this is much higher in the subset model, then the $F$-statistic will be high, the $p$-value low, and we can reject the null hypothesis. 
+```{r results='hide'}
+anova(mod.1, mod.2)
+```
+
+- Does the reduced model appear much worse than the full model?
+
+### Automatic variable selection
+For a datasets with multiple possible explanatory variables, such as the runoff dataset, the potential number of different combinations of variables makes it impractical to test each one manually. Stepwise variable selection helps by adding or removing variables in an iterative way until the best model is reached. This can be done in R by using the `step()` function. This requires you give an initial model (e.g. the null model) and a target model (e.g. the full model). The `step()` function uses the Akaike Information Criterion (AIC) to judge improvement in model fit. 
+```{r results='hide'}
+## Full model
+mod.1 <- lm(RUNOFF ~ ., data=runoff)
+## Null model
+mod.0 <- lm(RUNOFF ~ 1, data=runoff)
+step(mod.0, scope=formula(mod.1))
+```
+
+- Trace the changes in AIC during the stepwise process. What is the final (lowest) AIC? How much does this change at each step?
+- How does the selected model compare to the reduced model you chose earlier? 
+- What variables have been added or removed?
+
+## Extending the basic model
+Here we will use the dataset of child and mothers IQ scores to build a multiple regression model that includes the interaction term between mother's IQ and whether or not she finished high school. Start by loading the file into a data frame called `kidiq`, and carry out some simple descriptive statistics. 
+```{r results='hide'}
+kidiq = read.csv("kidiq.csv")
+str(kidiq)
+summary(kidiq)
+```
+
+### Dummy variables
+If one (or more) of your independent variables are categorical or binary data, then they can be used in a model by converting them to dummy variables, allowing you to model different responses in different groups. 
+
+In the simplest case, where you have a binary variable coded as 0/1, then R will treat this automatically as a dummy variable. For example, to model the child's IQ as a function of whether or not the mother finished high school (a 0/1 variable), build the following model:
+```{r results='hide'}
+kidiq.lm1 = lm(kid.score ~ mom.hs, data=kidiq)
+summary(kidiq.lm1)
+```
+
+The coefficients tell us that the average child ID for a mother who did not finish high school is `r round(coef(kidiq.lm1)[1],2)` and the increase in child IQ for a mother who did finish is `r round(coef(kidiq.lm1)[2],2)`. 
+
+- What is the average child IQ for a mother who did finish high school?
+
+If your variable has three or more categories, then R will automatically convert this to dummy variables, as long as the variable is a factor. For example, to model child IQ as a function of the mothers employment type (4 categories), we must first convert this to a factor, then we can build the model. Note that we create this new factor variable as part of the original data frame - effectively adding a new column to the data frame. 
+
+```{r results='hide'}
+kidiq$mom.work2 = factor(kidiq$mom.work, 
+       labels=c("unemployed","plumber","lawyer","doctor"))
+kidiq.lm2 = lm(kid.score ~ mom.work2, data=kidiq)
+summary(kidiq.lm2)
+```
+
+This returns 3 coefficients, for the plumber, lawyer and doctor categories. R uses the first factor specified as the reference category, so the results represent the offset in child IQ scores for these categories, relative to unemployed mothers. 
+
+- What is the average IQ for children of plumbers? [Note: these labels were made up and should not be taken to reflect the real IQ of plumbers' children]
+
+### Centering and scaling
+Next, we'll build a third model that relates the child's IQ to the mothers IQ score. Both of these are continuous variables, so we no longer need to worry about dummy variables. Before proceeding with the model, we will center and scale the mother's IQ scores to help in interpretability. To do this, we subtract the mean value of mother's IQ, then divide by 10. 
+
+```{r results='hide'}
+kidiq$mom.iq2 = (kidiq$mom.iq - mean(kidiq$mom.iq)) /10
+kidiq.lm3 = lm(kid.score ~ mom.iq2, data=kidiq)
+summary(kidiq.lm3)
+```
+
+- What is the slope for this model? How would you interpret it, given the scaling of the mother's IQ score?
+- The mother's IQ scores were also centered by subtracting the mean. How would you now interpret the intercept of the model?
+
+An alternative approach is to convert all independent variables to $z$-scores. To convert a numerical variable to its $z$-score, simply subtract the mean and divide by the standard deviation. This has the effect of a) centering the variable and b) making the units the same for all variables, facilitating comparisons. Slope coefficient now represent the change in $y$ for one standard deviation change in that variable. R provides a convience function `scale()` to do this for you, so to convert the mother's IQ values to $z$-scores:
+
+```{r}
+kidiq$mom.iqz = scale(kidiq$mom.iq)
+```
+
+### Adding both variables
+Next, we'll build a model that relates the child's IQ to the mothers IQ score, and includes a dummy variable representing whether or not the mother finished high school. We use the centered and scaled variable as before:
+
+```{r results='hide'}
+kidiq.lm4 = lm(kid.score ~ mom.iq2 + mom.hs, data=kidiq)
+summary(kidiq.lm4)
+```
+
+The coefficient for the dummy variable in this model again represents the offset of the intercept between the two groups. With this in mind:
+
+- Write out the model for children of mothers who did finish high school
+
+### Interactions
+Including interactions between independent ($X$) variables in regression models allows us to account for dependencies between these variables, and how these may influence the relationship between individual $x$'s and the response variable ($y$). Interactions may be including directly as an extra term in a model, by using a colon (`x1:x2`) between the two x's. Alternatively, using a star (`x1*x2`) provides a short cut to include the interaction and the individual terms. 
+
+Now we build the model, including the interaction term:
+```{r results='hide'}
+kidiq.lm5 = lm(kid.score ~  mom.hs * mom.iq2, data=kidiq)
+summary(kidiq.lm5)
+```
+
+Note that we have four coefficients: the intercept, the coefficient describing the change in intercept for mothers who finished high school (`mom.hs`), the slope describing the change in IQ for a 10 unit increase in mothers IQ who didn't finish high school (`mom.iq2`) and the change in this slope for mothers who did finish high school. See the lecture notes for a breakdown of how to interpret these. Note that you can run all the usual diagnoses on this model, including ANOVA, plotting residuals, QQ-plots, etc.
+
+We now plot out the final model(s). Note that we get two models (HS and non-HS), and we can use the `abline()` function to plot these out. This plots a straight line at either a horizontal or vertical coordinate (if you use `h=80` or `v=1`), for example, or it will plot out a sloped line by giving it the intercept and the slope values.
+
+Start by making a scatterplot:
+```{r eval=FALSE}
+plot(kid.score ~ mom.iq2, data=kidiq, col=(kidiq$mom.hs+1), pch=16)
+```
+
+Note that we have four coefficients from this model. To extract these from the model object, use the `coef()` function:
+```{r results='hide'}
+coef(kidiq.lm5)
+```
+
+Now add the model for mothers that did not finish high school. For this we need the intercept (coefficient 1) and the un-adjusted slope (coefficient 3):
+```{r eval=FALSE}
+abline(coef(kidiq.lm5)[1], coef(kidiq.lm5)[3])
+```
+
+Finally add the model for mothers that did finish high school. For this we need to add the intercept adjustment (coefficient 2) and the slope adjustment (coefficient 4) to the previous line:
+```{r eval=FALSE}
+abline(coef(kidiq.lm5)[1] + coef(kidiq.lm5)[2], 
+       coef(kidiq.lm5)[3] + coef(kidiq.lm5)[4], col=2)
+```
+```{r echo=FALSE}
+plot(kid.score ~ mom.iq2, data=kidiq, col=(kidiq$mom.hs+1), pch=16)
+abline(coef(kidiq.lm5)[1], coef(kidiq.lm5)[3])
+abline(coef(kidiq.lm5)[1] + coef(kidiq.lm5)[2], 
+       coef(kidiq.lm5)[3] + coef(kidiq.lm5)[4], col=2)
+```
+
+- Try adapting this plot to plot the model with no interaction between the two independent variables from the previous section.
+
+## Exercises
+
+1. In the previous lab, we used the file *statedata.csv* to examine the relationship between life expectancy and other socio-economic variables for the U.S. states. Using the same data set, now use stepwise regression (`step()`) to obtain the best model to estimate life expectancy. You will first need to make a new dataframe that excludes the first column of statedata (`statedata2 <- statedata[,-1]`).
+    + Build the null model (mod0) and full model (mod1)
+    + Use the `step()` function to perform automatic stepwise model building. Report the R code you used
+    + Describe the final model obtained, together with its AIC score
+    + From the `summary()` function, report the goodness-of-fit ($F$-statistic and associated $p$-value) and the $R^2$
+    + Using the final model you obtain, make a prediction for the life expectancy in Utah in 2009, given an increase in population size to approximately 2 785 000 in 2009, increase in high school graduation (known) to 75% and a change in murder rate to 1.3/100 000. To do this you will need to make a new dataframe. This can be done easily by selecting the appropriate row from statedata (`newstate <- statedata[44,]`), then adjusting the values directly (`newstate[2] <- 2785`). Give the new expectancy plus 95% confidence interval
+    + Do the same for California. 2009 population = 36 962 000; 2009 high school graduation = 68.3%; 2009 murder rate = 5.3/100 000 (figures are approximate)
+2. The file *normtemp.csv* contains measurements of body temperature from 130 healthy human subjects, as well as their weight and sex. Use this data to model body temperatures as a function of both weight and sex. You will need to convert the `sex` variable into a factor in order for R to recognize this as a dummy variable (`bodytemp$sex <- factor(bodytemp$sex, labels=c("male","female"))`). You should also center the weight variable by subtracting the mean. 
+    + Start by testing the correlation between body temperature and weight using Pearson's correlation coefficient
+    + Build a model including both weight and sex, and give the code you used
+    + Report the goodness-of-fit ($F$-statistic and associated $p$-value) and the $R^2$
+    + The model should provide you with three coefficients. Give a very brief interpretation of what each of these mean (see the lecture notes for an example)
+    + Build a subset model using only weight and then use the `anova()` function to test whether or not there is a significant improvement in the full model over the subset. Give the $F$-statistic, the associated $p$-value and state whether or not you believe the full model to be better
+\newpage
+
+## Files used in lab
+
+### Southern California runoff data set: *SoCal_Runoffm.csv*
+| Column header | Variable |
+| --- | --- |
+| Year | Observation year |
+| APMAM | Snowfall at site 1 | 
+| APSAB | Snowfall at site 2 | 
+| APLAKE | Snowfall at site 3 |
+| OPBPC | Snowfall at site 4 |
+| OPRC | Snowfall at site 5 |
+| OPSLAKE | Snowfall at site 6 | 
+| RUNOFF | Stream runoff near Bishop, CA | 
+
+### Child/mother IQ data set: *kidiq.csv*
+| Column header | Variable |
+| --- | --- |
+| kid.score | Child's IQ score |
+| mom.hs | Mother finished high school (yes = 1; no = 0) |
+| mom.iq | Mother's IQ score |
+| mom.work | Mother's work category |
+| mom.age | Mother's age |
+
+### Body temperature dataset: *normtemp.csv*
+| Column header | Variable |
+| --- | --- |
+| Blank | Observation number |
+| temp | Body temperature (F) |
+| sex | Sex |
+| weight | Weight (kg) |
+
+### US State data set: *statedata.csv*
+| Column header | Variable |
+| --- | --- |
+| State | Dependent variable |
+| Population | Population estimate (1975) |
+| Income | Per capita income (1974) |
+| Illiteracy | Illiteracy (%age, 1970) |
+| Life.Exp | Life expectancy in years (1969-71) |
+| Murder | Murder rate per 100K population (1976) |
+| HS.Grad | Percent high-school graduates (1970) |
+| Frost | Number of days < 32F in largest city (1931-60) |
+| Area | Area of state (square miles) |
+
+### Irish Education data set: *irished.csv*
+| Column header | Variable |
+| --- | --- |
+| sex | Sex of student (male = 0; female = 1) |
+| DVRT | Vocal reasoning test score |
+| fathocc | Prestige score of fathers occupation |
+| lvcert | Taken leaving certificate (yes = 1; no = 0) |
+| schltype | School type |
+
+## R code covered in lab
+\begin{tabularx}{\linewidth}{| l | X |}
+
+\hline
+R Command & Purpose \\
+\hline
+\texttt{lm(y $\sim$ x)} & Model $y$ as a function of $x$. Note that the `$\sim$' dictates the nature of the relationship. Dependent variable(s) on the left hand side, independent on the right hand side \\
+\texttt{summary(model)} & Provides summary of model fit, including coefficients, $r^2$, $F$-statistic, etc \\
+\texttt{coef} & Extract coefficients of model \\
+\texttt{residuals} & Extract residuals of model \\
+\texttt{fitted} & Extract predicted $y$ values for observations \\
+\texttt{abline} & Plot model line (only really works for bivariate regression) \\
+\texttt{predict} & Predict for new values of $x$. NB: requires a data frame with a variable having the same name as the original $x$.\\
+\texttt{step} & Perform stepwise regression.\\
+\hline
+\end{tabularx}
+
+\section{Appendix: Making a VIF function}
+\label{sec:vif}
+\subsection{Making a function}
+It is highly recommended that you write this as a script, rather than in the console. We will be using several lines of code, including a loop, and it would be very easy to get lost. Once the function is written, if you run the script using \texttt{source} or the `Source' button in RStudio, a new function will be created. If you have made a mistake, it is then easy to go back and fix them.
+
+We start by creating the skeleton for the function. A function is an \emph{object} and so requires a variable name to store the function code. Add the following code:
+```{r eval=FALSE}
+myvif = function(x) {
+  
+}
+```
+
+This creates a blank function called 'myvif'. The only thing that we have told it so far, is that the function takes one variable called 'x'. This will be used to represent the data that function works on. So if you ran the function as follows \texttt{myvif(runoff)}, this would create a new variable within the function called 'x' that was a copy of 'runoff'. This is done invisibly, so you don't have to worry about it, but be aware that the variable names in a function are not the same as those in your workspace. We can then start to analyze 'x' in the function. Add the following lines between the curly brackets:
+
+```{r eval=FALSE}
+  nvars = dim(x)[2]
+  vif = rep(NA, nvars)
+  names(vif) = names(x)
+```
+This does three things. First, it gets the number of variables from the number of columns of `x' (2nd dimension). It then creates a blank vector by repeating the NA value the same number of times as there are variables. Finally, we add names to this vector, using the column names of the input data. This will allow us to associate the VIF with the variable. You may at this point want to save your script and see if it runs by sourcing the script file. 
+
+Now we'll add the loop to calculate the VIF. Remember that this is given by $1 / (1 - r^2)$ from a model between $x_i$ and all the other $x$s. Add the following code after the \texttt{names()} function:
+```{r eval=FALSE}
+  for (i in 1:nvars) {
+    myy = x[,i]
+    myx = x[,-i]
+    fit = lm(myy ~ ., myx)
+    myr2 = summary(fit)$r.squared
+    vif[i] = 1 / (1 - myr2)
+  }
+```
+
+- We create a loop from 1 to the number of $x$ variables. 
+- In each iteration of the loop, we make two new variables 'myy', which contains the variable we are calculating the VIF for and 'myx', all the other variables. 
+- Then we build a model between 'myy' and 'myx'
+- Extract the $r^2$ from that model
+- Calculate the VIF, and store it in the blank vector we created earlier using an index defined by where we are in the loop
+
+Finally, we need to output the results of the function. After the loop (but before the finally `\}'), add the following line to output the vector filled with VIFs:
+```{r eval=FALSE}
+return(vif)
+```
+```{r echo=FALSE}
+source("myvif.r")
+```
+Now save and source the file. Once you have done this, you can calculate the VIFs for the snowfall sites as follows:
+```{r}
+myvif(runoff[,-7])
+```
+
+One issue with this is that it will not work if the object you use is a single vector. Looking back at the code, can you see how to add a check to make sure there is more than one variable? (HINT: look at the `if`, `stop` and `dim` functions.)
+
+\subsection{Full code}
+```{r eval=FALSE}
+## myvif function to calculate VIF for a set of independent variables
+myvif <- function(x) {
+  nvars = dim(x)[2]
+  vif = rep(NA, nvars)
+  names(vif) = names(x)
+  for (i in 1:nvars) {
+    myy = x[,i]
+    myx = x[,-i]
+    fit = lm(myy ~ ., myx)
+    myr2 = summary(fit)$r.squared
+    vif[i] = 1 / (1 - myr2)
+  }
+  return(vif)
+}
+```
+

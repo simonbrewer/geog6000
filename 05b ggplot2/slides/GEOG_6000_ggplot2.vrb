@@ -1,0 +1,24 @@
+\frametitle{Facets}
+\begin{columns}
+  \begin{column}{0.50\textwidth}
+\begin{knitrout}\tiny
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{myplot} \hlkwb{=} \hlkwd{ggplot}\hlstd{(}\hlkwc{data}\hlstd{=gapdata,} \hlkwd{aes}\hlstd{(}\hlkwc{x}\hlstd{=gdpPercap,} \hlkwc{y}\hlstd{=lifeExp))}
+\hlstd{myplot} \hlkwb{=} \hlstd{myplot} \hlopt{+} \hlkwd{geom_point}\hlstd{()} \hlopt{+}
+  \hlkwd{scale_x_log10}\hlstd{(}\hlstr{"GDP"}\hlstd{)} \hlopt{+} \hlkwd{scale_y_continuous}\hlstd{(}\hlstr{"Life Exp."}\hlstd{)}
+\hlstd{myplot} \hlkwb{=} \hlstd{myplot} \hlopt{+} \hlkwd{facet_grid}\hlstd{(year}\hlopt{~}\hlstd{continent)}
+\hlstd{myplot} \hlkwb{=} \hlstd{myplot} \hlopt{+} \hlkwd{geom_smooth}\hlstd{(}\hlkwc{method}\hlstd{=}\hlstr{"lm"}\hlstd{)}
+\hlkwd{print}\hlstd{(myplot)}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+  \end{column}
+  \begin{column}{0.5\textwidth}
+\begin{knitrout}\scriptsize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}
+\includegraphics[width=\maxwidth]{figure/unnamed-chunk-29-1}
+
+\end{knitrout}
+  \end{column}
+\end{columns}

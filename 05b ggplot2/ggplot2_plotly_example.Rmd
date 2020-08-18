@@ -1,0 +1,29 @@
+---
+title: "ggplot2 and plotly"
+author: "Simon Brewer"
+date: "9/16/2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## ggplot2 and plotly
+
+```{r warning=FALSE, message=FALSE}
+library(ggplot2)
+library(plotly)
+gapdata = read.csv("gapminderData5.csv")
+```
+
+
+```{r}
+gapsub = subset(gapdata, country %in% c("United States", "China", "Germany", "Japan"))
+myplot = ggplot(gapsub, aes(x=year, y=lifeExp, col=country)) + geom_line()
+print(myplot)
+```
+
+```{r}
+ggplotly(myplot)
+```

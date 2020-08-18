@@ -1,0 +1,475 @@
+---
+title: "GEOG 6000 Lab 14 Bayesian analysis with R and JAGS"
+author: "Simon Brewer"
+date: "December 01, 2018"
+output: pdf_document
+---
+
+```{r echo=FALSE}
+options(width=50)
+set.seed(1234)
+```
+
+This lab provides a fairly brief introduction to Bayesian analysis using R and JAGS (Just Another Gibbs Sampler). R has a large number of add-on packages for Bayesian analysis, many of which are simpler to set up and run. However, JAGS provides one of the most flexible approaches, and can be used in a wider variety of situations. 
+
+As JAGS is a stand alone piece of software, you will first need to download and install it. Current binaries for most OS can be found [here][1]. Once this is installed, add the package **rjags** to your R installation:
+
+```{r eval=FALSE}
+install.packages('rjags')
+```
+
+There are a wide variety of other R packages listed [here][2]. Some notable ones are:
+
+- **coda**: provides routines for post-processing results
+- **mcmcplots**: provides prettier visualizations of MCMC results
+- **MCMCpack**: provides mainly standard statistical models in a simpler format
+- **rstan**: provides an interface to [stan][3], an alternative language for Bayesian analysis
+
+# Example 1: Inference for normally distributed data
+
+We'll start by creating a small dataset by random draws from a normal distribution with $\mu=20$ and $\sigma^2=4$ (remember that the variance is the square of the standard deviation). We will then use JAGS to try and recover these parameters. Note that we also define `N` as the number of observations. 
+
+```{r}
+set.seed(1234) ## For reproducibility
+
+N = 10
+y = rnorm(N, mean = 20, sd = sqrt(4))
+mean(y)
+sd(y)
+```
+
+The standard way to start to investigate normally distributed data is by calculating the mean and variance, and we will start by doing the same thing in a Bayesian context. As a reminder, a normal distribution is given by:
+
+\[
+y = N(\mu, \sigma^2)
+\]
+
+In our analysis then, $\mu$ and $\sigma$ represent the parameters we wish to estimate from the data. An important thing to note is that JAGS (and most Bayesian software) works with the *precision*, rather than the variance or standard deviation. The precision is simply the inverse of the variance, and is used for efficiency. This is important in specifying the priors and likelihood functions used, and you should be careful when converting back and forth. The model used by JAGS is then often written (where $\tau$ is the precision) as 
+
+\[
+y = N(\mu, 1/\tau)
+\]
+
+We next need to define prior distributions for these parameters. As a reminder, the prior gives the distribution which be used to draw random values of the parameters, which are then tested using the likelihood value. Note that we are not restricted to these distributions - we'll see the effect of changing them later. 
+
+- We use a weak normal distribution for the prior for `mu`, with a mean of 0 and a precision of 0.0001, which equates to a standard deviation of 10000: $N(0, .0001)$
+- We use a weak uniform distribtion for the prior for `tau`, with a lower limit of 0 and an upper limit of 0.0001, to avoid getting negative values for the variance: $U(0, .0001)$. This equates to using a uniform range for the s.d. between 0 and 100. 
+
+Now we have our model and priors, we write the JAGS code to run the analysis. There are a couple of different ways to do this. You can write directly to a text file, or run this through a temporary file directly from an R script.For this first example, we'll do the first of these, so open a text file (in RStudio[^1] or with an editor), and enter the following code, and save this as *model1.jags*.
+
+[^1]: You can open a text file in RStudio's editor by clicking on the green '+' icon in the top left hand corner
+
+```{}
+model {
+  for (i in 1:N) {
+    y[i] ~ dnorm(mu, tau)
+  }
+  mu ~ dnorm(0, .0001)
+  tau <- pow(sigma, -2)
+  sigma ~ dunif(0, 100)
+}
+```
+
+Models written in JAGS always take the same basic format. The syntax `model{}` represents our model, and gives the code that will be run during a single MCMC iteration. Within this, there are basically two parts:
+
+- The likelihood. This is the first part of code, and here is a loop from 1 to $N$ (the number of observations). This loop calculates the total likelihood of the data $y$, under a normal distribution with parameters `mu` and `tau`
+- The priors 
+    - The definition of the prior for `mu` should be relatively straightforward. Note that again, we use the precision to define the variance of `mu`
+    - We use two seperate steps to define `tau`. First, we define a prior for the standard deviation (`sigma`), as a uniform distribution with a lower limit of 0 and an upper limit of 100. This is then converted to `tau`, by squaring it and inverting it. Note that we can define a prior for `tau` directly (e.g. `tau ~ dunif(0, .0001)`), but this allows us to calculate our estimates of `sigma` directly from the model run. 
+
+If you are happy with all of that, let's now run the model. Start by loading **rjags**, then we'll perform a first run with JAGS. The function is `jags.model()`, and we specify the following parameters:
+
+- The file containing the JAGS code
+- The data to be used - note that this is passed as a list, not a data.frame
+- The number of Markov chains to be used. Each of these is a independent set of iterations starting from a different random selection of parameters. 
+- The number of iterations to run for adaptation. This allows the software to start to calibrate the Markov chains
+
+The first iterations may well contain outliers, as the chains start with random, and possibly quite unrealistic values. These first iterations are therefore called the *burn-in*, and are usually discarded. 
+
+```{r message=FALSE, results='hide'}
+library(rjags)
+model1.out <- jags.model("model1.jags",
+                         data = list(y = y,
+                                     N = N),
+                         n.chains=4,
+                         n.adapt=100)
+```
+
+If everything has worked, you should see messages telling you that JAGS is compiling the model and the initializing it. 
+
+Now, let's run the model and examine the output. There are a number of different functions to do this - we'll use one called `coda.samples()`. We start by setting the parameters that we want to monitor (i.e. record the results for) as `mparams`. Then use the function `update()` to initialize (burn-in) the model. Finally, we use `coda.samples()`, then run for 10000 iterations, and store the output for the two parameters of interest. 
+
+```{r}
+mparams = c("mu","sigma")
+update(model1.out, 500)
+model1.out = coda.samples(model1.out, mparams, n.iter = 2000)
+```
+
+This produces quite a lot of output, so let's look at it using the `summary()` function
+```{r}
+summary(model1.out)
+```
+
+This provides us with:
+
+- A summary of the run (number of iterations, etc)
+- The mean and standard deviation of the parameters requested
+- A set of percentiles for each parameter (the 2.5 and 97.5% can be used to give robust confidence intervals)
+
+Visualizing the results is also useful. First we'll look at the chains (i.e. the individual estimated values). Ideally, the chains should be stochastic, with no discernable pattern or trend:
+
+```{r eval=TRUE}
+plot(model1.out, trace=TRUE, density = FALSE)
+```
+
+We can also look at the probability density plots, which show the shape of the final, posterior distribution for each parameter
+
+```{r eval=FALSE}
+plot(model1.out, trace=FALSE, density = TRUE)
+```
+
+One thing you might notice in the summary output, is that the s.d. is somewhat overestimated. Let's try a new version of the model, with a more informed prior for `sigma`. Make a new copy of the JAGS code, called *model2.jags*. In it, change the definition of the prior on sigma to use a Gamma distribution. This requires two parameters (a and b), and here we set both to one. Our prior for the standard deviation now looks like this, giving a greater emphasis to lower values of a standard deviation:
+
+```{r echo=FALSE}
+xx = seq(0,10,length=100)
+dd = dgamma(xx, 1, 1)
+plot(xx, dd, type='l', xlab="S.D.", ylab="P")
+```
+
+Save the file, re-run the various steps (burn-in and iterations) and make the visualizations. 
+```{r echo=FALSE, results='hide'}
+model2.out <- jags.model("model2.jags",
+                         data = list(y = y,
+                                     N = N),
+                         n.chains=4,
+                         n.adapt=100)
+update(model2.out, 500)
+model2.out = coda.samples(model2.out, mparams, n.iter = 2000)
+```
+
+Now when we run the summary estimates, we find that the estimate of the standard deviation has improved, and that it is more tightly constrained.
+
+```{r}
+summary(model2.out)
+```
+
+We further need to test for autocorrelation in the Markov chains. The MCMC method is assumed to produce independent realizations on each parameter at each iteration, possibly due to an inappropriate step size used for the changes. Potential autocorrelation can be visualized using a autocorrelation function, which measures the correlation between the parameters used at each iteration of the chain. The correlation is measured betweenn lagged iterations (i.e. first between iteration 1 and 2, 2 and 3, 3 and 4, etc), and then for longer lags (so lag two measures the correlation between iteration 1 and 3, 2 and 4, etc). If there is no correlation, these values should be close to zero. If there is autocorrelation, then higher values will be observed. Plot this now for the second model:
+
+```{r}
+acfplot(model2.out)
+```
+
+The estimates of `sigma` show some correlations over the first 4-5 lags. This reduces the number of independent sample used to calculate the posterior distributions, which can approximately estimated as follows:
+
+```{r}
+effectiveSize(model2.out)
+```
+
+Note there are only about one-third the number of independent samples for `sigma`. 
+
+To correct for this, we re-run the model with thinning. This runs the full chain but only keeps every $k^{th}$ sample, discarding the ones inbetween. As long as $k$ is larger than the number of lags with autocorrelation, the remaining samples are considered independent. Let's re-run the previous model. Note that we add the parameter `thin = 10` to keep only 1 in 10 samples, and we increase the total number of iterations to compensate.
+
+```{r echo=TRUE, results='hide'}
+model2.out <- jags.model("model2.jags",
+                         data = list(y = y,
+                                     N = N),
+                         n.chains=4,
+                         n.adapt=100)
+update(model2.out, 1000)
+model2.out = coda.samples(model2.out, mparams, n.iter = 20000, thin = 10)
+```
+
+Now if we plot the ACF, then there should be little remaining autocorrelation. 
+
+```{r fig.keep='none'}
+acfplot(model2.out)
+```
+
+Despite this extra manipulation, the parameter estimates are pretty much the same as before:
+
+```{r results='hide'}
+summary(model2.out)
+```
+
+# Example 2: Linear regression
+
+We'll now extend this out to a linear regression with a single covariate. We'll use the heights and weights of the Aragorn actors used in previous modeling labs. Start by reading this file in and making a subset of the Aragorn actors:
+
+```{r}
+lotr = read.csv("lotr_hw.csv")
+aragorn = subset(lotr, role=="Aragorn")
+head(aragorn)
+```
+
+Our basic model for a linear regression with an intercept and a single covariate is: 
+\[
+y = \beta_0 + \beta_1 x + \epsilon, \epsilon \sim N(0, \sigma^2)
+\]
+
+To make this easier to fit with our Bayesian approach, we can rewrite this by including all the terms into a distribution:
+
+\[
+y = N(\beta_0 + \beta_1 x, \sigma^2)
+\]
+
+We have now three unknown parameters to estimate, and we will use the following prior distributions
+
+- $\beta_0$: Normal distribution ($N(0,.0001)$)
+- $\beta_1$: Normal distribution ($N(0,.0001)$)
+- $\sigma^2$: Gamma distribution ($\gamma(1,1)$)
+
+We now write a new JAGS model to the file *model3.jags*:
+
+```{}
+model {
+  for (i in 1:N) {
+    y[i] ~ dnorm(y.hat[i], tau)
+    y.hat[i] <- b0 + b1 * x[i]
+  }
+  b0 ~ dnorm(0, .0001)
+  b1 ~ dnorm(0, .0001)
+  tau <- pow(sigma, -2)
+  sigma ~ dgamma(1, 1)
+}
+```
+
+And now, we set up the model, run the burn-in, run the iterations and visualize:
+
+```{r message=FALSE, results='hide'}
+N = dim(aragorn)[1]
+model3.out <- jags.model("model3.jags",
+                         data = list(y = aragorn$weight,
+                                     x = aragorn$height,
+                                     N = N),
+                         n.chains=4,
+                         n.adapt=100)
+mparams = c("b0","b1","sigma")
+update(model3.out, 100)
+model3.out = coda.samples(model3.out, mparams, n.iter = 10000, thin=1)
+plot(model3.out, trace=TRUE, density=FALSE)
+```
+
+This time, the traces of the individual chains show some problems. The rapid change at the start of the series suggest that the burn-in period was insufficient, so we can re-run this with a longer period in the `update()` function. The second problem is the patterning during the run, indicating high autocorrelation in the parameter search. To demonstrate how high, plot the autocorrelation function:
+
+```{r}
+acfplot(model3.out, asp="x")
+```
+
+Although we could remove some of this by thinning, the degree of patterning in the traces suggests that the likelihood function was struggling to find the best set of coefficients. This can often be improved by using centered covariates. 
+
+We'll re-run the model with these changes:
+
+```{r message=FALSE, results='hide', fig.keep='none'}
+aragorn$height.cen = aragorn$height - mean(aragorn$height)
+model3.out <- jags.model("model3.jags",
+                         data = list(y = aragorn$weight,
+                                     x = aragorn$height.cen,
+                                     N = N),
+                         n.chains=4,
+                         n.adapt=1000)
+update(model3.out, 1000)
+model3.out = coda.samples(model3.out, mparams, n.iter = 10000, thin = 10)
+plot(model3.out, trace=TRUE, density=FALSE)
+```
+
+The chains are now stable, so next check for autocorrelation:
+
+```{r}
+acfplot(model3.out, asp="x")
+```
+
+we can look at the density plots and get the estimates of the coefficients:
+
+```{r}
+plot(model3.out, trace = FALSE, density = TRUE)
+summary(model3.out)
+```
+
+As we are using a different approach to classical statistics, we no longer get a $p$-value to test for the significance of coefficients. We can instead examine the confidence intervals, so for the slope `b1`, we have 95% confidence that the true slope is between `r round(summary(model3.out)$quantiles[2,1],3)` and `r round(summary(model3.out)$quantiles[2,5],3)`. As this interval does not include zero, we are 95% confident that there is a link between our variables. 
+
+# Example 3: Logistic regression
+
+For a more complex example, we will fit a logistic model, one of the set of generalized linear models. We will use a simple model with one covariate, where the the probability of a binary outcome $y$ occurring is given by:
+\[
+P(y_i) = \frac{exp(\beta_0 + \beta_1 x)}{1-(exp(\beta_0 + \beta_1 x))}
+\]
+
+This can be rewritten to make our lives easier to:
+
+\[
+P(y_i) = \frac{1}{1+(exp((\beta_0 + \beta_1 x)\times-1))}
+\]
+
+The likelihood for a binary outcome is given by a Bernoulli distribution, which takes $P$ as its only parameter. We have two parameters to estimate: $\beta_0$ and $\beta_1$. Note that unlike the previous model, there is no variance parameter to estimate (it is assumed to be proportional to $P$).We will use the same weak priors on the two coefficients ($N(0, .0001)$).
+
+We will fit this to the Irished Education dataset used in a previous lab. Here we model the probability of a student taken the leaving certificate (`lvcert`) given their score on a verbal reasoning test (`DVRT`).
+
+```{r results='hide'}
+irish = read.csv("irished.csv")
+head(irish)
+```
+
+Create a new JAGS model file (*model4.jags*), and add the following code:
+```{}
+model {
+  for (i in 1:N) {
+    y[i] ~ dbern(p[i])
+    p[i] <- 1 / (1 + exp(-z[i]))
+    z[i] <- b0 + b1 * x[i]
+  }
+  b0 ~ dnorm(0, .0001)
+  b1 ~ dnorm(0, .0001)
+}
+```
+
+The likelihood part of the model is a little more complex than before, but is just a series of simple steps:
+
+- Create the linear predictor `z[i]` for each observation as a combination of the coefficients ($\beta$) and `x[i]`
+- Convert this to a probability ($P$) using the equation given above
+- Calculate the likelihood of that value of $P$ using a Bernoulli function
+
+The priors should be easy to follow. Now go through the usual steps of setting up and running the model, including centering the `DVRT` variable.
+
+```{r fig.keep='none'}
+irish$DVRT.cen = irish$DVRT-mean(irish$DVRT)
+N = dim(irish)[1]
+model4.out <- jags.model("model4.jags",
+                         data = list(y = irish$lvcert,
+                                     x = irish$DVRT.cen,
+                                     N = N),
+                         n.chains=4,
+                         n.adapt=100)
+mparams = c("b0","b1")
+update(model4.out, 1000)
+model4.out = coda.samples(model4.out, mparams, n.iter = 10000, thin=10)
+plot(model4.out, trace=TRUE, density=FALSE)
+```
+
+The traces look good, but let's check for autocorrelation in the traces:
+
+```{r fig.keep='none'}
+acfplot(model4.out)
+```
+
+If you see any evidence for autocorrelation in this plot, go back and re-run the model with a higher value for thinning, Now, let's look at the summary of model run:
+
+```{r}
+summary(model4.out)
+```
+
+The 95% confidence intervals suggest both coefficients are significant. As with the GLM lab, we can get some sense of what these mean. The intercept is the value for a student with an average DVRT score. To convert this to odds:
+
+```{r}
+b0p = summary(model4.out)$statistics[1,1]
+exp(b0p)
+```
+And the intercept gives the rate of change of these odds as $x$ increases
+
+```{r}
+b1p = summary(model4.out)$statistics[2,1]
+exp(b1p)
+```
+
+We can also use the model to make predictions - but now we can use the full range of Bayesian estimates. The full set of coefficients for any given chain can be obtained as follows:
+
+```{r results='hide'}
+b0_1 = model4.out[[1]][,"b0"]
+b1_1 = model4.out[[1]][,"b1"]
+```
+
+The set of predictions is then given by
+
+```{r}
+newDVRT = 120 - mean(irish$DVRT)
+pred120 = exp(b0_1 + b1_1*newDVRT) / (1 + exp(b0_1 + b1_1*newDVRT))
+summary(pred120)
+```
+
+```{r echo=FALSE}
+hist(pred120, breaks=100, main="lvcert Probability", xlab="DVRT")
+```
+
+# Example 4: Bayesian hierarchical models
+
+Bayesian methods are widely used with hierarchical models, in which the variance of the outcome variable can be partitioned among groups or levels, or other structures (including space and time). We'll demonstrate this with a very simply hierarchical model using the Lord of the Rings dataset. The model that we built in example two related the weight of Aragorn actors to their heights, but now we want to expand this model to all three actor roles. We assume that the relationhsip between actors weights and heights can be influenced by the roles. The first level of the model is then the height-weight model:
+
+\[
+weight_i \sim N(\beta_{0j} + \beta_1 height, \sigma^2)
+\]
+
+But we allow the intercepts to vary randomly across roles, and this variation is defined by a new distribution, described by the overall grand mean intercept and a variance ($\sigma^2_b$). (Note that it would be straightforward to allow the slopes to vary as well). 
+
+\[
+beta_{0j} \sim N(\beta_0, \sigma^2_b)
+\]
+
+We now have four parameters to estimate: $\beta_0$, $\sigma^2_b$, $\beta_1$ and $\sigma^2$. We will use the usual priors (as described above).
+
+The model is written as follows. Copy this into a text file and save as *model5.jags*. 
+
+```{}
+model {
+  for(i in 1:N) {
+    weight[i] ~ dnorm(beta0[role[i]] + beta1*height[i], sigma^(-2))
+  }
+  for(j in 1:J) {
+    beta0[j] ~ dnorm(mu, sigmab^(-2))
+  }
+  mu ~ dnorm(0, 0.0001)
+  beta1 ~ dnorm(0, 0.0001)
+  sigma ~ dgamma(1, 1)
+  sigmab ~ dgamma(1, 1)
+}
+```
+
+The main difference in the code is that we now have two loops in the likelihood part of the model. The second of these (the 'J' loop), iterates through each role, and assigns an intercept from a normal distribution. These intercepts are then used in the first loop to calculate the final likelihood. Note the indexing used - for each observation, the likelihood is calculated using a randomly sampled slope, and the intercept generated for the group (role) to which that observation belongs. Also note that we estimate both `mu` (this is $\beta_0$, the grand mean intercept) and the intercept for each role, which represent the random effects for that group. 
+
+Save the file, then initialize and run the model for a burn-in of 1000 iterations to check that all is working.
+```{r results='hide'}
+J = length(unique(lotr$role))
+N = dim(lotr)[1]
+
+model5.out <- jags.model("model5.jags",
+                         data = list(weight = lotr$weight,
+                                     height = lotr$height-mean(lotr$height), 
+                                     role = lotr$role, 
+                                     J=J,
+                                     N=N),
+                         n.chains=4,
+                         n.adapt = 500)
+update(model5.out, 1000)
+```
+
+Finally, run the model for 100000 iterations, thinning it to every 100th step and check the traces.
+
+```{r fig.keep='none', results='hide'}
+mparams <- c("beta0", "beta1", "mu", "sigma", "sigmab")
+model5.out <- coda.samples(model5.out, mparams, n.iter = 100000, thin = 100)
+summary(model5.out)
+plot(model5.out, trace=TRUE, density=FALSE)
+```
+
+
+The traces look stable, so take a look at the acf plot:
+
+```{r fig.keep='none'}
+acfplot(model5.out)
+```
+
+
+If this looks ok, plot densities for the fixed coefficients. 
+```{r}
+plot(model5.out[,c("mu","beta1","sigma","sigmab")], trace = FALSE)
+```
+
+Note that the ratio of the two sigmas can be used to help understand the distribution of variance. Here, more variance is explained by the roles ($\sigma_b$) than by the model with height ($\sigma$).
+
+And finally the individual role intercepts (the random effects). This gives the expected weight for an actor of average height in each given role. Note that a more useful approach would be to center the heights in each group, rather than for the overall dataset. 
+```{r}
+plot(model5.out[,c("beta0[1]","beta0[2]","beta0[3]")], trace = FALSE)
+```
+
+
+[1]: https://sourceforge.net/projects/mcmc-jags
+[2]: https://cran.r-project.org/web/views/Bayesian.html
+[3]: http://mc-stan.org

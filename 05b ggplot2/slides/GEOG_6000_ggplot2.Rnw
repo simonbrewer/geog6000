@@ -1,0 +1,444 @@
+% sample.tex
+\documentclass[aspectratio=169]{beamer}
+%\usecolortheme{beaver}
+%\usecolortheme[RGB={129,3,3}]{structure}
+\usecolortheme{seahorse}
+\usetheme{Singapore}
+\newcommand\Fontvi{\fontsize{9}{7.5}\selectfont}
+
+% Standard header (will need to change date!)
+\title[GEOG 6000 Fall '17]{GEOG 6000\\Advanced Geographical Data Analysis}
+\subtitle[ggplot2]{0401: Advanced graphics with \textbf{ggplot2}}
+\author[S. Brewer]{Simon Brewer}
+\institute[Univ. Utah]{
+  Geography Department\\
+  University of Utah\\
+  Salt Lake City, Utah 84112\\[1ex]
+  \texttt{simon.brewer@geog.utah.edu}
+}
+\date[Sep. 27, 2017]{September 27, 2017}
+
+\begin{document}
+<<setup, include=FALSE>>=
+#opts_chunk$set(size = 'footnotesize')
+opts_chunk$set(size = 'scriptsize', warning=FALSE)
+@
+
+%--- the titlepage frame -------------------------%
+\begin{frame}
+  \titlepage
+\end{frame}
+
+%--- Slide 3 ----------------%
+\begin{frame}{Objectives}
+\begin{itemize}
+  \item Introduce \textbf{ggplot2}
+  \item Dataframes for \textbf{ggplot2}
+  \item Examples
+\end{itemize}
+\end{frame}
+
+\section{ggplot2}
+%--- Slide 3 ----------------%
+\begin{frame}{ggplot2}
+\begin{itemize}
+  \item Based on Leland Wilkinson's Grammar of Graphics
+  \begin{itemize}
+    \item All data figures can be represented by the same \emph{grammar}
+  \end{itemize}
+  \item Adapted for R by Hadley Wickham
+  \item Provides much easier methods for comparative plots
+\end{itemize}
+\end{frame}
+
+%--- Slide 3 ----------------%
+\begin{frame}[fragile]{Base graphics vs. ggplot2}
+\begin{columns}
+  \begin{column}{0.50\textwidth}
+  Base graphics: 8 lines
+<<echo=FALSE, message=FALSE, fig.height=5>>=
+require(ggplot2)
+gapdata = read.csv("gapminderData5.csv")
+gapdata = subset(gapdata, continent != "Oceania")
+gapdata$year = factor(gapdata$year)
+mycont = c("Africa","Americas","Asia","Europe")
+par(mfrow=c(2,2))
+for (i in 1:length(mycont)) {
+  contID = which(gapdata$continent==mycont[i])
+  boxplot(lifeExp ~ year, gapdata[contID,],
+          xlab="Year",ylab="Life Expectancy", main=mycont[i])
+}
+par(mfrow=c(1,1))
+@
+  \end{column}
+  \begin{column}{0.5\textwidth}
+  ggplot2: 1 (quite complex) line
+<<echo=FALSE, fig.height=5>>=
+myplot = ggplot(gapdata, aes(x = year, y=lifeExp))
+myplot = myplot + geom_boxplot() + facet_wrap(~ continent) 
+myplot + ggtitle("Life Expectancy over time") + xlab("Year") + ylab("Life expectancy")
+@
+  \end{column}
+\end{columns}
+\end{frame}
+
+\section{Data frames for ggplot2}
+\begin{frame}[fragile]{Data frames for ggplot2}
+\begin{columns}
+  \begin{column}{0.50\textwidth}
+    \begin{itemize}
+      \item Data is often presented as short and fat tables
+      \item Plotting is easier with tall and thin data frames
+      \begin{itemize}
+        \item Each variable forms a column
+        \item Each observation forms a row
+      \end{itemize}
+    \end{itemize}
+  \end{column}
+	\begin{column}{0.5\textwidth}
+  \begin{center}
+      \includegraphics[width=0.95\textwidth]{./fat_vs_thin.png}
+  \end{center}
+  \end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}[fragile]{Data frames for ggplot2}
+\Fontvi
+\begin{columns}
+  \begin{column}{0.50\textwidth}
+Short/fat table: good for presenting results
+\begin{tabular}{ l | c r }
+  \hline
+   & TreatA & TreatB \\
+  \hline 
+  Jane Smith & - & 2 \\
+  John Doe & 16 & 11 \\
+  Mary Jones & 3 & 1 \\
+  \hline
+\end{tabular}
+\end{column}
+  \begin{column}{0.5\textwidth}
+Tall/thin dataframe: preferred for plotting
+\begin{tabular}{ l | c | r }
+  \hline 
+  Name & Treat & Result \\
+  \hline 
+  Jane Smith & a & - \\
+  John Doe & a & 16 \\
+  Mary Jones & a & 3 \\
+  Jane Smith & b & 2 \\
+  John Doe & b & 11 \\
+  Mary Jones & b & 1 \\
+  \hline 
+\end{tabular}
+
+\end{column}
+\end{columns}
+\begin{itemize}
+  \item Support package \textbf{reshape2} includes functions to transform between these layouts
+  \item \texttt{cast}: thin data frame to table
+  \item \texttt{melt}: table to thin data frame 
+\end{itemize}
+\end{frame}
+
+\section{Grammar of Graphics}
+\begin{frame}{Grammar of Graphics}
+  \begin{itemize}
+    \item Data: as data frame
+    \item Aesthetic: variables used to control position, color, fill, etc
+    \item Geometry: form of the plot, points, lines, bars, etc
+    \item Scale: mapping values into computer values, log scaling, etc
+    \item Statistics: summaries or transformation of data
+    \item Facet: Groups used to split data into multiple graphs
+  \end{itemize}
+\end{frame}
+
+\section{Examples}
+\begin{frame}[fragile]{Simple scatterplot}
+\begin{columns}
+  \begin{column}{0.50\textwidth}
+<<eval=FALSE, size="tiny">>=
+myplot = ggplot(data=iris, 
+                aes(x=Sepal.Length, y=Petal.Length)) 
+myplot + geom_point()
+@
+  \end{column}
+  \begin{column}{0.5\textwidth}
+<<echo=FALSE>>=
+data(iris) 
+@
+<<echo=FALSE>>=
+myplot = ggplot(data=iris, aes(x=Sepal.Length, y=Petal.Length)) 
+myplot + geom_point()
+@
+  \end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}[fragile]{Simple scatterplot}
+\begin{columns}
+  \begin{column}{0.50\textwidth}
+<<eval=FALSE, size="tiny">>=
+myplot = ggplot(data=iris, 
+                aes(x=Sepal.Length, y=Petal.Length, col=Species)) 
+myplot + geom_point()
+@
+  \end{column}
+  \begin{column}{0.5\textwidth}
+<<echo=FALSE>>=
+myplot = ggplot(data=iris, 
+                aes(x=Sepal.Length, y=Petal.Length, col=Species)) 
+myplot + geom_point()
+@
+  \end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}[fragile]{Simple scatterplot}
+\begin{columns}
+  \begin{column}{0.50\textwidth}
+<<eval=FALSE, size="tiny">>=
+myplot = ggplot(data=iris, 
+                aes(x=Sepal.Length, y=Petal.Length, col=Species)) 
+myplot = myplot + geom_point() + geom_smooth()
+print(myplot)
+@
+  \end{column}
+  \begin{column}{0.5\textwidth}
+<<echo=FALSE, message=FALSE>>=
+myplot = ggplot(data=iris, 
+                aes(x=Sepal.Length, y=Petal.Length, col=Species)) 
+myplot = myplot + geom_point() + geom_smooth()
+print(myplot)
+@
+  \end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}[fragile]{Themes and title}
+\begin{columns}
+  \begin{column}{0.50\textwidth}
+<<eval=FALSE, size="tiny">>=
+myplot = ggplot(data=iris, 
+                aes(x=Sepal.Length, y=Petal.Length, col=Species)) 
+myplot = myplot + geom_point() + geom_smooth() 
+myplot = myplot + ggtitle("Fisher's Iris Dataset") + 
+  theme(legend.position="bottom")
+print(myplot)
+@
+  \end{column}
+  \begin{column}{0.5\textwidth}
+<<echo=FALSE, message=FALSE>>=
+myplot = ggplot(data=iris, 
+                aes(x=Sepal.Length, y=Petal.Length, col=Species)) 
+myplot = myplot + geom_point() + geom_smooth() 
+myplot = myplot + ggtitle("Fisher's Iris Dataset") + 
+  theme(legend.position="bottom")
+print(myplot)
+@
+  \end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}[fragile]{Themes and title}
+\begin{columns}
+  \begin{column}{0.50\textwidth}
+<<eval=FALSE, size="tiny">>=
+myplot = ggplot(data=iris, 
+                aes(x=Sepal.Length, y=Petal.Length, col=Species)) 
+myplot = myplot + geom_point() + geom_smooth() 
+myplot = myplot + ggtitle("Fisher's Iris Dataset") + 
+  theme_bw() + theme(legend.position="bottom")
+print(myplot)
+@
+  \end{column}
+  \begin{column}{0.5\textwidth}
+<<echo=FALSE, message=FALSE>>=
+myplot = ggplot(data=iris, 
+                aes(x=Sepal.Length, y=Petal.Length, col=Species)) 
+myplot = myplot + geom_point() + geom_smooth() 
+myplot = myplot + ggtitle("Fisher's Iris Dataset") + 
+  theme_bw() + theme(legend.position="bottom")
+print(myplot)
+@
+  \end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}[fragile]{Themes and titles}
+\begin{columns}
+  \begin{column}{0.50\textwidth}
+<<eval=FALSE, size="tiny">>=
+require(ggthemes)
+myplot = ggplot(data=iris, 
+                aes(x=Sepal.Length, y=Petal.Length, col=Species)) 
+myplot = myplot + geom_point() + geom_smooth()
+myplot = myplot + ggtitle("Fisher's Iris Dataset") + 
+  theme_economist()
+print(myplot)
+@
+  \end{column}
+  \begin{column}{0.5\textwidth}
+<<echo=FALSE, message=FALSE>>=
+require(ggthemes)
+myplot = ggplot(data=iris, 
+                aes(x=Sepal.Length, y=Petal.Length, col=Species)) 
+myplot = myplot + geom_point() + geom_smooth()
+myplot = myplot + ggtitle("Fisher's Iris Dataset") + 
+  theme_economist()
+print(myplot)
+@
+  \end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}[fragile]{Histograms}
+\begin{columns}
+  \begin{column}{0.50\textwidth}
+<<eval=FALSE, size="tiny">>=
+myplot = ggplot(data=iris, aes(x=Sepal.Length, fill=Species))
+myplot = myplot + geom_histogram(binwidth = 0.1) + 
+  theme(legend.position="bottom")
+print(myplot)
+@
+  \end{column}
+  \begin{column}{0.5\textwidth}
+<<echo=FALSE, message=FALSE>>=
+myplot = ggplot(data=iris, aes(x=Sepal.Length, fill=Species))
+myplot = myplot + geom_histogram(binwidth = 0.1) + theme(legend.position="bottom")
+print(myplot)
+@
+  \end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}[fragile]{Kernel densities}
+\begin{columns}
+  \begin{column}{0.50\textwidth}
+<<eval=FALSE, size="tiny">>=
+myplot = ggplot(data=iris, aes(x=Sepal.Length, fill=Species))
+myplot = myplot + geom_density(alpha=0.5) + 
+  theme(legend.position="bottom")
+print(myplot)
+
+@
+  \end{column}
+  \begin{column}{0.5\textwidth}
+<<echo=FALSE, message=FALSE>>=
+myplot = ggplot(data=iris, aes(x=Sepal.Length, fill=Species))
+myplot = myplot + geom_density(alpha=0.5) + theme(legend.position="bottom")
+print(myplot)
+@
+  \end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}[fragile]{Boxplots}
+\begin{columns}
+  \begin{column}{0.50\textwidth}
+<<eval=FALSE, size="tiny">>=
+myplot = ggplot(data=iris, aes(x=Species, y=Sepal.Length))
+myplot = myplot + geom_boxplot()
+print(myplot)
+@
+  \end{column}
+  \begin{column}{0.5\textwidth}
+<<echo=FALSE, message=FALSE>>=
+myplot = ggplot(data=iris, aes(x=Species, y=Sepal.Length))
+myplot = myplot + geom_boxplot()
+print(myplot)
+@
+  \end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}[fragile]{Scales}
+\begin{columns}
+  \begin{column}{0.50\textwidth}
+<<eval=FALSE, size="tiny">>=
+myplot = ggplot(data=gapdata, aes(x=gdpPercap, y=lifeExp))
+myplot = myplot + geom_point()
+print(myplot)
+@
+  \end{column}
+  \begin{column}{0.5\textwidth}
+<<echo=FALSE, message=FALSE>>=
+myplot = ggplot(data=gapdata, aes(x=gdpPercap, y=lifeExp))
+myplot = myplot + geom_point()
+print(myplot)
+@
+  \end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}[fragile]{Scales}
+\begin{columns}
+  \begin{column}{0.50\textwidth}
+<<eval=FALSE, size="tiny">>=
+myplot = ggplot(data=gapdata, aes(x=gdpPercap, y=lifeExp))
+myplot = myplot + geom_point() + 
+  scale_x_log10("GDP") + scale_y_continuous("Life Exp.")
+print(myplot)
+@
+  \end{column}
+  \begin{column}{0.5\textwidth}
+<<echo=FALSE, message=FALSE>>=
+myplot = ggplot(data=gapdata, aes(x=gdpPercap, y=lifeExp))
+myplot = myplot + geom_point() + 
+  scale_x_log10("GDP") + scale_y_continuous("Life Exp.")
+print(myplot)
+@
+  \end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}[fragile]{Facets}
+\begin{columns}
+  \begin{column}{0.50\textwidth}
+<<eval=FALSE, size="tiny">>=
+myplot = ggplot(data=gapdata, aes(x=gdpPercap, y=lifeExp))
+myplot = myplot + geom_point() + 
+  scale_x_log10("GDP") + scale_y_continuous("Life Exp.")
+myplot = myplot + facet_wrap(~continent)
+print(myplot)
+@
+  \end{column}
+  \begin{column}{0.5\textwidth}
+<<echo=FALSE, message=FALSE>>=
+myplot = ggplot(data=gapdata, aes(x=gdpPercap, y=lifeExp))
+myplot = myplot + geom_point() + 
+  scale_x_log10("GDP") + scale_y_continuous("Life Exp.")
+myplot = myplot + facet_wrap(~continent)
+print(myplot)
+@
+  \end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}[fragile]{Facets}
+\begin{columns}
+  \begin{column}{0.50\textwidth}
+<<eval=FALSE, size="tiny">>=
+myplot = ggplot(data=gapdata, aes(x=gdpPercap, y=lifeExp))
+myplot = myplot + geom_point() + 
+  scale_x_log10("GDP") + scale_y_continuous("Life Exp.")
+myplot = myplot + facet_grid(year~continent)
+myplot = myplot + geom_smooth(method="lm")
+print(myplot)
+@
+  \end{column}
+  \begin{column}{0.5\textwidth}
+<<echo=FALSE, message=FALSE>>=
+myplot = ggplot(data=gapdata, aes(x=gdpPercap, y=lifeExp))
+myplot = myplot + geom_point() + 
+  scale_x_log10("GDP") + scale_y_continuous("Life Exp.")
+myplot = myplot + facet_grid(year~continent)
+myplot = myplot + geom_smooth(method="lm")
+print(myplot)
+@
+  \end{column}
+\end{columns}
+\end{frame}
+
+\end{document}

@@ -1,0 +1,4 @@
+\beamer@sectionintoc {1}{ggplot2}{3}{0}{1}
+\beamer@sectionintoc {2}{Data frames for ggplot2}{5}{0}{2}
+\beamer@sectionintoc {3}{Grammar of Graphics}{7}{0}{3}
+\beamer@sectionintoc {4}{Examples}{8}{0}{4}

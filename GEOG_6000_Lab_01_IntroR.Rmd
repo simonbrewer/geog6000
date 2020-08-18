@@ -1,0 +1,472 @@
+---
+title: "GEOG 6000 01 Introduction to R Lab"
+author: | 
+  | Simon Brewer
+  | Geography Department
+  | University of Utah
+date: "August 11, 2020"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    fig_caption: true
+header-includes:
+   - \usepackage{tabularx}
+---
+
+In this lab, we will introduce the basic functionality of R, together with some simple plotting functions. We will be using the following files for these examples:
+
+- The iris dataset (morphological measurements on plants) *iris.csv*
+- A dataset on world cities *cities.csv*
+- A dataset of landcover types by elevation: *landcover.csv*
+
+## Introduction to R
+
+### A quick note on formatting
+
+In this and subsequent labs, code that can be entered into R will be high-lit, e.g.:
+
+```{r eval=FALSE}
+plot(x, y)
+```
+
+And R output will be formatted with `##` at the start of the line. File names will be given in *italics* and will be available in the 'Datafiles' directory on the course Canvas site. 
+
+### Getting started
+
+#### RStudio layout
+The R Studio interface consists of several windows. Start R Studio from the 'Start' menu under Windows, and the following window should appear:
+
+![RStudio Interface](./images/rstudio.png)
+
+- Bottom left: console window (also called command window). Here you can type simple commands after the `>` prompt and R will then execute your command. This is the most important window, because this is where R actually does stuff.
+- Top left: editor window (also called script window). Collections of commands (scripts) can be edited and saved. When you don't see this window, you can open it with [File $>$ New $>$ R script]. Just typing a command in the editor window is not enough, it has to get into the command window before R executes the command. If you want to run a line from the script window (or the whole script), copy and paste it to the console. Alternatively, you can click [Run] or press CTRL+ENTER to send it to the command window.
+- Top right: workspace / history window. In the workspace window you can see which data and values R has in its memory. You can view and edit the values by clicking on them. The history window shows what has been typed before.
+- Bottom right: Files / plots / packages / help window. Here you can open files, view plots (also previous plots), install and load packages or use the help function. You can change the size of the windows by dragging the grey bars between the windows.
+
+#### Working with R
+Much of your time spent with R will involve typing commands in at the console, and R Studio has some help with this.
+
+- The up/down arrow keys allow you to cycle back through commands that have been previously entered. You can then modify or reuse these as necessary. The commands can also be accessed through the `History' tab in the top-right panel
+- The console has 'tab-completion', which allows you to enter the first few characters of a string or function name, press 'Tab', and R Studio will bring up a list of possible options that match the string you entered. Try typing `pri` and pressing 'Tab' - you should see `print` as part of the list, and you can click on this, or scroll down to use it from the list. 
+
+#### Workspace
+R has a *workspace* where variables and data are stored as you use it. This is held in the memory of the computer, so if you are working from a file, you will need to read it in to the R workspace, and then work on the values held in memory. This means that you only access files to read in or write out data, the rest of the time you are working on a copy in the workspace. 
+
+#### Working directory
+R defines the working directory as the folder in which it is currently working. When you ask R to open a certain file, it will look in the working directory for this file, and when you tell R to save a data file or plot, it will save it in the working directory.
+
+Before you do anything in R, it is important to set your working directory to where all your data and script files are or should be stored. Create a directory on the computer you are currently working on. Now change to this directory, either by typing `setwd("directoryname")` in the command window. For example:
+
+```{r eval=FALSE}
+setwd("N:/Rintro/Data/")
+```
+
+Make sure that the slashes are forward slashes and that you don't forget the apostrophes. R is case sensitive, so make sure you write capitals where necessary. 
+
+Alternatively, you can open a browser to help select the working directory by going to [Session] $>$ [Change working directory]. If you are using the base version of R, go to [File] $>$ [Change dir...] in Windows, or [Misc] $>$ [Change Working Directory] in Mac. 
+
+#### Using the console
+In the console, the '`>`' is the prompt, and your commands will be entered here. Click on the console window, then enter the following:
+```{r}
+2+2
+```
+
+And press 'Enter', and R will tell you, not too surprisingly, that 2+2=4. The spacing is not relevant, you could equally enter `2 + 2` or `2+ 2` and get the same result. The `[1]` before the output is a vector index. It refers to the first value in the vector (here a vector of length 1). We'll be using this later.
+
+We can equally use standard math functions, for example, to take the natural log or square root of 2:
+```{r}
+log(2)
+sqrt(2)
+```
+
+## Working with variables in R
+R can use many different file types, but csv files are recommended as the easiest way to transfer between R and Excel.
+Start by changing your working directory to the directory holding the two files listed above. Then get a list of files as follows (note the use of the pattern parameter to get only certain files):
+
+```{r}
+list.files(pattern=".csv")
+```
+
+Larger data sets will most commonly be read in from files. A recommended format to use are csv (comma-separated value) files, as these may be easily exchanged with spreadsheet software. Use the `read.csv()` function to read in the data from the Iris data file
+```{r}
+iris <- read.csv("iris.csv")
+```
+
+R will store data read in a data frame. To print out the contents of any variable, simply type the name of that variable at the command prompt. Other useful commands are `class()` to see what data class a variable is, and `names()` to get a list of the column headers. The function `str()` is probably the most useful, describing the column names and the type of data stored in them.
+```{r results='hide'}
+iris
+class(iris)
+names(iris)
+str(iris)
+```
+
+The variable `iris` here represents the whole data frame. If you want to access subsets of the data frame or individual values, you will need to understand indexes in R. There are two main method to access parts of a data frame, the `$` notation, and row/column indexes. The `$` notation allows you to access individual columns:
+
+```{r results='hide'}
+iris$Sepal.Length  	# Extract single column
+```
+
+The row/column notation is a more flexible approach, and allows you to access individual rows, columns or values, or to access a range of rows and columns
+
+```{r results='hide'}
+iris[ ,4]   # 4th column
+iris[10, ]  # 10th row
+```
+
+Alternatively, you can access a range of rows and columns using `:`:
+
+```{r results='hide'}
+iris[ ,1:4]     # Columns 1 to 4
+iris[1:10, ]    # First 10 rows
+iris[1:50,1:2]  # First 50 rows of the first two columns
+```
+
+Note that the data frame can contain different data classes. Compare:
+```{r}
+class(iris)			
+class(iris$Sepal.Length)		
+class(iris$Species)			
+```
+
+To access specific values within a vector, use the index of that value:
+```{r results='hide'}
+iris$Sepal.Length[3]      # 3rd element
+iris$Sepal.Length[-3]     # All but 3rd element
+iris$Sepal.Length[1:10]   # First 10 elements
+```
+
+Logical operators $<, <=, >, >=, ==, !=$ can be used to select parts of the data set by value. This is very useful if you only want to analyze part of your dataset
+```{r results='hide'}
+iris$Sepal.Length[iris$Sepal.Length > 5]	# All over 5 
+iris[iris$Sepal.Length > 5, ]	# All columns with sepal length over 5 
+iris$Sepal.Length[(iris$Species == 'setosa')] 	# All "setosa" species
+iris[(iris$Species == 'setosa'), ] 	# All columns for "setosa" species
+```
+
+These operators can be combined, so to get all instances of "setosa" species with sepal lengths greater than 5:
+
+```{r results='hide'}
+iris[(iris$Species == 'setosa') & (iris$Sepal.Length > 5), ]
+```
+
+### Factors 
+
+The vector of species names (`iris$Species`) is a set of character strings. R has another data type, a **factor** used to represent groups within your data. With a factor, R automatically assumes that every observation with the same name or *level* belongs to a single group, which can greatly facilitate comparing values between groups 
+
+You can convert a vector of character strings to a factor with the `as.factor()` function. The following code replaces the original `Species` string with factor:
+
+```{r}
+iris$Species <- as.factor(iris$Species)
+```
+
+Now let's recheck the class:
+
+```{r}
+class(iris$Species)
+```
+
+If we now check the first 10 values, you will see some additional information showing the levels of the factor, i.e. the individual groups. 
+
+```{r}
+iris$Species[1:10]
+```
+
+R automatically sets the levels in alphabetical order, irrespective of the order in the vector. The first level is considered to be the reference level, which has some uses in regression model as we will see later. You can change the order of the levels using the `factor()` function. The following sets the species `virginica` as the reference:
+
+```{r eval=FALSE}
+factor(iris$Species, levels = c("virginica", "versicolor", "setosa"))
+```
+
+We will look further at how factors work in a later lab. 
+
+## Functions in R
+
+Functions typically are comprised of the name of the function (`sqrt` for taking square roots) and a set of parentheses. The parentheses are used to pass data to the function as well as setting parameters to change the behavior of the function.
+
+```{r}
+sqrt(5)
+```
+
+Note that we can use the assignment operator to save the output from a function, allowing you to use this in subsequent functions and analyses. 
+```{r}
+y <- sqrt(5)
+round(y)
+```
+
+To save time and code, functions can be combined:
+```{r}
+round(sqrt(5))
+```
+
+The `seq()` function produces a series of numbers on a regular step. By default, it require 3 parameters, the starting number, the ending number and the step.
+```{r}
+seq(from=0,to=20,by=2)
+```
+
+If you include the parameter names, as in this example, the order does not matter. The parameter names can be omitted if you keep to the specified order of parameters. So `seq(0,20,2)` will give you the equivalent results.
+
+To find out what these parameters are, what they are called and what values they take, use the `help()` function, e.g. `help(seq)`. This will open a window with the help file for that function. If you do not know the name of a function, there is a search function `help.search()`, or use the help browser `help.start()`, browse to packages or use the search engine.
+
+### Univariate statistics
+Now create two new vectors in R containing the list of sepal lengths and the list of species names. Note the use of the assignment operator `<-`. You can also use the equal sign  (`=`) here and elsewhere in these examples.
+
+```{r}
+sl <- iris$Sepal.Length
+sp <- iris$Species
+```
+
+R has a large number of inbuilt functions. This section is designed to simply introduce you to the some basic functions for describing data.
+
+Functions to describe the central tendency:
+```{r}
+mean(sl)
+median(sl)
+```
+
+Functions to describe the dispersion (output not shown):
+```{r results='hide'}
+sd(sl)
+var(sl)
+min(sl)
+max(sl)
+quantile(sl)
+```
+
+Note that `quantile()` takes a parameter that allows you to choose the quantile to be calculated, e.g. `quantile(sl, c(0.1,0.9))`, will calculate the 10th and 90th percentile. Try adapting this to calculate the 25th and 75th percentile.
+
+Some other useful functions:
+```{r results='hide'}
+sum(sl)
+summary(sl)
+```
+
+Some specific functions for categorical data
+```{r results='hide'}
+levels(sp)
+table(sp)
+```
+
+As R is object oriented, functions will adapt to different data types
+```{r results='hide'}
+summary(sl) ## Summary of numeric vector
+summary(sp) ## Summary of categorical vector
+summary(iris) ## Summary of data frame
+```
+
+#### The `tapply()` function
+R has a set of `*apply` functions designed to help to do repetitive tasks. We will look at one of the simplest of these today, the `table` apply function. This *applies* a function (e.g. mean) to a vector, but calculates the function on subgroups defined by categories in a second vector. For example, to calculate the average sepal length per species of Iris, we can do the following:
+```{r}
+tapply(iris$Sepal.Length, iris$Species, mean)
+```
+
+Repeat this and calculate the standard deviation per species. 
+
+### Bivariate statistics
+Read in the cities data (if you haven't already done so).
+```{r}
+cities <- read.csv('cities.csv')
+str(cities)
+```
+
+## Quitting R
+When you are finished with R, exit by typing `q()` in the console (or going to [File] $>$ [Quit R Studio]). You will be asked if you want to save your workspace. This is generally a good idea, as this will create a file containing all your current data (".RData"), and the history (".Rhistory") of the commands you have used. If you restart R in the same directory, by clicking on an R script file, the workspace will be loaded automatically. If it doesn't, you can load this by changing to the the correct working directory and typing:
+
+```{r eval=FALSE}
+load(".RData")
+```
+
+## Basic plotting in R
+
+We'll now look quickly at the basic plotting functions in R. R has a wide range of plotting types, and we will look at some more complex methods later in this class. For now, we will concentrate on the basic plotting function (`plot()`) and how to simply modify this.
+
+Restart R Studio (or R) and make sure you set the working directory to where your files are located. Now load the Iris and Cities datasets:
+
+```{r}
+iris = read.csv("iris.csv")
+cities = read.csv("cities.csv")
+```
+
+### Index plots
+The simplest type of plot is an index plot, which simply plots values in the order they are recorded in the input vector. These are useful for examining the basic data structure and identifying errors and outliers. `plot` is a generic plotting command and will adapt to different data types. The parameter `type='p'` gives the plot type, here using points. Other options are `'l'` for lines, `'h'` for histogram lines, `'s'` for a stepped plot and `'b'` for both line and points. See `help(plot)` for more options and other parameters. 
+
+```{r fig.keep='high'}
+plot(iris$Sepal.Length, type='p')
+```
+
+As we have only asked to plot one variable, this is represented on the y-axis. The x-axis gives the index of the observation, in this case from 1 to 150. Other index plots include strip plots and dot plots (also known as Cleveland plots). Here we use the first column of the cities data frame, which contains the city names, to label the plot.
+```{r fig.keep='none'}
+stripchart(iris$Sepal.Length, method='stack')
+dotchart(cities$Pop.2000, labels=cities$City)
+```
+
+The final example of an index plot shown in class is the quantile-quantile or q-q plot. This compares the quantiles of the set of data values to equivalent quantiles from a standard normal distribution. The first function used here `qqnorm()` plots this comparison, and if the data set is normally distributed, there should be a linear correspondence between the observed and theoretical quantiles, i.e. they should form a straight line on the scatterplot. The second function, `qqline`, adds a line representing the match between two normal distributions. If the points from the first function fall mainly on this line, we can infer that our data set is close to being normally distributed. 
+
+```{r fig.keep='none'}
+qqnorm(iris$Sepal.Length)
+qqline(iris$Sepal.Length)
+```
+
+### Summary plots 
+Summary plots attempt to describe the distribution of the data, giving some ideas about which values are most common and which are most rare. Histograms are commonly used for this method, values are 'binned' into a set of classes, and the histogram represents the frequency of occurrences in that bin. Bins are defined with the `breaks` parameter, which may be set to a constant number in which case the data range is split into that many bins, or as a sequence of numbers defining the intervals between bins. In this latter case, we can make use of the `seq()` function from earlier. 
+
+```{r fig.keep='none'}
+hist(iris$Sepal.Length, breaks=20)
+hist(iris$Sepal.Length, breaks=seq(4,8,0.25))
+```
+An alternative to histograms are boxplots, which show information about the data quartiles.
+Here the box represents the interquartile data (25-75\% of the data), the thick bar is the median, and the 'whiskers' show the data range.
+
+```{r fig.keep='none'}
+boxplot(iris$Sepal.Length)
+```
+
+### Bivariate plots
+Bivariate plots are designed to show the relationship between two variables, and how this may vary. The simplest form is the scatter plot. We use the `plot()` function again, but now we give it two variables (x and y). 
+```{r fig.keep='none'}
+plot(iris$Petal.Length,iris$Petal.Width)
+```
+As we know that these values come from three difference species, we can use this knowledge
+to add extra information to the plot, by using the `col` parameter. We first convert the `Species` vector to a factor class. R will then use the levels of the factor to assign colors to the points. We can also change the symbol type using the `pch` parameter.
+
+```{r}
+iris$Species <- as.factor(iris$Species)
+plot(iris$Petal.Length,iris$Petal.Width,
+     col = iris$Species, pch = 4)
+```
+
+Let's clean up this plot a little by specifying the axis labels and a title:
+
+```{r eval=FALSE}
+plot(iris$Petal.Length,iris$Petal.Width,
+     col=iris$Species, pch=4, 
+     xlab="Petal length (cm)", ylab="Petal width (cm)",
+     main="Fisher's Iris Data")
+```
+
+We can also add a legend to our plot to explain the different colors and symbols. Unfortunately, R makes you do all the work for this, using the `legend()` function. Here, we add a legend to the top left of the plot, giving the labels for each color and the color used:
+
+```{r eval=FALSE}
+legend("topleft",legend=c("Setosa","Versicolor","Virginica"),
+       col=c(1,2,3), pch=4)
+```
+
+```{r eval=FALSE}
+plot(iris$Petal.Length,iris$Petal.Width,
+     col=iris$Species, pch=4, 
+     xlab="Petal length (cm)", ylab="Petal width (cm)",
+     main="Fisher's Iris Data")
+legend("topleft",legend=levels(iris$Species),
+       col=c(1,2,3), pch=4)
+```
+Note that we can also use the `levels()` function introduced above to help - this will give us the list of labels to be used in the title:
+
+An alternative way to look at the association between factors and a variable is, again, to use boxplots. Note that this code uses a tilde ($\sim$) between the variable and the set of factors. The tilde is often used to define dependency between two variables, and we will return to this again during the modeling part of this class. 
+
+```{r fig.keep='none'}
+boxplot(iris$Sepal.Length ~ iris$Species, ylab='Sepal Length')
+```
+As the boxplot does not automatically label the y-axis, we add this with the `ylab` parameter. See `help(plot)` and `help(par)` for a complete list of the plotting parameters. 
+
+### Graphic output
+By default, R plots graphics to the screen, but has the ability to save figures in most of the standard graphic formats. In order to do this, you first need to open a file (a graphics *device*), then run the plotting functions, then close the device. Remember that you need to plot all the layers of a figure before closing the file. The following example plots the Iris petal data to a pdf file. Alternatives include: png, jpeg, svg, etc.; type `help(Devices)` for more details. 
+```{r results='hide', eval=FALSE}
+pdf('iris_petal_figure.pdf')
+plot(iris$Petal.Length,iris$Petal.Width,
+     col=iris$Species, pch=4, 
+     xlab="Petal length (cm)", ylab="Petal width (cm)",
+     main="Fisher's Iris Data")
+legend("topleft",legend=levels(iris$Species),
+       col=c(1,2,3), pch=4)
+dev.off()
+```
+Alternatively, you can copy-paste directly into Word by going to [Export] -> [Copy to clipboard...] in R Studio's plotting window.
+
+\newpage
+
+## Files used in lab
+
+### Iris morphology dataset: *iris.csv* 
+| Column header | Variable |
+| --- | --- |
+| Sepal.Length | Sepal length (mm) |
+| Sepal.Width | Sepal width (mm) |
+| Petal.Length | Petal length (mm) |
+| Petal.Width | Petal width (mm) |
+| Species | Species name |
+| Code | Species code |
+
+### World city dataset: *cities.csv* 
+| Column header | Variable |
+| --- | --- |
+| City | City name |
+| Area | Urban area |
+| Pop.1980 | Population in 1980 (000s) |
+| Pop.1990 | Population in 1990 (000s) |
+| Pop.2000 | Population in 2000 (000s) |
+| Growth |  |
+| Food |  |
+| PersRoom | |
+| Water | Percentage access to water |
+| Elec | Percentage access to electricity |
+| Phones |  |
+| Vehicles |  |
+
+### Landcover/elevation dataset: *landcover.csv* 
+| Column header | Variable |
+| --- | --- |
+| elevation | Elevation (m) |
+| landcover | Landcover class (3) |
+
+\newpage
+\section{R code covered in lab}
+
+\begin{tabularx}{\linewidth}{| l | X |}
+\hline
+\textbf{R Command} & \textbf{Purpose} \\
+\hline
+\texttt{getwd} & Prints working directory \\
+\texttt{setwd} & Changes working directory \\
+\texttt{list.files} & Lists files in directory \\
+\texttt{read.csv} & Reads data from CSV file \\
+\texttt{help} or \texttt{?} & Get help on function \\
+\texttt{q} or \texttt{quit} & Quits R session \\
+\hline
+\texttt{<-} or \texttt{=} & Attributes value to variable \\
+\hline
+\texttt{class} & Prints object class \\
+\texttt{str} & Prints object structure \\
+\texttt{summary} & Prints summary statistics \\
+\texttt{table} & Prints counts of categories \\
+\texttt{levels} & Prints category labels \\
+\hline
+\texttt{df\$column} & Access `column' from `df' dataframe \\
+\texttt{df[,col]} & Access column `col' from `df' dataframe \\
+\texttt{df[row,]} & Access row `row' from `df' dataframe \\
+\texttt{df[row,col]} & Access value at row and column \\
+\texttt{vec[id]} & Access value at position `id' in vector \\
+\hline
+\texttt{log} & Calculates natural logarithm \\
+\texttt{log10} & Calculates log 10 \\
+\texttt{round} & Round values to integer \\
+\texttt{seq} & Generate sequence of numbers (from, to, by) \\
+\texttt{sqrt} & Calculates square root \\
+\texttt{sum} & Calculates sum of vector \\
+\hline
+\texttt{mean} & Calculates mean of vector \\
+\texttt{median} & Calculates median of vector \\
+\texttt{var} & Calculates variance of vector \\
+\texttt{sd} & Calculates standard deviation of vector \\
+\texttt{quantile} & Calculates quantile of vector (requires percentile parameter)\\
+\texttt{cov} & Calculates covariance of two (or more) vectors\\
+\texttt{cor} & Calculates correlation of two (or more) vectors\\
+\hline
+\texttt{plot} & Basic line and point plots \\
+\texttt{stripchart} & 1D scatterplot \\
+\texttt{dotplot} & Cleveland dot plot \\
+\texttt{boxplot} & Boxplots \\
+\texttt{hist} & Plot histogram \\
+\texttt{qqnorm} & Plot quantile of vector against normal distribution \\
+\texttt{qqline} & Plot line showing quantiles of two normal distributions \\
+\hline
+\end{tabularx}

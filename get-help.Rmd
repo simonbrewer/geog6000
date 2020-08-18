@@ -1,0 +1,22 @@
+
+Working in R can be frustrating, with errors and warnings popping up from you know not where. In fact, problems arise so often, troubleshooting (which usually just means Googling) should be considered an inescapable component of programming. 
+
+<br>
+
+<p align="center">
+![](https://imgs.xkcd.com/comics/wisdom_of_the_ancients.png)
+</p>
+
+<br>
+
+Here are some of the best places to look for help:
+
+- [rdocumentation.org](https://www.rdocumentation.org/)
+- [rdrr.io](https://rdrr.io/)
+- [community.rstudio.com](https://community.rstudio.com/)
+- [stackoverflow.com](https://stackoverflow.com/)
+
+
+The last one there, StackOverflow (often abberviated SO), is a forum where people post their problems and other users try to help them find an answer. Coding problems are rarely unique, so you can probably find a post there where someone ran into the exact same problem you are having. RStudio Community is like SO, but with a slightly different interface (the people there are typically nicer too). The first two will help you get to descriptions of functions that detail how to use them. This information can also be found by typing `?<function>` into the console (for example, `?plot`). This will bring up the package help documentation, which R Studio displays in the bottom right view pane. 
+
+<br>

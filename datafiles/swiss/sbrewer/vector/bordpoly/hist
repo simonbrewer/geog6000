@@ -1,0 +1,15 @@
+COMMAND: v.in.dxf input="/Users/sbrewer/Documents/Classes/GEOG6000/Lectures/18 Spatial VI/borders.dxf"
+GISDBASE: /Users/sbrewer/Documents/Classes/GEOG6000/Lectures/18 Spatial VI
+LOCATION: swiss MAPSET: sbrewer USER: sbrewer DATE: Tue Nov  1 15:09:42 2011
+---------------------------------------------------------------------------------
+COMMAND: v.build.polylines input="borders" output="bordpoly" cats="no"
+GISDBASE: /Users/sbrewer/Documents/Classes/GEOG6000/Lectures/18 Spatial VI
+LOCATION: swiss MAPSET: sbrewer USER: sbrewer DATE: Tue Nov  1 15:19:56 2011
+---------------------------------------------------------------------------------
+COMMAND: v.db.connect map="bordpoly@sbrewer" driver="dbf" database="$GISDBASE/$LOCATION_NAME/$MAPSET/dbf/" key="cat" layer=1 fs=" "
+GISDBASE: /Users/sbrewer/Documents/Classes/GEOG6000/Lectures/18 Spatial VI
+LOCATION: swiss MAPSET: sbrewer USER: sbrewer DATE: Tue Nov  1 15:26:40 2011
+---------------------------------------------------------------------------------
+COMMAND: v.db.connect map="bordpoly@sbrewer" driver="dbf" database="$GISDBASE/$LOCATION_NAME/$MAPSET/dbf/" table="borders_0ch97test" key="cat" layer=1 fs=" "
+GISDBASE: /Users/sbrewer/Documents/Classes/GEOG6000/Lectures/18 Spatial VI
+LOCATION: swiss MAPSET: sbrewer USER: sbrewer DATE: Tue Nov  1 15:27:05 2011

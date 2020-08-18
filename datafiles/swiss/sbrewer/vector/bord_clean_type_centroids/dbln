@@ -1,0 +1,1 @@
+1 bord_clean_type_centroids cat $GISDBASE/$LOCATION_NAME/$MAPSET/dbf/ dbf

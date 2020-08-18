@@ -1,0 +1,19 @@
+
+
+#header {
+  margin-bottom: 75px;
+}
+
+h1:not(:first-child) {
+  margin-top: 60px;
+  margin-bottom: 20px;
+  border-bottom: 1px solid #CCC;
+  float: left;
+  width: 100%;
+  padding-bottom: 3px;
+  font-weight: bold;
+}
+
+h2 {
+  margin-top: 40px;
+}

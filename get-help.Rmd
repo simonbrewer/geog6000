@@ -17,6 +17,16 @@ Here are some of the best places to look for help:
 - [stackoverflow.com](https://stackoverflow.com/)
 
 
-The last one there, StackOverflow (often abberviated SO), is a forum where people post their problems and other users try to help them find an answer. Coding problems are rarely unique, so you can probably find a post there where someone ran into the exact same problem you are having. RStudio Community is like SO, but with a slightly different interface (the people there are typically nicer too). The first two will help you get to descriptions of functions that detail how to use them. This information can also be found by typing `?<function>` into the console (for example, `?plot`). This will bring up the package help documentation, which R Studio displays in the bottom right view pane. 
+The last one there, StackOverflow (often abberviated SO), is a forum where people post their problems and other users try to help them find an answer. Coding problems are rarely unique, so you can probably find a post there where someone ran into the exact same problem you are having. RStudio Community is like SO, but with a slightly different interface (the people there are typically nicer too). The first two will help you get to descriptions of functions that detail how to use them. 
+
+Help for any function in R can also be obtained using the `help()` function:
+
+```{r, eval = FALSE}
+help(plot)
+```
+
+Which opens the relevant help page in the Help browser window (`?plot` also does this). All R functions have a similar page, and will give a brief explanation of the variable, the parameters that it takes and how these change the way it works. It is also worth scrolling down - at the bottom of the help page will be some examples of usage which you can run to get a feel for how the function works. 
+
+You can search the help pages, using `help.search(...)` or `??...`, with a text string in the place of the three dots. This will return all help pages with that string. So if you want to carry out a cluster analysis, typing `??cluster` will search for any functions that use the word cluster. Hopefully including some that are relevant to cluster analysis. 
 
 <br>

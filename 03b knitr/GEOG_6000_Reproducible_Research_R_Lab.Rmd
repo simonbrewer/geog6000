@@ -2,7 +2,12 @@
 title: "GEOG 6000 Writing reports with R"
 author: "Simon Brewer"
 date: "September 22, 2015"
-output: pdf_document
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    fig_caption: true
+    css: "../style.css"
 header-includes:
    - \usepackage{tabularx}
 ---
@@ -26,12 +31,13 @@ knit_hooks$set(source = function(x, options){
 ```
 
 
-## Writing reports from R
+# Writing reports from R
+
 R has several add-on packages that allow you to write reports directly from R, incorporating the code, analyses and plots that you would make. These include Sweave, knitr and pander. These can be used to generate a wide variety of output documents, including LaTeX, RTF, the open document format (ODF) and html. One of the most advanced of these is **knitr**, which integrates extremely well with RStudio. Using **knitr**, reports can be generated in html using *markdown*, a simplified version of the full html markup language. 
 
 While this is not obligatory, the exercises and report that you write as part of this course can be generated using **knitr** and markdown. This helps keep your code, answers and figures in a single document for submission. This lab should provide a sufficient introduction for you to be able to write your own documents. 
 
-## Markdown
+# Markdown
 We'll start with a quick introduction to markdown, before starting to introduce R code into our document. 
 
 You are probably familar with html, the markup language that is used to create web pages. Like most markup languages, it works of a series of tags that are used to format different parts of the text. For example, `<h1>` and `</h1>` indicate that the enclosed text is a "level one header", or `<em>` and `</em>` indicate emphasis (generally italics). A web browser will parse the html tags and render the web page, often using a Cascading style sheet (CSS) to define the precise style of the different elements.
@@ -40,10 +46,10 @@ Writing directly in html is difficult, as it is necessary to remember all these 
 
 Markdown is designed to simplify this, by using very simple formatting. For example, text starting with `#` is a header, text enclosed by `*` is emphasized, and so on. The result is a file that is easy to read even before it is processed into html, and has an easy method for including code: the backtick (on the key to the left of the '1' on your keyboard. See appendix 2 for an example. 
 
-### Markdown syntax
+## Markdown syntax
 Here is a brief introduction to markdown syntax. Much more detail can be found [here][mdID]
 
-#### Headers
+### Headers
 Headers are indicated in markdown using hashmarks `#`. One is a top-level header, two a sub-header and so on up to six sub-headers. The main header can also be defined by adding a line of equal signs on the next line. The two following bits of code will do the same thing:
 
     # My header
@@ -51,7 +57,7 @@ Headers are indicated in markdown using hashmarks `#`. One is a top-level header
     My header
     =========
 
-#### Emphasis and bold
+### Emphasis and bold
 
 Bold text can be written as
 
@@ -61,7 +67,7 @@ Emphasized text uses a single asterix:
 
     *This text will be emphasized*
   
-#### Lists
+### Lists
 
 markdown can generated unnumbered lists as a set of bullet points:
 
@@ -75,8 +81,9 @@ markdown can generated unnumbered lists as a set of bullet points:
     2. List item 2
     3. List item 3
     
-#### Links
-Links to web pages can be included. Usually this is done in two ways. The word that will have the hyperlink is enclosed in `[,]`, and followed by a reference. Elsewhere in the document (usually at the end) the reference is connected to the full URL. For example:
+### Hyperlinks
+
+Links to web pages can be included in a couple of different ways. The word that will have the hyperlink is enclosed in `[  ]`, and followed by a reference. Elsewhere in the document (usually at the end) the reference is connected to the full URL. For example:
 
     I get 10 times more traffic from [Google][1] than from [Yahoo][2] or [MSN][3].
 
@@ -86,12 +93,12 @@ Links to web pages can be included. Usually this is done in two ways. The word t
 
 will convert the words "Google", "Yahoo" and "MSN" in the first line into hyperlinks. 
 
-#### Horizontal lines
+### Horizontal lines
 A horizontal line can be specified by a line of hypens:
 
     -----
 
-#### Code
+### Code
 The ease in which prgramming code can be formatted in a document has made markdown a favorite tool for writing documents and tutorials on programming. For example, all of the lab documents for this course are written using markdown. Text that should be formatted as code is usually show enclosed in backticks or by identing the code by four spaces (one tab stop).
 
 \begin{verbatim}
@@ -103,24 +110,40 @@ Or
 
       Some code
 
-### Processing markdown
+## Processing markdown
+
 Once the markdown file is written, it can be processed into html. There are quite a few processors that can be used, but a couple of good online free processors and editors are [stackedit] [seID] and [dillinger][dlID].
 
 ![Dillinger Window](images/dillinger.png)
 
 Dillinger interface showing the markdown editor on the left and the processed html on the right. 
 
-## RStudio, R Markdown and **knitr**
-### R Markdown
+# RStudio, R Markdown and **knitr**
+
+## R Markdown
+
 [R Markdown][rmID] is a variant of Markdown developed by the same people who developed RStudio. It allows you to embed *chunks* of R code which is then used with the **knitr** package to create reproducible web-based reports. The clever part about **knitr** is that it will take this code, and actually run it in R. So any R code you include will be processed, and the results can be displayed. This has several advantages: 1) it makes sure that the results are exactly those produced by R (and that the code is consistent with the results); 2) it allows you to easily update your report using new or extra data; 3) the figures are produced directly in the report; 4) your reports are easy to publish on the web. 
 
-### knitr
-[knitr][knID] is a package developed by Yihui Xie to embed R code into different documents. This needs to be installed on your computer before you can start generating reports. Use the instructions from the previous lab to install this package. 
+## knitr
 
-### A first R Markdown document
-In RStudio, go to the 'File' menu > 'New File' > 'R Markdown'. A new markdown document will open in the top-left panel. This is a template and already has some markdown code in it, but we will start from scratch. So highlight and delete all the existing text to leave a blank document. 
+[knitr][knID] is a package developed by Yihui Xie to embed R code into different documents. This needs to be installed on your computer before you can start generating reports. Use the instructions from the previous lab to install this package.[THIS NEEDS UPDATING]
 
-We'll start by adding a header and a short introduction. Type the following code into the document:
+# A first R Markdown document
+
+In RStudio, go to the 'File' menu > 'New File' > 'R Markdown'. A new markdown document will open in the top-left panel. This is a template and already has some markdown code in it, including a header that will look something like:
+
+```
+---
+title: "Untitled"
+author: "Simon Brewer"
+date: "8/19/2020"
+output: html_document
+---
+```
+
+Start by updating the header - give this a useful title and make sure your name is there. Then highlight and delete the remaining text to leave a blank document. 
+
+We'll start by adding a short introduction. Type the following code into the document:
 
     # My first report
     A first example of generating a report using R, RStudio and **knitr**. 
@@ -138,7 +161,7 @@ Click this button, and **knitr** will process the file. Once done, RStudio will 
 
 ![HTML output](images/htmlout1.png)
 
-If you look in your working directory, you should see two extra files with the same name as the R Markdown file, a simple markdown file with the extension *.md, and the html file (extension *.html). This second file can be open directly in a browser. 
+If you look in your working directory, you should see a new html file with the same name as the R Markdown file. This can be open directly in a browser. 
 
 We'll now add some R code into this document. Each block of code is called a 'chunk' and is preceded by three backticks and the string `{r}`. The chunk is ended by another three backticks. So a very simple example to add two numbers would be:
 
@@ -151,6 +174,7 @@ Add this to your markdown file, and click on the 'Knit HTML' button. Check the h
 ```{r}
 5 + 6
 ```
+
 The html output therefore has, not only the R code that you entered, but the result of that code. 
 
 We'll now add more code to this example to read in some data and calculate summary statistics. Add the following code to read in the GISS global temperature data set *giss_temp.csv*, and calculate some summary statistics. 
@@ -187,9 +211,11 @@ And a line plot showing the annual temperatures
           xlab="Years", ylab="Temp Anom")
     abline(h=0, lty=2)
     ```
+
 Add some text to explain what the code is doing, and click 'Knit HTML' to get the final report. When it is finished, go to your working directory, and double click the *.html file to open this in a browser. 
 
-### Chunk options
+## Chunk options
+
 **knitr** has a set of [options][opID] for modifying the way in which the chunks are run. This is done by adding options in between brackets at the start of the chunk (`{r}`). For example, `{r echo=FALSE}` will run the code, but not display it in the document. Some other options are:
 
 - `fig.keep=FALSE`: doesn't display any figures
@@ -199,7 +225,15 @@ Add some text to explain what the code is doing, and click 'Knit HTML' to get th
 - `eval=FALSE`: don't run the R code
 - `cache=TRUE`: only run the R code once and save the output for subsequent 'knits'. This is very useful for code that takes a long time to run
 
-Multiple options can be used by separating them by commas, e.g. `{r fig.width=10,fig.height=7}` will make a 10x7 figure in the output. 
+Multiple options can be used by separating them by commas, e.g. `{r fig.width=10, fig.height=7}` will make a 10x7 figure in the output. 
+
+If you need to set chunk options for the entire diagram, this can be done using the `opts_chunk$set()` function. When you opened the file, you should have seen a line that looked like this:
+
+    ```{r}`r ''`
+    knitr::opts_chunk$set(echo = TRUE)
+    ```
+
+Any options added to this (between the parentheses) will then be applied to all chunks. 
 
 
 [kbID]: http://kbroman.github.io

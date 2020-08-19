@@ -18,7 +18,7 @@ This lab covers two things:
 - Further plotting in R
 - How to build basic models in R and how to perform some simple diagnostics. 
 
-Before starting the lab, you will need to set up a new folder for your working directory. In the previous lab, you should have set up a `geog6000` folder, containing a folder for the first lab (`lab01`) and a folder for the data files (`datafiles`). Go to this folder now and create a new folder for today's class called `lab02`. The folder structure should now look like this:
+Before starting the lab, you will need to set up a new folder for your working directory. In the previous lab, you should have set up a `geog6000` folder, containing a folder for the first lab (`lab01`) and a folder for the data files (`datafiles`). Go to this folder now and create a new folder for today's class called `lab03`. The folder structure should now look like this:
 
 For this class, the labs will assume that you have your files organized according to the following structure:
 
@@ -27,6 +27,7 @@ For this class, the labs will assume that you have your files organized accordin
 |   +-- datafiles
 |   +-- lab01
 |   +-- lab02
+|   +-- lab03
 ```
 
 We will be using the following files for these examples:
@@ -38,7 +39,7 @@ We will be using the following files for these examples:
 
 You will need to download these files from Canvas, and move them from your `Downloads` folder to the `datafiles` folder. 
 
-Now start RStudio and change the working directory to `lab02`. As a reminder, you can do this by going to the [Session] menu in RStudio, then [Change working directory]. This will open a file browser that you can use to browse through your computer and find the folder. 
+Now start RStudio and change the working directory to `lab03`. As a reminder, you can do this by going to the [Session] menu in RStudio, then [Change working directory]. This will open a file browser that you can use to browse through your computer and find the folder. 
 
 **With all the examples given, it is important to not just type in the code, but to try changing the parameters and re-running the functions multiple times to get an idea of their effect.** Help on the parameters can be obtained by typing `help(functionname)` or `?functionname`. 
 

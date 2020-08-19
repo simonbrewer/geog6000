@@ -10,6 +10,7 @@ output:
     toc: true
     toc_float: true
     fig_caption: true
+    css: "../style.css"
 header-includes:
    - \usepackage{tabularx}
 ---
@@ -42,6 +43,7 @@ Now start RStudio and change the working directory to `lab02`. As a reminder, yo
 # Working with data frames in R
 
 ## Reading and writing files
+
 Larger data sets will most commonly be read in from files. A recommended format to use are csv (comma-separated value) files, as these may be easily exchanged with spreadsheet software. Use the `read.csv()` function to read in the data from the Irish Education file:
 (*irished.csv*).
 
@@ -50,6 +52,7 @@ irished <- read.csv("../datafiles/irished.csv")
 ```
 
 Plain text (or tab delimited files) can be read with the function `read.table()`, and an example is given later in this lab. Note that we use a variable to store the values read in from this file. By default, R creates this as a data frame, as this allows different types of variables to be stored (you can check this with the `class()` function). To see what is in the new data frame you can examine the *structure* as follows:
+
 ```{r}
 str(irished)
 ```
@@ -57,67 +60,85 @@ str(irished)
 Which tells you what the individual columns of the data frame are called (e.g. `sex`, `DVRT`), and the type of data (here all integer data). Note there are several add-on functions that will allow you to read from files with different formats, including most other statistical software.
 
 ## Review of indexing
+
 The Irish Education dataset that you read in in the previous section has 500 rows (observations) and 6 columns (variables). R has two methods of indexing or selecting subsets of the data. The first of these uses a system of coordinates within the grid of data, so `irished[4,1]` will select the value in the fourth row of the first column. Leaving one of these indices blank will select all values, so `irished[4,]` will select all values in the fourth row. A range of values can be selected as follows:
+
 ```{r results='hide'}
 irished[1:10,4:6]
 ```
+
 This returns the values in from columns 4 thru 6 in lines 1 thru 10. 
 
 The second form of indexing uses the column names directly, with an intervening `$`. This can be useful with large datasets, when the number of variables makes it hard to locate the value of interest, or if the order of the variables may change in the file. Using the column names also makes it easier to remember what you are doing. To extract the DVRT score (a vocal reasoning score):
+
 ```{r results='hide'}
 irished$DVRT
 irished$DVRT[1:10]
 ```
+
 Note that we can combine the two approaches to select only the first ten values from the DVRT column.
 
 We can equally use this notation to create new variables in the data frame. For example, if we want to make a new variable as the log-transformed DVRT score, we can do the following:
+
 ```{r}
 logDVRT <- log(irished$DVRT)
 ```
 
 More usefully, we can store this in the existing data frame as follows:
+
 ```{r}
 irished$logDVRT <- log(irished$DVRT)
 ```
 
 We can now write the data back out to a file to save the new data frame:
+
 ```{r}
 write.csv(irished, "irished2.csv")
 ```
+
 This will write a new csv file called *irished2.csv* in your working directory (note the `datafiled` folder), containing the `irished` data frame, with the new column. Note that R uses the variable names as column headers and adds a column with line numbers. You can remove the line numbers by adding the parameter `row.names=FALSE` to the `write.csv()` function. 
 
 ## Working with factors
+
 The dataset contains some categorical variables (e.g. presence/absence of leaving certificate, sex). As these are coded as 0/1 in the file, R has read them as numerical value. Before moving on, we will convert these to *factors*, which R will understand as categorical data. To do this we use the function `factor()`, and create new variables in the data frame:
 
 ```{r results='hide'}
-irished$fsex <- factor(irished$sex, levels = c(1, 2),
-    labels = c("male", "female"))
-irished$flvcert <- factor(irished$lvcert, levels = c(0, 1), 
-    labels = c("not taken", "taken"))
+irished$fsex <- factor(irished$sex, 
+                       levels = c(1, 2),
+                       labels = c("male", "female"))
+
+irished$flvcert <- factor(irished$lvcert, 
+                          levels = c(0, 1), 
+                          labels = c("not taken", "taken"))
 ```
 
 The function `factor` has an additional parameter `ordered`. This can be used to define factors where the `order` is important (e.g. small, medium, large), as opposed to unordered groups (e.g. makes of cars). By default, this is set to unordered. 
 
 ## Indexing by value
 A more useful approach to indexing is to select observations according to some criteria, for example all observations over 50, or all female students, allowing the creation of subsets for comparative studies. There are a couple of different ways to do this, but one of the most straightforward uses the `which()` function. This uses a conditional statement to return a list indexes for values of a variable that correspond to a criteria. So if we wanted to obtain the index of all students with a DVRT score over 100:
+
 ```{r results='hide'}
 which(irished$DVRT > 100)
 dvrt100 <- which(irished$DVRT > 100)
 ```
+
 By storing this set of indices as new variable, we can then use it to select the data subset for further analysis.
+
 ```{r results='hide'}
 irished$DVRT[dvrt100]
 irished$sex[dvrt100]
 ```
 
 We can now use this index, for example, to compare the number of students taking the leaving certificate from the group with a DVRT score greater than or less than 100.
+
 ```{r results='hide'}
 table(irished$lvcert[dvrt100])
 table(irished$lvcert[-dvrt100])
 ```
+
 Note that using the '-' in front of the index means 'select all values not in the index set'.
 
-### Implicit loops
+## Implicit loops
 
 The `tapply()` function is also useful for exploring datasets. If, for example, we were interested in calculating the mean DVRT score for boys and girls, we can run the following line:
 
@@ -131,14 +152,6 @@ Note that this works for more than two groups. To get the mean DVRT score for th
 tapply(irished$DVRT, irished$schltype, mean)
 ```
 
-## Help in R
-Help for any of these functions, or any function in R can be obtained using the `help()` function:
-```{r}
-help(mean)
-```
-Which opens the relevant help page in the Help browser window (`?mean` also does this). All R functions have a similar page, and will give a brief explanation of the variable, the parameters that it takes and how these change the way it works. It is also worth scrolling down - at the bottom of the help page will be some examples of usage which you can run to get a feel for how the function works. 
-
-You can search the help pages, using `help.search(...)` or `??...`, with a text string in the place of the three dots. This will return all help pages with that string. So if you want to carry out a cluster analysis, typing `??cluster` will search for any functions that use the word cluster. Hopefully including some that are relevant to cluster analysis. 
 
 # Inference tests
 
@@ -165,9 +178,11 @@ t.test(poro$A, poro$B, alternative = 'two.sided')
 This gives a $p$-value of approximately 0.0059, so (assuming a critical level of 0.05) we can reject our null hypothesis with a reasonable amount of confidence (this suggests we have about a 1-in-170 chance of making a mistake in our conclusion). Try changing the alternative to `greater` or `less` and look at how the $p$-value changes when you specify a one-sided test, and how this relates to the two means. 
 
 ### One sample *t*-test
+
 For the second example, we will run a one-sample $t$-test. As the name implies, this only uses one sample or set of observations, and compares them to a single, usually theoretical value. This is useful if you want to compare your observations to a value that has been established from previous studies or from first principles. Here, we'll test a set of adult body temperatures, with the goal of testing if the assumed average body temperature of 98.6F is supported by temperatures taken from 130 adults, or if there is a significant difference. 
 
 We begin by loading the data file containing the body temperature results:
+
 ```{r}
 normtemp = read.csv("../datafiles/normtemp.csv")
 names(normtemp)
@@ -181,6 +196,7 @@ Now we first form our null and alternative hypothesis. We will use a two-sided *
 - Alternative $H_a$: Mean temperature of samples $\ne 98.6$
 
 Now we run the test, using the `t.test()` function. Rather than using two vectors, as in the previous example, we supply the vector of values (the sample) the argument `mu`, which defines the assumed or hypothetical value we wish to test against. We also set the parameter `alternative`, which states whether this is two-sided or one-sided:
+
 ```{r}
 t.test(normtemp$temp, mu = 98.6, alternative = "two.sided")
 ```
@@ -190,11 +206,13 @@ This gives a $p$-value of approximately 2.4e-7, so we can reject our null hypoth
 - Would you keep or reject the null hypothesis with these results?
 
 ### $F$-test
+
 The $F$-test tests for equality of variance between two samples. As such, it is usually carried out prior to other tests to check assumptions (the basic $t$-test assumes equal variance). It is calculated as the ratio of the two variances ($s^2_a / s^2_b$). If the variances are similar, $F$ will be close to 1. If these differ, then $F$ will increase (or tend to zero, depending on how the ratio is calculated). We then compare the observed $F$-statistic to an $F$-distribution, to see the chance that our value arose through simple sampling effects. The $F$-distribution is defined by two degrees of freedom ($n-1$ for each of the two samples). We will test use this to test the two soil porosity samples used in the previous section. 
 
 - As before, write out your hypotheses prior to running the code.  
 
 The function `var.test()` carries out this test in R:
+
 ```{r results='hide'}
 var.test(poro$A, poro$B)
 ```
@@ -210,7 +228,9 @@ t.test(poro$A, poro$B, var.equal = TRUE)
 How does this compare to the previous $t$-test? What has changed in the results (and how has it changed)? Does this change your conclusions?
 
 ## Tests of association
+
 ### Correlation tests
+
 The correlation coefficient obtained between two sets of variables may be tested for significant differences from a null correlation. The parametric correlation coefficient (Pearson's $r$) can be used to calculate a $t$-statistic, and then compared to a $t$-distribution. For data that is not normally distributed, Spearman's rank correlation can be used. For each variable, all values are converted to ranks (the lowest value is converted to 1, the second lowest to 2, ..., the highest to $n$). We then calculate Pearson correlation coefficient based on the correlation between these ranks for the two variables and use this to generate a $t$-statistic. 
 
 Here we generate two random sets of 30 numbers, and test them using Pearson's correlation coefficient. Our null hypothesis ($H_0$) is that they do not correlate, which is highly likely, given that they are randomly generated.
@@ -226,6 +246,7 @@ cor.test(x, y, method = "pearson")
 - Do the results support the null or alternate hypothesis?
 
 In a second test, we do the same, but we replace the second series with a duplicate of the first, with some added noise. Note the second use of the `rnorm()` function with a much smaller mean and s.d. to add noise to a set of data (see also `jitter()`). 
+
 ```{r results='hide'}
 x <- rnorm(30, 10, 1)
 y <- x + rnorm(30, 1, 0.5)
@@ -235,6 +256,7 @@ cor.test(x,y, method = "pearson")
 - Do the results support correlation between x and y? Why do you get these results?
 
 ### Contingency tests
+
 These test for *association* between two sets of categories. The null hypothesis is that values are uniformally distributed among categories. If association exists, we expect that some pairwise associations between categories will be high and other low. 
 
 In this example, we have observations of land cover classes from a set of 80 locations, which are also classified as low or high elevation. Our question is then if there is association between land cover class and elevation class, i.e. are some land cover classes more commonly found in some elevation classes, or are they even spread among the different elevations? 
@@ -242,6 +264,7 @@ In this example, we have observations of land cover classes from a set of 80 loc
 - What do you think the null and alternative hypotheses would be for this test?
 
 We start by reading the data in from a csv file (*landcover.csv*), then creating the contingency table showing association. For this we use the function `table()`, which cross-tabulates pairs of categories. 
+
 ```{r}
 lc <- read.csv("../datafiles/landcover.csv")
 lc.tab <- table(lc$elevation, lc$landcover)
@@ -269,7 +292,9 @@ chisq.test(lc.tab)
 Analysis of variance (ANOVA) has several uses in statistical analysis, but here we will use it as an extension of a $t$-test to look for differences between more than two groups. The name comes from the use in analyzing or decomposing the variance in a sample into two parts: the variance explained by (or *between*) the groups and the residual (or *within*) group variance. 
 
 ## One-way ANOVA
+
 We will use one-way ANOVA to examine differences in dissolved oxygen (DO) measurements from a set of four locations in the file *maximumDO.txt*. Download and read this file into R:
+
 ```{r results='hide'}
 maxdo <- read.table("../datafiles/maximumDO.txt", header = TRUE)
 maxdo
@@ -292,17 +317,22 @@ maxdo <- data.frame(location = locs, maxdo = dovals)
 Use this data frame to make a boxplot of the values across the four locations. Note we use the formula syntax to indicate which variable is the response variable (DO), and which is the independent or explanatory variable (location). As a reminder, the formula syntax is always written as `response ~ explantory`, and we will be using this extensively in building statistical models. 
 
 ```{r fig.keep='none'}
-boxplot(maxdo ~ location, data = maxdo,
-        xlab = "Location", ylab = "mg/l")
+boxplot(maxdo ~ location, 
+        data = maxdo,
+        xlab = "Location", 
+        ylab = "mg/l")
 ```
 
 - Prior to running the ANOVA function, state the null and alternative hypotheses
 
 We now run the ANOVA, using the R function `aov()`. This uses the same formula syntax, and produces the breakdown of variance as the sum of squares. The first column gives the amount explained by the location and the remaining variance is given in column 2. 
+
 ```{r}
 aov(maxdo ~ location, data = maxdo)
 ```
+
 You should be able to see from this that the majority of variance is explained by our grouping. To test the significance, we could calculate the $F$-statistic and compare to a $F$-distribution. However, if we use the `summary()` function, R will do this for us:
+
 ```{r results='hide'}
 summary(aov(maxdo ~ location, data = maxdo))
 ```
@@ -311,7 +341,6 @@ Now we obtain the sum of squares for each component, the mean (sum of squares di
 
 - Do the results support a difference in DO values between locations?
 
-\newpage
 
 # Exercises
 
@@ -326,7 +355,7 @@ Now we obtain the sum of squares for each component, the mean (sum of squares di
     + Carry out the ANOVA and give the $F$-statistic and the $p$-value obtained
     + On the basis of this state whether or not life expectancy varies across continents
 
-\newpage
+
 
 <!-- ## Implicit loops -->
 <!-- Most R functions will treat an entire matrix or dataset as a set of values. There are some useful functions that allow these to be treated in more useful way, by *applying* a function to various subsets of the data using implicit loops. -->
@@ -355,57 +384,6 @@ Now we obtain the sum of squares for each component, the mean (sum of squares di
 
 ```{r, child = '../get-help.Rmd'}
 ```
-
-# R code covered in lab
-\begin{tabularx}{\linewidth}{| l | X |}
-
-\hline
-R Command & Purpose \\
-\hline
-\textbf{Reading data} & \\
-\hline
-\texttt{read.csv} & Read data from comma separated text file \\
-\texttt{read.table} & Read data from general ASCII text file \\
-\hline
-\textbf{Working with data} & \\
-\hline
-\texttt{class} & Prints object class \\
-\texttt{str} & Prints object structure \\
-\texttt{summary} & Prints summary statistics \\
-\texttt{table} & Prints counts of categories \\
-\texttt{levels} & Prints category labels \\
-\hline
-\texttt{df\$column} & Access `column' from `df' dataframe \\
-\texttt{df[,col]} & Access column `col' from `df' dataframe \\
-\texttt{df[row,]} & Access row `row' from `df' dataframe \\
-\texttt{df[row,col]} & Access value at row and column \\
-\texttt{vec[id]} & Access value at position `id' in vector \\
-\hline
-\textbf{Summary statistics} & \\
-\hline
-\texttt{mean} & Calculates mean of vector \\
-\texttt{median} & Calculates median of vector \\
-\texttt{var} & Calculates variance of vector \\
-\texttt{sd} & Calculates standard deviation of vector \\
-\texttt{quantile} & Calculates quantile of vector (requires percentile parameter)\\
-\texttt{cov} & Calculates covariance of two (or more) vectors\\
-\texttt{cor} & Calculates correlation of two (or more) vectors\\
-\hline
-\textbf{Statistical tests} & \\
-\hline
-\texttt{t.test} & T-test: both one sided (parameter $\mu$) and two sided (requires two vectors) \\
-\texttt{var.test} & F-test: comparison of variance. Works with two vectors \\
-\texttt{wilcox.test} & Wilcoxon rank test: comparison of medians. Both one sided (parameter $\mu$) and two sided (requires two vectors)  \\
-\texttt{cor.test} & Significance test of correlation between two variables. Tests include Pearson's (default) and Spearman's  \\
-\texttt{aov} & Analysis of variance --- uses formula syntax to define response variable and factors. Performs one-way and two-way ANOVA\\
-\hline
-\textbf{Other functions} & \\
-\hline
-\texttt{table} & Produces cross-tabulation of two different sets of categories \\
-\texttt{as.matrix} & Converts object to matrix form \\
-\texttt{cut} & Assign a vector of continuous values into defined bins \\
-\hline
-\end{tabularx}
 
 # Files used in lab
 
@@ -446,13 +424,6 @@ R Command & Purpose \\
 | B | DO values for site B |
 | C | DO values for site C |
 | D | DO values for site D |
-
-## Crop yield dataset: *yield2.csv*
-| Column header | Variable |
-| --- | --- |
-| Seed | Seed variety (A-C) |
-| Fertilizer | Fertilizer treatment (1-5) |
-| Yield | Crop yield |
 
 ## GapMinder Dataset: *gapC.csv*
 | Column header | Variable |

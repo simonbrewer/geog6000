@@ -1,10 +1,13 @@
 ---
 title: "GEOG 6000 Lab 06 Modeling 4"
 author: "Simon Brewer"
-date: "September 18, 2015"
-output: 
-  pdf_document: 
-    number_sections: yes
+date: "August 31, 2020"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    fig_caption: true
+    css: "../style.css"
 header-includes:
    - \usepackage{tabularx}
 ---
@@ -14,21 +17,18 @@ options(width=50)
 set.seed(1234)
 ```
 
-This lab will introduce you to mixed effects (hierarchical) modeling and briefly to generalized additive modeling. It requires several additional libraries to be loaded: **nlme** and **lattice**, which are both part of the standard R installation, and **lme4**, which you will need to install for this lab. The following files will be used in this lab, all available on Canvas:
+This lab will introduce you to mixed effects (hierarchical) modeling and briefly to generalized additive modeling. It requires several additional libraries to be loaded: **nlme** and **lattice**, which are both part of the standard R installation, and **lme4**, which you will need to install for this lab. 
+
+Before starting the lab, you will need to set up a new folder for your working directory. Go to your `geog6000` folder now and create a new folder for today's class called `lab06`. The following files will be used in this lab, all available on Canvas:
 
 - The Math achievement dataset  *MathAch.csv*
 - A dataset of introduced species   *speciesIntro.csv*
 - A dataset of daily ozone concentrations   *ozone.csv*
 
-Things to remember:
+You will need to download these files from Canvas, and move them from your `Downloads` folder to the `datafiles` folder that you made previously. 
 
-- The following font conventions are used:
-    - Normal font = text, comments etc
-    - `Courier font` = R commands
-    - *Italic font* = file names
-- R is case-sensitive for variables and functions. Iris is not the same as iris or IRIS.
-- `#` indicates comments - no need to type these
-- **Remember to change your R working directory to where your files are stored**
+Now start RStudio and change the working directory to `lab06`. As a reminder, you can do this by going to the [Session] menu in RStudio, then [Change working directory]. This will open a file browser that you can use to browse through your computer and find the folder. 
+
 
 **With all the examples given, it is important to not just type in the code, but to try changing the parameters and re-running the functions multiple times to get an idea of their effect.** Help on the parameters can be obtained by typing `help(functionname)` or `?functionname`. 
 
@@ -43,27 +43,27 @@ For this section, we will make the model linking scores on a math achievement te
 To start, load the data file. 
 
 ```{r results='hide'}
-MathAch = read.csv("MathAch.csv")
+MathAch <- read.csv("../datafiles/MathAch.csv")
 str(MathAch)
 ```
 
 To ensure that the model is correctly made, we will need to carry out three operations. First, convert the sector variable into a factor. We tell R to use 'Public' as the first level class. All coefficients derived in the model will now be *relative* to this level (i.e. they represent the difference in Catholic schools relative to Public).
 
 ```{r}
-MathAch$sector = factor(MathAch$sector, levels=c("Public","Catholic"))
+MathAch$sector <- factor(MathAch$sector, levels=c("Public","Catholic"))
 ```
 
 Now create a vector of mean SES values per school, using the `apply()` function. This iterates a function (mean) over a vector (ses), applying by group (school). This requires two steps, first we calculate the means fro each school, then we repeat each of them by the number of students in each school:
 
 ```{r}
-mses = tapply(MathAch$ses, MathAch$school, mean)
-MathAch$meanses = mses[as.character(MathAch$school)]
+mses <- tapply(MathAch$ses, MathAch$school, mean)
+MathAch$meanses <- mses[as.character(MathAch$school)]
 ```
 
 Create a vector of centered SES scores per student. To do this, simply subtract the school mean SES (calculated in the previous step) from the student raw score:
 
 ```{r fig.keep='none'}
-MathAch$cses = MathAch$ses - MathAch$meanses
+MathAch$cses <- MathAch$ses - MathAch$meanses
 ```
 
 Finally, make a simple boxplot of math score by school type, and a boxplot of SES by school type:
@@ -91,7 +91,8 @@ To build this model in R, load the **nlme** library, and use the `lme()` functio
 
 ```{r results='hide'}
 library(nlme)
-math.lme1 <- lme(mathach ~ meanses*cses + sector*cses, random= ~ cses | school, data=MathAch)
+math.lme1 <- lme(mathach ~ meanses * cses + sector * cses, 
+                 random = ~ cses | school, data = MathAch)
 summary(math.lme1)
 ```
 
@@ -147,11 +148,11 @@ We can conclude from this that the mean SES varies across schools, but the relat
 
 ## Data
 
-The file *speciesIntro.csv* contains a simulated dataset related the success or failure of 60 species introduced into 4 different countries. The simple goal of this analysis is see if there is a difference in the overall success in different countries. As there are several different species per country, we include the intercept as a random effect across species.
+The file *speciesIntro.csv* contains a simulated dataset related the success or failure of 60 species introduced into 4 different countries. The simple goal of this analysis is see if there is a difference in the overall success in different countries. As there are several different species per country, we include the intercept as a random effect across species. First load and plot the data. The plot we use here is a *mosaic* plot. This shows the data as bars that are proportional to the number of `0`s and `1`s at each location. In this case, Australia has the lowest overall proportion of `1`s (successful introductions).
 
 ```{r fig.keep='none'}
-sppint  = read.csv("speciesIntro.csv")
-plot(as.factor(success) ~ location, data=sppint)
+sppint <- read.csv("../datafiles/speciesIntro.csv")
+mosaicplot(location ~ success, data = sppint)
 ```
 
 ## Model
@@ -160,17 +161,22 @@ As the success variable is binary (0/1), we use the `glmer()` function from the 
 
 Note that the syntax here is a little different from the previous example; random effects are not specified as a separate parameter, but are included directly in the model formula. These are specified as an effect/variable pair; in the example below `(1|species)` means vary intercept across species groups.
 
-```{r}
+```{r message = FALSE}
 library(lme4)
-spp.glmm.1 = glmer(cbind(success, failure) ~ location + (1|species), 
-                   family = binomial, data=sppint)
+spp.glmm.1 <- glmer(cbind(success, failure) ~ location + (1|species), 
+                   family = binomial, data = sppint)
+summary(spp.glmm.1)
 ```
 
+The results tell us that the log-odds of successful introduction in Argentina (the reference location) are -0.615, or odds of about 0.54. The coefficients for the different countries give an estimate of the change in log-odds, with introductions in Australia being lower than Argentina, but introductions elsewhere being more successful (although there is little significance in the results). 
+
 ## Model comparisons
+
 Now test if location has an impact on species success or failure, by creating a new model without location, and using anova to compare models. Note that we could also use the `update()} function to achieve this.
 
-```{r results='hide'}
-spp.glmm.2 = glmer(cbind(success, failure) ~ 1 + (1|species), family = binomial, data=sppint)
+```{r results='markup'}
+spp.glmm.2 <- glmer(cbind(success, failure) ~ 1 + (1|species), 
+                    family = binomial, data = sppint)
 #spp.glmm.2 = update(fit.glmm.1, .~. -location)
 anova(spp.glmm.1, spp.glmm.2)
 ```
@@ -179,7 +185,7 @@ The results of the anova show a slight, but significant improvement in the first
 
 ## Generalized Additive Models
 ```{r echo=FALSE}
-ozone <- read.csv('ozone.csv')
+ozone <- read.csv('../datafiles/ozone.csv')
 ```
 
 Generalized Additive Models (GAMs) use methods to fit the model to the data locally, using splines to account for non-linear relationships. They also include the possibility to specify the distribution family and link function for the dependent variable. Here we will fit a GAM to a dataset of ozone concentrations covering several months.
@@ -189,7 +195,7 @@ Generalized Additive Models (GAMs) use methods to fit the model to the data loca
 - Are there any clear relationships with the ozone concentrations?
 
 We will now build a GAM linking ozone to air temperature and wind speed. GAMs are fit and explored using an add-on package called **mgcv**. Similarly to the **splines** packages, this is installed by default with a standard R installation, but is not loaded when R is first started. Load it now using the `library()` function:
-```{r}
+```{r message = FALSE}
 library(mgcv)
 ```
 To test that it has loaded, open the help page for the `gam()` function:
@@ -202,7 +208,7 @@ The `gam()` function uses the usual formula syntax in R ($\sim$). However, the i
 
 We'll build a GAM model for the ozone data, using temperature and wind speed as predictors:
 ```{r results='hide'}
-ozone.gam <- gam(ozone~s(temp)+s(wind), data=ozone)
+ozone.gam <- gam(ozone ~ s(temp) + s(wind), data = ozone)
 summary(ozone.gam)
 ```
 
@@ -212,16 +218,16 @@ Note that as we are using a normal (gaussian) family for the dependent variable,
 - Does this appear to a good job of modeling the ozone variations?
 
 Now plot the model obtained for temperature and ozone:
-```{r fig.keep='none'}
-plot(ozone.gam, resid=T, pch=16, select=1)
+```{r}
+plot(ozone.gam, resid = T, pch = 16, select = 1)
 ```
 
 - Plot the relationship with wind speed, by changing the parameter `select` to 2.
 
 As an alternative, we can use a perspective plot to look at the relationship of ozone to both temperature and wind speed. The viewing direction is controlled by the parameters `theta` (horizontal) and `phi` (vertical).
 
-```{r fig.keep='none'}
-vis.gam(ozone.gam, theta=230, phi=20)
+```{r}
+vis.gam(ozone.gam, theta = 230, phi = 20)
 ```
 
 - Try rotating the plot to get the best view of the surface.
@@ -229,23 +235,28 @@ vis.gam(ozone.gam, theta=230, phi=20)
 As the observations are from successive days over a four month period, we can try plotting the original and fitted model as a time series. We will simple make an time index vector to provide the 'x'-variable, plot the original ozone values, then overlay the modeled values:
 
 ```{r fig.keep='none'}
-timeIDX = seq(1,length(ozone$ozone))
-plot(timeIDX, ozone$ozone, type="l", 
-     xlab="Time", ylab="Ozone Conc ppb")
-lines(timeIDX, fitted(ozone.gam), col=2)
-legend("topleft",legend=c("Obs.","Est."),
-       lty=1, col=c(1,2))
+timeIDX <- seq(1, length(ozone$ozone))
+plot(timeIDX, ozone$ozone, type = "l", 
+     xlab = "Time", ylab = "Ozone Conc ppb")
+lines(timeIDX, fitted(ozone.gam), col = 2)
+legend("topleft", legend = c("Obs.", "Est."),
+       lty = 1, col = c(1,2))
 ```
 
 Finally, use the model to predict the ozone concentration for a warm, still day:
 ```{r}
-newclim <- data.frame(temp=85, wind=5)
-predict(ozone.gam, newdata=newclim, se.fit=TRUE)
+newclim <- data.frame(temp = 85, wind = 5)
+predict(ozone.gam, newdata = newclim, se.fit = TRUE)
 ```
 
 - Redo the prediction with an increase of wind speed to 15 m/s
 
 \newpage
+
+# Where to get help
+
+```{r, child = '../get-help.Rmd'}
+```
 
 # Files used in lab
 

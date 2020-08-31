@@ -1,41 +1,42 @@
 ---
 title: "GEOG 6000 Lab 05 Modeling III"
 author: "Simon Brewer"
-date: "September 19, 2017"
-output: pdf_document
+date: "August 31, 2020"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    fig_caption: true
+    css: "../style.css"
 header-includes:
    - \usepackage{tabularx}
 ---
 
-In this lab we will cover the use of generalized linear models (GLMs) in R. We will use the following three datasets:
+In this lab we will cover the use of generalized linear models (GLMs) in R. Before starting the lab, you will need to set up a new folder for your working directory. Go to your `geog6000` folder now and create a new folder for today's class called `lab05`. 
+
+We will use the following three datasets:
 
 - A dataset from a study of Irish schoolchildren *irished.csv*
 - A dataset of honors awards granted to students from three school programs: *hsa.csv*
 - A dataset of the exhaustion tests on turbines: *turbines.csv*
 
-Things to remember:
+You will need to download these files from Canvas, and move them from your `Downloads` folder to the `datafiles` folder that you made previously. 
 
-- The following font conventions are used:
-    - Normal font = text, comments etc
-    - `Courier font` = R commands
-    - *Italic font* = file names
-- R is case-sensitive for variables and functions. Iris is not the same as iris or IRIS.
-- `#` indicates comments - no need to type these
-- **Remember to change your R working directory to where your files are stored**
+Now start RStudio and change the working directory to `lab05`. As a reminder, you can do this by going to the [Session] menu in RStudio, then [Change working directory]. This will open a file browser that you can use to browse through your computer and find the folder. 
 
 **With all the examples given, it is important to not just type in the code, but to try changing the parameters and re-running the functions multiple times to get an idea of their effect.** Help on the parameters can be obtained by typing `help(functionname)` or `?functionname`. 
 
-## Generalized Linear Models
+# Generalized Linear Models
 Generalized Linear Models (GLMs) allow model fitting to non-normal data types and distributions. In R, the `glm()` function allows for fitting of these models and follows a similar format to the `lm()` function, except that we need to supply two extra parameters:
 
 - The name of the distribution that describes the dependent variables (`family`)
 - The name of the link function that is used to make the relationship linear (`link`)
 
-### Binomial Models 1
+## Binomial Models 1
 As a first example, we will fit a model to some binary data, using a binomial model. These models are also called logistic or logit models. We will use the Irish education dataset and use this to model the relationship between students taking their leaving certificate and their scores on a vocal reasoning test. Start by downloading the data from Canvas and loading it into R in a data frame called 'irished'. 
 
 ```{r}
-irished <- read.csv("irished.csv")
+irished <- read.csv("../datafiles/irished.csv")
 ```
 
 In the file, categorical data (presence/absence of leaving certificate, sex) are coded as numerical values. To convert them into factors for use in R, use the `factor` command as follows:
@@ -105,11 +106,11 @@ anova(irished.glm1, test='Chisq')
 
 - What does this tell you about the goodness-of-fit of the model?
 
-### Binomial Models 2
+## Binomial Models 2
 
 In the previous example, we had the values for each individual observation (0/1; whether or not they had taken the leaving certificate). Binomial models may also be fit to proportional data (i.e. proportion of 0's, proportion of 1's), as long as you know the number of observations. The file *turbines.csv* contains the result of a series of tests to see how long a turbine will run before developing fissures. The file contains a set of experiments in which a number of turbines were run for a set time period. The file then records how many turbines were run that experiment, how many developed fissures. We can model this outcome using a binomial GLM, by calculating the proportion of turbines with fissures in each experiment:
 ```{r}
-turbines = read.csv("turbines.csv")
+turbines = read.csv("../datafiles/turbines.csv")
 head(turbines)
 ```
 The proportion can be simply calculated as the number of fissures divided by the total number:
@@ -137,11 +138,12 @@ predict(turbine.glm, newturbine,
 ```
 Which tells us that the probability is about `r round(predict(turbine.glm, newturbine, type='response', se.fit=TRUE)$fit,3)`.
 
-### Poisson Models
+## Poisson Models
+
 Poisson models are used to build relationships with count data, for example to explain what factors may contribute to the number of awards won by students. Load the dataset from the file *hsa.csv* into a data frame called `hsa`, and explore the relationships using boxplots. As before, the school program is stored as numerical value, so we will need to convert it to a factor.
 
 ```{r}
-hsa <- read.csv("hsa.csv")
+hsa <- read.csv("../datafiles/hsa.csv")
 ```
 
 ```{r fig.keep='none'}
@@ -178,12 +180,13 @@ Try building a second, simpler model, which only uses the math score to explain 
 
 - Is the reduced model a better choice?
 
-## Exercises
+# Exercises
 
 1. The file *island2.csv* contains information about the presence or absence of a particular species of bird across a set of islands in the Mediterranean sea. The format of the file is given below. Use this file to build a model relating species presence to the island characteristics. As the response ($y$) variable consists of presence/absences, you should use a binomial model, with the logit link function. 
     - The 'incidence' variable contains information of presence/absence. Make boxplots of other variables to see which have a relationship with 'incidence'. Using this, state which variables appear to be related the presence/absence of the species
     - The two main explanatory variables are island area and island isolation. Using the `glm()` function, build a generalized linear model of the presence of bird species as explained by these variables. Report the code you used. Use the `summary()` function to obtain the coefficients, their significance and the AIC score 
     - Finally, use the model to predict the probability of presence of the species on a new island with an area of 5 and an isolation distance of 6. You will need to build a new dataframe for this island. You can either modify the approach used in the last exercise or directly make a new dataframe with these variables and values. Use the `predict()` function to make the prediction. Note that you will need to include a parameter (`type='response'`), otherwise the predicted values will not be transformed back into a 0-1 scale. Give the predicted value and its standard error (consult the help page for `predict.glm()` to do this)
+
 2. The file *tsuga.csv* has estimates of the abundance of Hemlock trees from a set of plots in the Smoky Mountain national park (data from Jason Fridley, Syracuse University). The abundance values are in classes from 0 to 10, and these follow a Poisson distribution (discrete values, zero-bounded). Use this data to make a Poisson regression model of the abundance ('cover'), using both distance to stream and elevation as explanatory variables. 
     - Give the code you used to build the model
     - Using the `summary()` function, report the coefficients as log-values and their significance and the model AIC 
@@ -192,9 +195,14 @@ Try building a second, simpler model, which only uses the math score to explain 
  
 \newpage
 
-## Files used in lab
+# Where to get help
 
-### Irish Education data set: *irished.csv*
+```{r, child = '../get-help.Rmd'}
+```
+
+# Files used in lab
+
+## Irish Education data set: *irished.csv*
 | Column header | Variable |
 | --- | --- |
 | sex | Sex of student (male = 0; female = 1) |
@@ -203,7 +211,7 @@ Try building a second, simpler model, which only uses the math score to explain 
 | lvcert | Taken leaving certificate (yes = 1; no = 0) |
 | schltype | School type |
 
-### Honor Student Award data set: *hsa.csv*
+## Honor Student Award data set: *hsa.csv*
 | Column header | Variable |
 | --- | --- |
 | id | Student ID |
@@ -211,14 +219,14 @@ Try building a second, simpler model, which only uses the math score to explain 
 | prog | School program (General = 1; Academic = 2; Vocational = 3) |
 | math | Math score |
 
-### Turbine data set: *turbines.csv*
+## Turbine data set: *turbines.csv*
 | Column header | Variable |
 | --- | --- |
 | Hours | Hours of operation |
 | Turbines | Total number of turbines |
 | Fissures | Number that developed fissures |
 
-### Mediterranean bird species data set: *island2.csv*
+## Mediterranean bird species data set: *island2.csv*
 | Column header | Variable |
 | --- | --- |
 | Incidence | Presence/Absence of species |
@@ -226,21 +234,5 @@ Try building a second, simpler model, which only uses the math score to explain 
 | Isolation | Distance to nearest neighboring island in km |
 | Quality | Estimate of quality of island, based on land cover |
 
-## R code covered in lab
-\begin{tabularx}{\linewidth}{| l | X |}
-
-\hline
-R Command & Purpose \\
-\hline
-\texttt{lm(y $\sim$ x)} & Model $y$ as a function of $x$. Note that the `$\sim$' dictates the nature of the relationhsip. Dependent variable(s) on the left hand side, independent on the right hand side \\
-\texttt{summary(model)} & Provides summary of model fit, including coefficients, $R^2$, $F$-statistic, etc \\
-\texttt{coef} & Extract coefficients of model \\
-\texttt{residuals} & Extract residuals of model \\
-\texttt{fitted} & Extract predicted $y$ values for observations \\
-\texttt{abline} & Plot model line (only really works for bivariate regression) \\
-\texttt{predict} & Predict for new values of $x$. NB: requires a data frame with a variable having the same name as the original $x$.\\
-\texttt{step} & Perform stepwise regression.\\
-\hline
-\end{tabularx}
 
 

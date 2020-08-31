@@ -353,6 +353,11 @@ lines(newx$x, pred.int[,3], lty = 2, col = 2)
 
 \newpage
 
+# Where to get help
+
+```{r, child = '../get-help.Rmd'}
+```
+
 ## Files used in lab
 
 ### Simple regression data set: *regrex1.csv*
@@ -410,32 +415,4 @@ Flat ASCII format, with each value representing elevation in a single 10x10 m ce
 | HS.Grad | Percent high-school graduates (1970) |
 | Frost | Number of days < 32F in largest city (1931-60) |
 | Area | Area of state (square miles) |
-
-## R code covered in lab
-\begin{tabularx}{\linewidth}{| l | X |}
-
-\hline
-R Command & Purpose \\
-\hline
-\textbf{Convert object types} & \\
-\hline
-\texttt{barplot} & Barplot using vector of heights \\
-\texttt{dotplot} & Simple index plot \\
-\texttt{abline} & Add reference line to figure \\
-\texttt{points} & Add points to figure \\
-\texttt{lines} & Add lines to figure \\
-\texttt{polygon} & Add filled polygon to figure \\
-\texttt{image} & Heatmap of matrix \\
-\texttt{contour} & Contour plot of matrix \\
-\texttt{persp} & 3D wireframe plot \\
-\hline
-\texttt{lm(y $\sim$ x)} & Model $y$ as a function of $x$. Note that the `$\sim$' dictates the nature of the relationhsip. Dependent variable(s) on the left hand side, independent on the right hand side \\
-\texttt{summary(model)} & Provides summary of model fit, including coefficients, $R^2$, $F$-statistic, etc \\
-\texttt{coef} & Extract coefficients of model \\
-\texttt{residuals} & Extract residuals of model \\
-\texttt{fitted} & Extract predicted $y$ values for observations \\
-\texttt{abline} & Plot model line (only really works for bivariate regression) \\
-\texttt{predict} & Predict for new values of $x$. NB: requires a data frame with a variable having the same name as the original $x$.\\
-\hline
-\end{tabularx}
 

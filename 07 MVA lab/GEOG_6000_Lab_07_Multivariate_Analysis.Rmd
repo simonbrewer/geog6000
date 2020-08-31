@@ -1,10 +1,13 @@
 ---
 title: "GEOG 6000 Lab 07 Multivariate Analysis"
 author: "Simon Brewer"
-date: "September 30, 2019"
-output: 
-  pdf_document: 
-    number_sections: yes
+date: "August 31, 2020"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    fig_caption: true
+    css: "../style.css"
 header-includes:
    - \usepackage{tabularx}
 ---
@@ -14,56 +17,50 @@ options(width=50)
 set.seed(1234)
 ```
 
-This lab is designed to cover the multivariate methods from the last two lectures, including cluster analysis and PCA. The following files will be used in this lab, all available on Canvas:
+This lab is designed to cover the multivariate methods from the last two lectures, including cluster analysis and PCA. Before starting the lab, you will need to set up a new folder for your working directory. Go to your `geog6000` folder now and create a new folder for today's class called `lab07`. The following files will be used in this lab, all available on Canvas:
 
 - A dataset of Western North America climate: *wnaclim2.csv*
 - A data set of the characteristics of cars: *cars.tab.csv*
 - The US State dataset: *statedata.csv*
 - Boston housing dataset *boston6k.csv*
 
+You will need to download these files from Canvas, and move them from your `Downloads` folder to the `datafiles` folder that you made previously. 
+
+Now start RStudio and change the working directory to `lab07`. As a reminder, you can do this by going to the [Session] menu in RStudio, then [Change working directory]. This will open a file browser that you can use to browse through your computer and find the folder. 
+
 You will also need to install the following add-on packages **fields**, **maps** and **fpc**.
-
-Things to remember:
-
-- The following font conventions are used:
-    - Normal font = text, comments etc
-    - `Courier font` = R commands
-    - *Italic font* = file names
-- R is case-sensitive for variables and functions. Iris is not the same as iris or IRIS.
-- `#` indicates comments - no need to type these
-- **Remember to change your R working directory to where your files are stored**
 
 **With all the examples given, it is important to not just type in the code, but to try changing the parameters and re-running the functions multiple times to get an idea of their effect.** Help on the parameters can be obtained by typing `help(functionname)` or `?functionname`. 
 
-\newpage
 # Distance measures and cluster analysis
 
 ## Distance measures
 We start by loading the cars dataset. This has six variables relating to engine size and performance from 38 cars from the late 1970's. 
 
 ```{r results='hide'}
-cars = read.csv("cars.tab.csv")
+cars <- read.csv("../datafiles/cars.tab.csv")
 head(cars)
 ```
 
 In order to use the cars data frame in cluster analysis, we need to do two things: first we remove the first two columns, which contain labels, then we scale the remaining data to make the variance of the different variables comparable. To do this, we use the `scale()` function, which subtracts the mean from each column and then divides by the standard deviation of that column. This is known as standardizing to zero mean and unit variance, and converts each observation into a number of standard deviations away from the mean. Note that the object returned by `scale()` has *attributes* which contain both the mean and s.d. used in standardizing the data.
+
 ```{r results='hide'}
-cars.use = cars[,-c(1,2)]
-cars.use = scale(cars.use)
+cars.use <- cars[, -c(1, 2)]
+cars.use <- scale(cars.use)
 ```
 
 To see the effect of this, make a histogram of the horsepower values on the original and standardized scale:
 ```{r fig.keep='none'}
-par(mfrow=c(2,1))
-hist(cars[,"Horsepower"], main="Horsepower: original scale")
-hist(cars.use[,"Horsepower"], main="Horsepower: standardized scale")
-par(mfrow=c(2,1))
+par(mfrow = c(2,1))
+hist(cars[, "Horsepower"], main = "Horsepower: original scale")
+hist(cars.use[, "Horsepower"], main = "Horsepower: standardized scale")
+par(mfrow = c(2, 1))
 ```
 
 Use the `dist()` function to explore the multivariate distances between different cars. This returns the distance matrix for the first four cars, using two different methods:
 ```{r results='hide'}
-dist(cars.use[1:4,], method='euclidean')
-dist(cars.use[1:4,], method='manhattan')
+dist(cars.use[1:4, ], method = 'euclidean')
+dist(cars.use[1:4, ], method = 'manhattan')
 ```
 
 Finally, create the full distance matrix for all cars for use in hierarchical clustering:
@@ -73,23 +70,26 @@ cars.dist
 ```
 
 ## Hierarchical clustering
+
 We can now use this distance matrix to perform hierarchical clustering on the cars dataset. We use the `hclust()` function, which requires the distance matrix and the type of comparison to be used between clusters as the function proceeds. We use here Ward's method, which uses the distances between the centroids of two clusters to assess their overall similarity. Once the `hclust()` function has run, we plot out the dendogram:
+
 ```{r results='hide', fig.keep='none'}
-cars.hclust = hclust(cars.dist, method='ward.D2')
-plot(cars.hclust,labels=cars$Car,main='Default from hclust')
+cars.hclust <- hclust(cars.dist, method = 'ward.D2')
+plot(cars.hclust, labels = cars$Car, main = 'Default from hclust')
 ```
 
 Each vertical line represents a group that was identified when objects were joined together into clusters. The observations in that group are represented by the branches of the dendogram that spread out below the line. For example, if we look at a height of 6, and move across the x-axis at that height, we'll cross two lines. That defines a two-cluster solution; by following the line down through all its branches, we can see the names of the cars that are included in these two clusters. The y-axis represents the similarity between observations when clusters were formed, small differences on the y-axis suggests that clusters are not particularly reliable. Big differences along the y-axis between the last merged cluster and the currently merged one, indicate that the clusters formed are probably doing a good job in showing us the structure of the data.
 
 The `rect.hclust()` function allows us to visualize what the groups will look like if cut off the tree at either a specified height (parameter: `h`) or for a set number of groups (parameter: `k`). Note that this is an overlay and you will need to first plot the dendogram
+
 ```{r results='hide', fig.keep='none'}
-plot(cars.hclust,labels=cars$Car,main='Default from hclust')
-rect.hclust(cars.hclust, k=3)
+plot(cars.hclust, labels = cars$Car, main = 'Default from hclust')
+rect.hclust(cars.hclust, k = 3)
 ```
 
 The `cutree()` function allows us to cut off the tree at some point to provide a set of groups, again using either a set number of groups or height in the tree. 
 ```{r results='hide'}
-groups.3 = cutree(cars.hclust,k=3)
+groups.3 = cutree(cars.hclust, k = 3)
 ```
 
 We can use these results to examine the characteristics of the clusters, for example, the number of cars in each cluster, or the cars that belong to cluster 1:
@@ -100,12 +100,12 @@ cars$Car[groups.3 == 1]
 
 As we have information about the country of manufacture, we can also look to see if there is a national bias in any of the groups:
 ```{r results='hide'}
-table(groups.3,cars$Country)
+table(groups.3, cars$Country)
 ```
 
 Finally, we can characterize the clusters using the original information on the cars. The `aggregate()` function allows us to calculate the median MPG, weight, etc for each cluster and helps explain why the clusters are formed. Note that we use the original data frame for this, rather than the scaled data frame, in order to have more interpretable results.
 ```{r results='hide'}
-aggregate(cars[,-c(1,2)],list(groups.3),median)
+aggregate(cars[, -c(1, 2)], list(groups.3), median)
 ```
 
 ## $k$-means clustering
@@ -120,7 +120,7 @@ library(maps)
 
 We now do the following: load the climate dataset, create a new variable with the site coordinates and define $k$, the number of groups.
 ```{r}
-wnaclim <- read.csv("wnaclim2.csv")
+wnaclim <- read.csv("../datafiles/wnaclim2.csv")
 wnaloc <- cbind(wnaclim$Longitude, wnaclim$Latitude)
 ngrp <- 6
 ```
@@ -133,43 +133,46 @@ map(add=TRUE)
 
 Prior to any clustering, we extract the variables we want to use (12 monthly values of temperature and precipitation), then scale these to remove any bias due to the difference in magnitudes of the variables:
 ```{r}
-wnaclim <- wnaclim[,seq(3,26)]
+wnaclim <- wnaclim[, seq(3,26)]
 wnaclim.s <- scale(wnaclim)
 ```
 
 We will now carry out a $k$-means classification of the WNA climate dataset. We use the scaled dataset directly, rather than the distance matrix, and run the algorithm several times from different random starts to try and get the best clustering solution, we also set the number of iterations. We use the `table()` function to get the number of observations per cluster:
 ```{r fig.keep='none'}
-wna.kmeans <- kmeans(wnaclim.s, ngrp, nstart=50, iter.max=20)
+wna.kmeans <- kmeans(wnaclim.s, ngrp, nstart = 50, iter.max = 20)
 table(wna.kmeans$cluster) 
 ```
 
 Plot the distribution of $k$-means clusters in space. We first build a color palette for the number of clusters. There are several built in palettes in R, `rainbow` is one. This produces a set of $n$ colors from this palette, which are evenly spaced along the complete palette. When plotting, we use the vector of cluster assignments as indices to assign the correct color to each observation:
 ```{r fig.keep='none'}
 mycol <- rainbow(ngrp)
-plot(wnaloc, xlab='', ylab='', pch=16, col=mycol[wna.kmeans$cluster])
-map(add=T)
+plot(wnaloc, xlab = '', ylab = '', pch = 16, col = mycol[wna.kmeans$cluster])
+map(add = TRUE)
 ```
 
 ### $k$-means prototypes
+
 In $k$-means cluster analysis, the prototype refers to the centroid of each cluster. Each prototype has a value for all the variables used in clusters (for each variable this is the mean of all variables in the set). These values are output as part of the `kmeans()` function, and are stored as `centers`:
+
 ```{r results='hide'}
 wna.kmeans$centers
 ```
 
 However, these are the scaled values, and before plotting these, we would need to convert them back to their original scale. An easier way is to use the `aagregate()` function as in the previous example. Here we get aggregate values for all monthly precipitation and temperature by cluster, then split this into two sets, one for temperature and one for precipitation:
+
 ```{r results='hide', fig.keep='none'}
 wna.centers <- aggregate(wnaclim, list(wna.kmeans$cluster), mean)
 wna.centers
-temp.centers = wna.centers[,2:13]
-ppt.centers = wna.centers[,14:25]
+temp.centers <- wna.centers[ , 2:13]
+ppt.centers <- wna.centers[ , 14:25]
 ```
 
 We can use these to make some simple climatology plots for the clusters we obtained. For this, we can use the `matplot()` function. This is a helper function, that plots all the columns of a matrix as individual series, and saves having to repeatedly add lines to a plot. As the prototypes are ordered by row, we simply transpose them to plot each cluster temperature over the 12 months of the year:
 ```{r fig.keep='none'}
-matplot(t(temp.centers), type='l', lwd=2, lty=2, col=mycol,
-        xlab="Month", ylab="Temp C")
-matplot(t(ppt.centers), type='l', lwd=2, lty=2, col=mycol,
-        xlab="Month", ylab="PPT mm")
+matplot(t(temp.centers), type = 'l', lwd = 2, lty = 2, col = mycol,
+        xlab = "Month", ylab = "Temp C")
+matplot(t(ppt.centers), type = 'l', lwd = 2, lty = 2, col = mycol,
+        xlab = "Month", ylab = "PPT mm")
 ```
 
 ## Testing clustering solutions
@@ -199,7 +202,7 @@ This is calculated use the `silhouette()` function from **cluster**. This functi
 
 ```{r results='hide'}
 sil.out <- silhouette(wna.kmeans$cluster, dist(wnaclim.s))
-sil.out[1:4,]
+sil.out[1:4, ]
 ```
 
 This produces a $n \times 3$ data frame that contains for each row: the assigned cluster, the next nearest cluster and the silhouette value for that observation. Remember that this index varies between -1 and 1, with the following interpretation:
@@ -211,18 +214,18 @@ This produces a $n \times 3$ data frame that contains for each row: the assigned
 We can then easily calculate the average silhouette index for this set of clusters as:
 
 ```{r fig.keep='none'}
-mean(sil.out[,3])
+mean(sil.out[, 3])
 ```
 
 Or the average index per cluster as:
 ```{r results='hide'}
-tapply(sil.out[,3], sil.out[,1], mean)
+tapply(sil.out[, 3], sil.out[, 1], mean)
 ```
 
 Finally, we can make a silhouette plot, which plots the index for each observation, sorted by cluster and by index value. This is an easy way to inspect the cluster output for possible problems. If we specify a set of $k$ colors, then each cluster will be colored differently (we can use the colors that were generated for the map above).
 
 ```{r fig.keep='none'}
-plot(sil.out, col=mycol, main="WNA Climate Silhouette Plot")
+plot(sil.out, col = mycol, main = "WNA Climate Silhouette Plot")
 ```
 
 [This may not plot clearly to the screen. If you are having difficulty in seeing the silhouette plot, try plotting to a PNG or PDF file instead.]
@@ -235,7 +238,7 @@ The goal here is to test different choices of $k$, the number of groups in $k$-m
 ch.out <- rep(NA,20) ## Calinksi index
 sil.out <- rep(NA,20) ## Silhouette index
 for (i in 2:20) {
-  wna.kmeans <- kmeans(wnaclim.s, centers=i, nstart=50)
+  wna.kmeans <- kmeans(wnaclim.s, centers = i, nstart = 50)
   ch.out[i] <- calinhara(wnaclim.s, wna.kmeans$cluster)
   tmp <- silhouette(wna.kmeans$cluster, dist(wnaclim.s))
   sil.out[i] <- mean(tmp[,3])
@@ -244,32 +247,31 @@ for (i in 2:20) {
 
 We can now plot the changes in the Calinski-Harabasz index as the number of groups increases:
 ```{r fig.keep='none'}
-plot(1:20,ch.out, type='b', lwd=2,
-     xlab="N Groups", ylab="C", main="Calinski-Harabasz index")
+plot(1:20,ch.out, type = 'b', lwd = 2,
+     xlab = "N Groups", ylab = "C", main = "Calinski-Harabasz index")
 ```
 
 Or the average silhouette index: 
 ```{r fig.keep='none'}
-plot(1:20,sil.out, type='b', lwd=2,
-     xlab="N Groups", ylab="C", main="Average silhouette index")
+plot(1:20,sil.out, type = 'b', lwd = 2,
+     xlab = "N Groups", ylab = "C", main = "Average silhouette index")
 ```
 
-Both of these show fairly clear maximum values at around 3 groups, suggesting the $k=3$ maybe the best set of clusters for this data. But remember: **these are tools to help you decide how many clusters are needed, and your own judgement is as important**. For example, you may need a greater number of groups to understand the patterns in the data, or a suggested cluster may not have a useful explanation. 
+Both of these show fairly clear maximum values at around 3 groups, suggesting the $k=3$ maybe the best set of clusters for this data. But remember: **these are tools to help you decide how many clusters are needed, and your own judgment is as important**. For example, you may need a greater number of groups to understand the patterns in the data, or a suggested cluster may not have a useful explanation. 
 
-\newpage
 # Principle Component Analysis
 Load the dataset of US State characteristics, remove the first column (state names) and add it back as row names (this will help in the output):
 
 ```{r results='hide'}
-state <- read.csv("statedata.csv")
-state2 <- state[,-1]
-rownames(state2) <- state[,1]
+state <- read.csv("../datafiles/statedata.csv")
+state2 <- state[, -1]
+rownames(state2) <- state[, 1]
 ```
 
 R has two functions for PCA, `princomp()`, which uses eigenanalysis to decompose the data matrix and `prcomp()`, which uses singular value decomposition (SVD). While these are generally comparable, `prcomp()` is recommended for numerical accuracy. As the original data have a variety of units, it is necessary to account for this by using the correlation matrix (in `princomp()`) or by scaling the data to zero mean and unit standard deviation (in `prcomp()`).
 
 ```{r results='hide'}
-state.pca <- prcomp(state2, scale=TRUE)
+state.pca <- prcomp(state2, scale = TRUE)
 ```
 
 Use the `summary()` function to examine the eigenvalues of the PCA results. These are expressed in standard deviation units (of the original data), and are used to calculate the proportion of variance explained by each principal component. The first component will explain the greatest amount of variance, this declines with subsequent components. Note that a) there are as many components as original variables ($p$) and b) that the full set of components explain 100\% of the total variance. 
@@ -297,31 +299,31 @@ The loadings reflect both the strength and the direction of association (the dir
 
 The site scores are contained in the variable `x`, giving the association between each observation and the new components. As before, high values indicate greater associations --- note that the direction of association can be positive or negative. This will visualize the scores for the first four components:
 ```{r results='hide'}
-state.pca$x[,1:4]
+state.pca$x[, 1:4]
 ```
 
 With this information, we can extract the scores for the states on any given component. By sorting this, we can obtain a gradient of states from negative values (high life expectancy and high school graduation) to positive values (high illiteracy and murder):
 ```{r results='hide'}
-sort(state.pca$x[,1])
+sort(state.pca$x[, 1])
 ```
 
 The results of PCA and other ordinations are traditionally visualized with a biplot. This is a two-dimensional plot where the two axes are selected principal components. The biplot includes the position of the observations, based on their scores and vectors representing the original variables. 
 
 ```{r fig.keep='none'}
-biplot(state.pca, xlim=c(-0.4,0.6))
+biplot(state.pca, xlim = c(-0.4, 0.6))
 ```
 
 By default, the `biplot()` function plots the first two components. The previous output suggests that the third and fourth components also explain part of the variance. We can plot these out by using the `choices` parameter, e.g. for to plot axes 1 and 3:
 
 ```{r fig.keep='none'}
-biplot(state.pca, choices=c(1,3))
+biplot(state.pca, choices = c(1, 3))
 ```
 
 This shows a new arrangement of the data. The third axis is split between area and population, and can be interpreted as representing population density.
 
 # Exercises
 
-1. The file \emph{boston6k.csv} contains information on house prices in Boston by census tract, as well as various socio-economic and environmental factors. Use this to cluster the tracts by these factors (NOT by price), then examine the characteristics of the clusters, whether they show a difference in house price and if there is any spatial structure to the clusters. Use only the following variables in the cluster analysis: CRIM, ZN, INDUS, CHAS, NOX, RM, AGE, DIS, RAD, TAX, PTRATIO, B, LSTAT (see the file description for explanations of these). You will need to scale the data as the variables are in a wide range of units. 
+1. The file *boston6k.csv* contains information on house prices in Boston by census tract, as well as various socio-economic and environmental factors. Use this to cluster the tracts by these factors (NOT by price), then examine the characteristics of the clusters, whether they show a difference in house price and if there is any spatial structure to the clusters. Use only the following variables in the cluster analysis: CRIM, ZN, INDUS, CHAS, NOX, RM, AGE, DIS, RAD, TAX, PTRATIO, B, LSTAT (see the file description for explanations of these). You will need to scale the data as the variables are in a wide range of units. 
     + Start by running $k$-means cluster analysis on the data from 2 to 20 clusters, using the approach outlined above. You should calculate *either* the silhouette index or the Calinski-Harabasz index for each set of clusters. Provide a plot of the index values, and identify the number of clusters ($k$) that gives the best solution
     + In your opinion, is this the best solution, or would more or less clusters be useful?
     + Re-run `kmeans()` using your chosen number for $k$
@@ -336,7 +338,10 @@ This shows a new arrangement of the data. The third axis is split between area a
     + Produce a map of the sites scores on axis 1, using the `quilt.plot()` function from the **fields** package (code to do this is given with the file description below). With reference to the association between the variables and axis 1 (previous question), give a short description of the map (e.g. where do you find negative or positive values and what variables are these associated with?). Does this make sense in terms of what you know about the geography and climate of North America?
     + Finally, produce a map of the sites scores on the second axis and give a short description of the spatial pattern in terms of the associated variables
 
-\newpage
+# Where to get help
+
+```{r, child = '../get-help.Rmd'}
+```
 
 # Files used in lab
 
@@ -410,49 +415,16 @@ This shows a new arrangement of the data. The third axis is split between area a
 | 34 | annp	 | Annual precipitation |
 
 ## Code to map PCA scores
-Note that this code requires the package **fields** to be installed and loaded. This includes two functions we can use to make a simple map: `quilt.plot()` which produces a color-scaled, gridded map from a set of point observations; and `world()` which adds a simple coastline. The object `wnaclim.pca` was made in a previous step using \texttt{prcomp()}. 
+Note that this code requires the package **fields** to be installed and loaded. This includes two functions we can use to make a simple map: `quilt.plot()` which produces a color-scaled, gridded map from a set of point observations; and `world()` which adds a simple coastline. The object `wnaclim.pca` was made in a previous step using `prcomp()`. 
+
 ```{r echo=FALSE, message=FALSE}
 require(fields)
-wnaclim = read.csv("wnaclim2.csv")
-wnaclim.pca = prcomp(wnaclim[, seq(3:26)], scale=TRUE)
+wnaclim <- read.csv("../datafiles/wnaclim2.csv")
+wnaclim.pca <- prcomp(wnaclim[, seq(3:26)], scale = TRUE)
 ```
 ```{r}
-wnaclim.pca.score = wnaclim.pca$x[,1]
-quilt.plot(wnaclim$Longitude,wnaclim$Latitude,wnaclim.pca.score)
-world(add=TRUE)
+wnaclim.pca.score <- wnaclim.pca$x[, 1]
+quilt.plot(wnaclim$Longitude, wnaclim$Latitude, wnaclim.pca.score)
+world(add = TRUE)
 ```
-
-
-\section{R code covered in lab}
-
-\begin{tabularx}{\linewidth}{| l | X |}
-
-\hline
-R Command & Purpose \\
-\hline
-\multicolumn{2}{|l|}{\textbf{Cluster analysis}} \\
-\hline
-\texttt{dist} & Calculates distance between a set of multivariate observations (e.g. in a data frame. Returns triangular distance matrix with pairwise distance. Parameter ``method'' chooses distance metric\\
-\texttt{hclust} & Performs hierarchical clustering. Takes a distance matrix as input. Parameter ``method'' chooses the method of cluster comparisons\\
-\texttt{rect.hclust} & Adds rectangles to hierarchical cluster to delimit a set number of clusters. Parameter ``k'' chooses the cluster number\\
-\texttt{cutree} & Cuts a hierarchical cluster classification into a set number of clusters. Parameter ``k'' chooses the cluster number\\
-\texttt{kmeans} & Performs $k$-means cluster analysis. Parameter ``centers'' chooses the cluster number. Parameter ``nstart'' repeats the $k$-means analysis $nstart$ times, and returns the best solution\\
-\texttt{calinhara} & Calculates the Calinski-Harabasz index for a cluster solution. Requires the \textbf{fpc} package\\
-\texttt{silhouette} & Calculates the silhouette index for a cluster solution. Requires the \textbf{cluster} package\\
-\hline
-\multicolumn{2}{|l|}{\textbf{Principal component analysis}} \\
-\hline
-\texttt{prcomp} & Performs principal component analysis on a matrix or data frame using singular value decomposition. Parameter ``scale'' scales the data before analysis. See also \texttt{princomp} for eigenanalysis methods\\
-\texttt{screeplot} & Produces a screeplot --- the eigenvalue for each component of a PCA\\
-\texttt{biplot} & Produces a biplot of the output from a PCA. Parameter ``choices'' selects the components (axes) to plot\\
-\hline
-\multicolumn{2}{|l|}{\textbf{Other}} \\
-\hline
-\texttt{map} & Adds a simple map outline to a plot. Requires the \textbf{maps} package\\
-\texttt{quilt.plot} & Function to quickly grid spatial point data for plotting\\
-\texttt{rainbow} & Creates a color palette using a rainbow color scale\\
-\texttt{scale} & Scales each column of a data frame. Default subtracts the mean and divides by the standard deviation to give $z$-scores (these can be changed). \\
-\hline
-
-\end{tabularx}
 

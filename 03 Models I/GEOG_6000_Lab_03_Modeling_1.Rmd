@@ -43,11 +43,11 @@ Now start RStudio and change the working directory to `lab03`. As a reminder, yo
 
 **With all the examples given, it is important to not just type in the code, but to try changing the parameters and re-running the functions multiple times to get an idea of their effect.** Help on the parameters can be obtained by typing `help(functionname)` or `?functionname`. 
 
-## Other plot types
+# Other plot types
 
 Some more advanced plotting examples are given here to give further demonstration of plotting multiple data series, including series with different scales, plotting matrices as raster images or as contours. Only a basic description of each plot is given, so use the `help()` function to look at any functions that you are not familar with. With any time remaining, start working through these examples and don't hesitate to ask for help as you go. 
 
-### Bar plots
+## Bar plots
 This makes a simple barplot using a dataset of Virginia death rates by age and urban/rural split. The colors for the bars are generated using `heat.colors()` which creates a color palette. Look at the help for `barplot()` to see options to arrange the bars differently. 
 
 ```{r fig.keep='none'}
@@ -57,7 +57,7 @@ barplot(as.matrix(VADeaths), beside=T, legend = rownames(VADeaths),
 	col = mycol)
 ```
 
-### Dot charts
+## Dot charts
 We have already used dot charts to visualize a small set of observations. These also adapt to having two different categories, as with the Virginia dataset. We need to convert the dataframe to a matrix, then can plot it. By transposing the matrix in the second example, we can change the hierarchy of the groupings.
 ```{r fig.keep='none'}
 VADeaths.m <- as.matrix(VADeaths)
@@ -65,7 +65,7 @@ dotchart(VADeaths.m)
 dotchart(t(VADeaths.m))
 ```
 
-### Plotting multiple series with points
+## Plotting multiple series with points
 In this example, we will plot death rate by age class but with a different series for each combination of sex and urban/rural. We start by generating a set of age class midpoints, then add the series with different colors and symbols, and finally add a legend explaining the points. Note that the plot does not adjust as extra data series are added, so we need to manually set the limits of the y-axis in the first `plot()` function. 
 ```{r fig.keep='none'}
 cmp <- c(52, 57, 62, 67, 72)
@@ -78,7 +78,7 @@ legend("topleft", legend = c("Rural Male","Rural Female","Urban Male","Urban Fem
 	col = c(1,2,3,4), pch = c(1,2,3,4))
 ```
 
-### Plotting multiple series with lines
+## Plotting multiple series with lines
 
 The file *ipccScenario_1900_2100.csv* contains the results of simulations of annual global temperature from 1900 to 2100 under a range of socio-economic scenarios (commit, b1, a1b, a2). The values are deviations from temperature in the year 2000. Each scenario has a median value and values representing the range of possible values (high/low). We will make a plot showing the four median simulated temperatures. 
 
@@ -95,7 +95,7 @@ legend("topleft",legend = c("Commit","B1","A1B","A2"),
   lty = 1, lwd = 2, col = c('orange','blue','green','red'))
 ```
 
-### Plotting polygons
+## Plotting polygons
 Here, we use a polygon to plot the range of one of the scenarios of temperature change, and then overlay the median value as a line. We need to create the full set of coordinates for the polygon, which may be obtained by plotting in the order of the series for the low range, then reversing the order of the high range. 
 
 ```{r fig.keep='none'}
@@ -117,7 +117,7 @@ lines(ipcc$yrs, ipcc$commitMed, lwd = 2, col = 'orange')
 
 This allows you to overplot several polygons and see where they overlap. If you're feeling up to the challenge, try adding polygons showing the range of the other three scenarios (changing the angle of the shading lines will help here).
 
-### Plotting images
+## Plotting images
 
 R has a series of functions for plotting matrices, in a way similar to plotting raster images. This will use a small text file with elevation information for the Maunga Whau volcano. Start by reading this, then creating the coordinates (x and y) and a matrix `z`, with the elevation multiplied by 2 to exaggerate the relief. Note that we will look at better functions for plotting spatial data later in the semester
 
@@ -163,7 +163,7 @@ persp(x, y, z, theta = 130, phi = 30, scale = FALSE,
       border = NA, box = FALSE)
 ```
 
-### Graphic output
+## Graphic output
 
 As a reminder, you can output any figure to a file, rather than on screen as follows: 
 ```{r results='hide', eval=FALSE}
@@ -207,10 +207,10 @@ To just obtain the coefficients of the model, type:
 coef(ex1.lm)
 ```
 
-## Model diagnostics
+# Model diagnostics
 We'll now go through the steps of running model diagnostics
 
-### ANOVA with linear models
+## ANOVA with linear models
 
 The first diagnostic to run is an ANOVA on the model fit. This uses the ratio of explained/unexplained variance to see if more variance is captured by the model, than is left in the residuals. This ratio is based on the mean sum of squares explained by the model and the remaining mean sum of squares in the residuals. We will use the `anova()` to calculate the ANOVA, as the output is slightly easier to work with than the `aov()` fucntion we previously used:
 
@@ -226,7 +226,7 @@ Look through the output and try to find the following values:
 - The $F$-statistic
 - The $p$-value
 
-### The `summary()` function
+## The `summary()` function
 
 Other model diagnostics can be obtained by using the `summary()` function. This adapts to the model object and produces a fairly long list of output:
 
@@ -244,7 +244,7 @@ Note that the results of the $F$-test from the ANOVA are given on the last line.
 
 - Do you think this is a good model? 
 
-### Linearity check
+## Linearity check
 
 A first and simple check on the model is simply to plot the model line through the observations. The function `abline()` allows you to add straight lines to a plot; if it is used with a model object, then it will plot the model line (this only really works for bivariate models). You can also use it to plot horizontal and vertical lines on a plot. Note the `col` parameter that allows you to change the color of the line. This can be used with most plotting commands to distinguish different series on the same plot.
 
@@ -255,7 +255,7 @@ abline(ex1.lm, col = "red")
 
 As we have built a linear model, we expect that the data show a linear relationship. If the data points are scattered randomly above and below the line, this supports a linear relationship. 
 
-### Model standard errors
+## Model standard errors
 
 Standard errors for the model fit can be generated using the `predict()` function, with the parameter `int="confidence"`. Note that these are the model errors, giving a confidence interval within which the model most likely falls. The range of this confidence interval is set using the parameter `level`, here set to 0.95 or 95% CI. The output of the `predict()` function will be a three column matrix with predicted value (`fit`) and lower (`lwr`) and upper (`upr`) intervals. 
 
@@ -279,7 +279,7 @@ lines(newx$x, newy[,"lwr"], col = 3, lty = 2)
 lines(newx$x, newy[,"upr"], col = 3, lty = 2)
 ```
 
-### Residual plots
+## Residual plots
 Next, we will make a series of plots with the model residuals. The assumption behind the model is that these should be normally distributed and independent. So we will look for both normality and patterns in the residuals. Examples of patterns are clusters of negative or positive residuals when plotted. 
 
 Model residuals can be extracted using the `residuals()` function and the model object, allowing us to use thhese in tests and plots. 
@@ -309,7 +309,7 @@ Finally, we'll make a plot of Cook's distance for each observation. This is a me
 plot(ex1.lm, which = 4)
 ```
 
-### Shapiro-Wilk test
+## Shapiro-Wilk test
 
 The Shapiro-Wilk test can be used to examine how close a set of values are to a normal distribution. We can use this here to test the normality of the residuals of your model. We will run this here, even though the visual examination does not suggest any evidence for non-normality
 
@@ -319,7 +319,7 @@ shapiro.test(ex1.res)
 
 The null hypothesis is that the data *are* normally distributed. Here we get a high $p$-value, and no evidence to reject the null. 
 
-## Prediction with a simple model
+# Prediction with a simple model
 Now use the model you have created to predict new values of $y$ for values of $x$ using the `predict()` function. As before, we need to make a new dataframe containing a variable(s) with the same name(s) as the original data. Predictions for new values of 'x' can then be made with the `predict()` function.
 
 ```{r}
@@ -358,15 +358,15 @@ lines(newx$x, pred.int[,3], lty = 2, col = 2)
 ```{r, child = '../get-help.Rmd'}
 ```
 
-## Files used in lab
+# Files used in lab
 
-### Simple regression data set: *regrex1.csv*
+## Simple regression data set: *regrex1.csv*
 | Column header | Variable |
 | --- | --- |
 | y | Dependent variable |
 | x | Independent variable |
 
-### Virginia mortality dataset: *VADeaths.csv*
+## Virginia mortality dataset: *VADeaths.csv*
 | Column header | Variable |
 | --- | --- |
 | X | Site elevation |
@@ -376,7 +376,7 @@ lines(newx$x, pred.int[,3], lty = 2, col = 2)
 | Urban.Male | Urban male death rates per 1000 |
 | Urban.Female | Urban female death rates per 1000 |
 
-### IPCC AR4 temperature simulations *ipccScenario_1900_2100.csv*
+## IPCC AR4 temperature simulations *ipccScenario_1900_2100.csv*
 | Column header | Variable |
 | --- | --- |
 | yrs | Year |
@@ -393,17 +393,17 @@ lines(newx$x, pred.int[,3], lty = 2, col = 2)
 | a2Med | A2 scenario median estimate |
 | a2Hi | A2 scenario high estimate |
 
-### IPCC CO2 concentration scenarios: *tar-isam_CO2.csv*
+## IPCC CO2 concentration scenarios: *tar-isam_CO2.csv*
 | Column header | Variable |
 | --- | --- |
 | Year | Year |
 | Cols 2-12 | CO2 concentration under different |
 |  | emission scenarios |
 
-### Maunga Whau DEM: *volcanodem.txt*
+## Maunga Whau DEM: *volcanodem.txt*
 Flat ASCII format, with each value representing elevation in a single 10x10 m cell
 
-### US State data set: *statedata.csv*
+## US State data set: *statedata.csv*
 | Column header | Variable |
 | --- | --- |
 | State | Dependent variable |

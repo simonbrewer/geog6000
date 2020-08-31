@@ -12,8 +12,7 @@ header-includes:
    - \usepackage{tabularx}
 ---
 
-In this lab, we will look at how to build basic models in R, how to extend them to include some simple terms and how to perform some simple diagnostics. Before starting the lab, you will need to set up a new folder for your working directory. Go to your `geog6000` folder now and create a new folder for today's class called `lab03`. 
-
+In this lab, we will look at how to build basic models in R, how to extend them to include some simple terms and how to perform some simple diagnostics. Before starting the lab, you will need to set up a new folder for your working directory. Go to your `geog6000` folder now and create a new folder for today's class called `lab04`. 
 
 
 We will be using the following files for these examples:
@@ -23,6 +22,12 @@ We will be using the following files for these examples:
 - Body temperature dataset: *normtemp.csv*
 - A dataset with state characteristics, (U.S. Department of Commerce, 1977): *statedata.csv*
 - A dataset from a study of Irish schoolchildren *irished.csv*
+- An R script to simulate coin tosses *cointoss.R*
+
+You will need to download these files from Canvas, and move them from your `Downloads` folder to the `datafiles` folder. 
+
+Now start RStudio and change the working directory to `lab04`. As a reminder, you can do this by going to the [Session] menu in RStudio, then [Change working directory]. This will open a file browser that you can use to browse through your computer and find the folder. 
+
 
 **With all the examples given, it is important to not just type in the code, but to try changing the parameters and re-running the functions multiple times to get an idea of their effect.** Help on the parameters can be obtained by typing `help(functionname)` or `?functionname`. 
 
@@ -45,7 +50,7 @@ source("plotIrish.r")
 ```
 And R will read through the script, executing each command in turn. Now if there are any mistakes or changes to be made, you can simply edit the script and re-run it.
 
-## Programming flow
+# Programming flow
 
 R contains the usual commands to control the flow of a program (`if()`, `for()`, `while()`). 
 
@@ -57,7 +62,7 @@ for (i in 1:10) {print(i)}
 
 This runs a loop ten times, each time printing out the value of the iterator `i`. Note the format of the loop: the details of the loop are given in parentheses, and the commands to execute at each iteration are given between the curly brackets.
 
-A slightly more complex example is given in the script *cointoss.r* (on Canvas).
+A slightly more complex example is given in the script *cointoss.R* (on Canvas).
 
 ```{r results='hide', eval=FALSE}
 source("cointoss.r")
@@ -67,7 +72,7 @@ This uses a for loop to simulate 100 coin tosses. In each iteration, a random nu
 
 Try to extend the script by increasing the number of loops, and by calculating the proportion of heads from the total number of loops at the end. 
 
-## Creating your own functions
+# Creating your own functions
 
 Once you have some experience with R, it is fairly easy to create your own functions. This is particularly useful if you need to repeat a set of analyses several times. The following code creates a function to calculate the standard deviation. 
 
@@ -112,7 +117,7 @@ Look at the various diagnostic outputs from the model
 - Which of the coefficients are significantly different from zero?
 - What is the result of the $F$-test?
 
-## Variance inflation
+# Variance inflation
 The independent variables used in this model show strong evidence of collinearity (i.e. correlations between the X variables). To check this make a correlation matrix as follows:
 
 ```{r results='hide'}
@@ -138,7 +143,7 @@ mod.2 <- lm(RUNOFF ~ AP3 + OP3, data = runoff)
 summary(mod.2)
 ```
 
-## Comparing models
+# Comparing models
 
 Use the `summary()` function to examine the two models (`mod.1` and `mod.2`). Which of these appears to a better model? Remember model comparison should be based on goodness-of-fit (Regression Sum of Squares vs. Error Sum-of-Squares) and the number of parameters. 
 
@@ -149,7 +154,7 @@ anova(mod.1, mod.2)
 
 - Does the reduced model appear much worse than the full model?
 
-## Automatic variable selection
+# Automatic variable selection
 
 For a datasets with multiple possible explanatory variables, such as the runoff dataset, the potential number of different combinations of variables makes it impractical to test each one manually. Stepwise variable selection helps by adding or removing variables in an iterative way until the best model is reached. This can be done in R by using the `step()` function. This requires you give an initial model (e.g. the null model) and a target model (e.g. the full model). The `step()` function uses the Akaike Information Criterion (AIC) to judge improvement in model fit. 
 
@@ -203,7 +208,7 @@ This returns 3 coefficients, for the tailor, soldier and spy categories. R uses 
 
 - What is the average IQ for children of spies? [Note: these labels were made up and should not be taken to reflect the real IQ of spies' children]
 
-### Centering and scaling
+## Centering and scaling
 Next, we'll build a third model that relates the child's IQ to the mothers IQ score. Both of these are continuous variables, so we no longer need to worry about dummy variables. Before proceeding with the model, we will center and scale the mother's IQ scores to help in interpretability. To do this, we subtract the mean value of mother's IQ, then divide by 10. 
 
 ```{r results='hide'}
@@ -221,7 +226,7 @@ An alternative approach is to convert all independent variables to $z$-scores. T
 kidiq$mom.iqz <- scale(kidiq$mom.iq)
 ```
 
-### Adding both variables
+## Adding both variables
 
 Next, we'll build a model that relates the child's IQ to the mothers IQ score, and includes a dummy variable representing whether or not the mother finished high school. We use the centered and scaled variable as before:
 
@@ -234,7 +239,7 @@ The coefficient for the dummy variable in this model again represents the offset
 
 - Write out the model for children of mothers who did finish high school
 
-### Interactions
+## Interactions
 Including interactions between independent ($X$) variables in regression models allows us to account for dependencies between these variables, and how these may influence the relationship between individual $x$'s and the response variable ($y$). Interactions may be including directly as an extra term in a model, by using a colon (`x1:x2`) between the two x's. Alternatively, using a star (`x1*x2`) provides a short cut to include the interaction and the individual terms. 
 
 Now we build the model, including the interaction term:
@@ -279,7 +284,7 @@ abline(coef(kidiq.lm5)[1] + coef(kidiq.lm5)[2],
 
 - Try adapting this plot to plot the model with no interaction between the two independent variables from the previous section.
 
-## Exercises
+# Exercises
 
 1. In the previous lab, we used the file *statedata.csv* to examine the relationship between life expectancy and other socio-economic variables for the U.S. states. Using the same data set, now use stepwise regression (`step()`) to obtain the best model to estimate life expectancy. You will first need to make a new dataframe that excludes the first column of statedata (`statedata2 <- statedata[,-1]`).
     + Build the null model (mod0) and full model (mod1)
@@ -296,9 +301,14 @@ abline(coef(kidiq.lm5)[1] + coef(kidiq.lm5)[2],
     + Build a subset model using only weight and then use the `anova()` function to test whether or not there is a significant improvement in the full model over the subset. Give the $F$-statistic, the associated $p$-value and state whether or not you believe the full model to be better
 \newpage
 
-## Files used in lab
+# Where to get help
 
-### Southern California runoff data set: *SoCal_Runoffm.csv*
+```{r, child = '../get-help.Rmd'}
+```
+
+# Files used in lab
+
+## Southern California runoff data set: *SoCal_Runoffm.csv*
 | Column header | Variable |
 | --- | --- |
 | Year | Observation year |
@@ -310,7 +320,7 @@ abline(coef(kidiq.lm5)[1] + coef(kidiq.lm5)[2],
 | OPSLAKE | Snowfall at site 6 | 
 | RUNOFF | Stream runoff near Bishop, CA | 
 
-### Child/mother IQ data set: *kidiq.csv*
+## Child/mother IQ data set: *kidiq.csv*
 | Column header | Variable |
 | --- | --- |
 | kid.score | Child's IQ score |
@@ -319,7 +329,7 @@ abline(coef(kidiq.lm5)[1] + coef(kidiq.lm5)[2],
 | mom.work | Mother's work category |
 | mom.age | Mother's age |
 
-### Body temperature dataset: *normtemp.csv*
+## Body temperature dataset: *normtemp.csv*
 | Column header | Variable |
 | --- | --- |
 | Blank | Observation number |
@@ -327,7 +337,7 @@ abline(coef(kidiq.lm5)[1] + coef(kidiq.lm5)[2],
 | sex | Sex |
 | weight | Weight (kg) |
 
-### US State data set: *statedata.csv*
+## US State data set: *statedata.csv*
 | Column header | Variable |
 | --- | --- |
 | State | Dependent variable |
@@ -340,7 +350,7 @@ abline(coef(kidiq.lm5)[1] + coef(kidiq.lm5)[2],
 | Frost | Number of days < 32F in largest city (1931-60) |
 | Area | Area of state (square miles) |
 
-### Irish Education data set: *irished.csv*
+## Irish Education data set: *irished.csv*
 | Column header | Variable |
 | --- | --- |
 | sex | Sex of student (male = 0; female = 1) |
@@ -348,23 +358,6 @@ abline(coef(kidiq.lm5)[1] + coef(kidiq.lm5)[2],
 | fathocc | Prestige score of fathers occupation |
 | lvcert | Taken leaving certificate (yes = 1; no = 0) |
 | schltype | School type |
-
-## R code covered in lab
-\begin{tabularx}{\linewidth}{| l | X |}
-
-\hline
-R Command & Purpose \\
-\hline
-\texttt{lm(y $\sim$ x)} & Model $y$ as a function of $x$. Note that the `$\sim$' dictates the nature of the relationship. Dependent variable(s) on the left hand side, independent on the right hand side \\
-\texttt{summary(model)} & Provides summary of model fit, including coefficients, $r^2$, $F$-statistic, etc \\
-\texttt{coef} & Extract coefficients of model \\
-\texttt{residuals} & Extract residuals of model \\
-\texttt{fitted} & Extract predicted $y$ values for observations \\
-\texttt{abline} & Plot model line (only really works for bivariate regression) \\
-\texttt{predict} & Predict for new values of $x$. NB: requires a data frame with a variable having the same name as the original $x$.\\
-\texttt{step} & Perform stepwise regression.\\
-\hline
-\end{tabularx}
 
 \section{Appendix: Making a VIF function}
 \label{sec:vif}

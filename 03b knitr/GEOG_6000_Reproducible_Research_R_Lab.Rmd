@@ -235,6 +235,11 @@ If you need to set chunk options for the entire diagram, this can be done using 
 
 Any options added to this (between the parentheses) will then be applied to all chunks. 
 
+# Where to get help
+
+```{r, child = '../get-help.Rmd'}
+```
+
 
 [kbID]: http://kbroman.github.io
 [mdID]: https://daringfireball.net/projects/markdown/syntax

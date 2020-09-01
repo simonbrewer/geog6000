@@ -28,7 +28,7 @@ This lab will introduce you to mixed effects (hierarchical) modeling and briefly
 Before starting the lab, you will need to set up a new folder for your working directory. Go to your `geog6000` folder now and create a new folder for today's class called `lab06`. The following files will be used in this lab, all available on Canvas:
 
 - The Math achievement dataset  *MathAch.csv*
-- A dataset of introduced species   *speciesIntro.csv*
+- A dataset of introduced species   *speciesIntro2.csv*
 - A dataset of daily ozone concentrations   *ozone.csv*
 
 You will need to download these files from Canvas, and move them from your `Downloads` folder to the `datafiles` folder that you made previously. 
@@ -180,19 +180,32 @@ We can conclude from this that the mean SES varies across schools, but the relat
 
 ## Data
 
-The file *speciesIntro.csv* contains a simulated dataset related the success or failure of 60 species introduced into 4 different countries. The simple goal of this analysis is see if there is a difference in the overall success in different countries. As there are several different species per country, we include the intercept as a random effect across species. First load and plot the data. The plot we use here is a *mosaic* plot. This shows the data as bars that are proportional to the number of `0`s and `1`s at each location. In this case, Australia has the lowest overall proportion of `1`s (successful introductions).
+The file *speciesIntro2.csv* contains a simulated dataset related the success or failure of 60 species introduced into 4 different countries. The simple goal of this analysis is see if there is a difference in the overall success in different countries. As there are several different species per country, we include the intercept as a random effect across species. First load and examine the data: 
 
 ```{r}
 
-sppint <- read.csv("../datafiles/speciesIntro.csv")
+sppint <- read.csv("../datafiles/speciesIntro2.csv")
 
-mosaicplot(location ~ success, data = sppint)
+str(sppint)
 
+```
+
+The table gives for each species and location the number of successful and failed introductions. As we want to model the overall success, we need to first convert this to proportion, which we can then model as a binomial process. We first calculate the sum of *trials* (the number of each species that were introduced), then divide the number of successes by this to get the proportion. 
+
+```{r}
+sppint$total = sppint$success + sppint$failure
+sppint$prop = sppint$success / sppint$total
+```
+
+And visualize the success rate as a proportion of trials:
+
+```{r}
+boxplot(prop ~ location, sppint)
 ```
 
 ## Model
 
-As the success variable is binary (0/1), we use the `glmer()` function from the **lme4**. This uses the same arguments as the `glm()` models we looked at earlier this semester, with a `family` parameter to specify the distribution of the dependent variable. As this is a binary variable, we specify it as a two-column matrix (success and failure) in the model, using `cbind()`.
+As the success variable is proportional ([0,1]), we use the `glmer()` function from the **lme4**. This uses the same arguments as the `glm()` models we looked at earlier this semester, with a `family` parameter to specify the distribution of the dependent variable. As this is a binary variable, we specify it as a two-column matrix (success and failure) in the model, using `cbind()`. As we are modeling proportions, we also need to include the `weights` argument to specify the total number of trials for each species. 
 
 Note that the syntax here is a little different from the previous example; random effects are not specified as a separate parameter, but are included directly in the model formula. These are specified as an effect/variable pair; in the example below `(1|species)` means vary intercept across species groups.
 
@@ -200,8 +213,8 @@ Note that the syntax here is a little different from the previous example; rando
 
 library(lme4)
 
-spp.glmm.1 <- glmer(cbind(success, failure) ~ location + (1|species), 
-                    family = binomial, 
+spp.glmm.1 <- glmer(prop ~ location + (1|species), 
+                    family = binomial, weights = total,
                     data = sppint)
 
 summary(spp.glmm.1)
@@ -216,8 +229,8 @@ Now test if location has an impact on species success or failure, by creating a 
 
 ```{r}
 
-spp.glmm.2 <- glmer(cbind(success, failure) ~ 1 + (1|species), 
-                    family = binomial, 
+spp.glmm.2 <- glmer(prop ~ 1 + (1|species), 
+                    family = binomial, weights = total,
                     data = sppint)
 
 #spp.glmm.2 = update(fit.glmm.1, .~. -location)

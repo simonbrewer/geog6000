@@ -12,6 +12,13 @@ header-includes:
    - \usepackage{tabularx}
 ---
 
+```{r setup, include=FALSE}
+
+knitr::opts_chunk$set(echo = TRUE,
+                      fig.align = "center")
+
+```
+
 In this lab we will cover the use of generalized linear models (GLMs) in R. Before starting the lab, you will need to set up a new folder for your working directory. Go to your `geog6000` folder now and create a new folder for today's class called `lab05`. 
 
 We will use the following three datasets:
@@ -27,59 +34,88 @@ Now start RStudio and change the working directory to `lab05`. As a reminder, yo
 **With all the examples given, it is important to not just type in the code, but to try changing the parameters and re-running the functions multiple times to get an idea of their effect.** Help on the parameters can be obtained by typing `help(functionname)` or `?functionname`. 
 
 # Generalized Linear Models
+
 Generalized Linear Models (GLMs) allow model fitting to non-normal data types and distributions. In R, the `glm()` function allows for fitting of these models and follows a similar format to the `lm()` function, except that we need to supply two extra parameters:
 
 - The name of the distribution that describes the dependent variables (`family`)
 - The name of the link function that is used to make the relationship linear (`link`)
 
 ## Binomial Models 1
+
 As a first example, we will fit a model to some binary data, using a binomial model. These models are also called logistic or logit models. We will use the Irish education dataset and use this to model the relationship between students taking their leaving certificate and their scores on a vocal reasoning test. Start by downloading the data from Canvas and loading it into R in a data frame called 'irished'. 
 
 ```{r}
+
 irished <- read.csv("../datafiles/irished.csv")
+
 ```
 
 In the file, categorical data (presence/absence of leaving certificate, sex) are coded as numerical values. To convert them into factors for use in R, use the `factor` command as follows:
 
 ```{r}
-irished$sex <- factor(irished$sex, levels = c(1, 2),
-    labels = c("male", "female"))
-irished$lvcert <- factor(irished$lvcert, levels = c(0, 1), 
+
+irished$sex <- factor(irished$sex, 
+                      levels = c(1, 2),
+                      labels = c("male", "female"))
+
+irished$lvcert <- factor(irished$lvcert, 
+                         levels = c(0, 1), 
                          labels = c("not taken", "taken"))
+
 ```
+
 We will also center the 'DVRT' score:
+
 ```{r}
+
 irished$DVRT.cen <- irished$DVRT - mean(irished$DVRT)
+
 ```
 
 Next make a boxplot to examine the relationship between whether a student has taken the leaving certificate (variable `lvcert`) and centered DVRT.
-```{r fig.keep='high'}
-boxplot(DVRT.cen ~ lvcert, data=irished)
+
+```{r}
+
+boxplot(DVRT.cen ~ lvcert, data = irished)
+
 ```
 
 - What is the relationship between DVRT scores and the leaving certificate?
 
 Now use the `glm()` function to build a binomial model between variables lvcert and centered DVRT.
 
-```{r results='hide'}
-irished.glm1 <- glm(lvcert ~ DVRT.cen, data = irished, family = binomial(link='logit'))
+```{r}
+
+irished.glm1 <- glm(lvcert ~ DVRT.cen, 
+                    data = irished, 
+                    family = binomial(link = 'logit'))
+
 summary(irished.glm1)
+
 ```
 
 - Are the coefficients significant?
 
 As the coefficients are given as log-odds, we can convert these to odd using the `exp()` function:
 ```{r}
+
 exp(coef(irished.glm1))
+
 ```
 
 So the odds of obtaining the leaving certificate for a student with an average DVRT score are about 3 to 4. The slope tells us the rate at which the odds change for every unit increase in DVRT scores. Remember that these act as a multiplier, so for a student with a DVRT score that is one higher than average, we would multiply 0.757 by 1.066 to get the new odds. 
 
 Binomial models estimate the probability of presence/absence (in this case, the probability of the presence of having taken the leaving certificate). Use the `predict()` to estimate the probability of having taking the leaving certificate for a student who has a DVRT score of 120. Note that you need to make a new data frame containing a variable called 'DVRT' as this was used in the original model, and that we need to subtract the original mean to make this compatible with the centered DVRT.
 
-```{r results='hide'}
-newDVRT = data.frame(DVRT.cen=120-mean(irished$DVRT))
-predict(irished.glm1, newdata=newDVRT, type='response', se.fit=TRUE)
+```{r}
+
+newDVRT = data.frame(DVRT.cen = 120 - mean(irished$DVRT))
+
+predict(irished.glm1, 
+        newdata = newDVRT, 
+        type = 'response', 
+        se.fit = TRUE)
+
 ```
 
 The parameter `se.fit=TRUE` tells R to calculate the standard error of prediction with a GLM.
@@ -89,19 +125,28 @@ The parameter `se.fit=TRUE` tells R to calculate the standard error of predictio
 
 Finally, make a plot of the model shape to see the relationship. To do this, make a prediction for a series of new values, then plot the prediction against the new values. Note we add the mean back on to the centered DVRT values to plot on the original scale:
 
-```{r results='hide', fig.keep='none'}
-newDVRT = data.frame(DVRT.cen=seq(60,160)-mean(irished$DVRT))
+```{r}
+newDVRT = data.frame(DVRT.cen = seq(60,160) - mean(irished$DVRT))
+
 lvcert.pred <- predict(irished.glm1, 
-                       newdata=newDVRT, type='response')
-plot(newDVRT$DVRT.cen+mean(irished$DVRT), 
-     lvcert.pred, type='l', col=2, lwd=2,
-     xlab='DVRT', ylab='Pr(lvcert)')
+                       newdata = newDVRT, 
+                       type = 'response')
+
+plot(newDVRT$DVRT.cen + mean(irished$DVRT), 
+     lvcert.pred, 
+     type = 'l',  # lowercase of the letter L
+     col = 2, 
+     lwd = 2,
+     xlab = 'DVRT', 
+     ylab = 'Pr(lvcert)')
 ```
 
-Note that the \texttt{anova()} function also works with GLMs, either to test two or more nested models or, as the following example demonstrates, to test a fitted model against a null model. Note that we specify the inference test to obtain a significance level --- the Chi-squared test is used for binomial and poisson distributions: 
+Note that the `anova()` function also works with GLMs, either to test two or more nested models or, as the following example demonstrates, to test a fitted model against a null model. Note that we specify the inference test to obtain a significance level --- the Chi-squared test is used for binomial and poisson distributions: 
 
-```{r results='hide'}
-anova(irished.glm1, test='Chisq')
+```{r}
+
+anova(irished.glm1, test = 'Chisq')
+
 ```
 
 - What does this tell you about the goodness-of-fit of the model?
@@ -110,57 +155,93 @@ anova(irished.glm1, test='Chisq')
 
 In the previous example, we had the values for each individual observation (0/1; whether or not they had taken the leaving certificate). Binomial models may also be fit to proportional data (i.e. proportion of 0's, proportion of 1's), as long as you know the number of observations. The file *turbines.csv* contains the result of a series of tests to see how long a turbine will run before developing fissures. The file contains a set of experiments in which a number of turbines were run for a set time period. The file then records how many turbines were run that experiment, how many developed fissures. We can model this outcome using a binomial GLM, by calculating the proportion of turbines with fissures in each experiment:
 ```{r}
+
 turbines = read.csv("../datafiles/turbines.csv")
+
 head(turbines)
+
 ```
+
 The proportion can be simply calculated as the number of fissures divided by the total number:
+
 ```{r}
+
 turbines$prop = turbines$Fissures/turbines$Turbines
+
 plot(prop ~ Hours, turbines)
+
 ```
 
 Now build a binomial GLM with this data. As we are using proportional data, rather than the raw 0/1's, we have to add a vector of weights giving the total number in each experiment:
+
 ```{r}
-turbine.glm = glm(prop ~ Hours, weights=Turbines, 
-                  data=turbines, family=binomial(link='logit'))
+
+turbine.glm = glm(prop ~ Hours, 
+                  data = turbines, 
+                  family = binomial(link = 'logit'),
+                  weights = Turbines)
+
 ``` 
+
 And as before we can look at the coefficients as both log-odds, and odds:
-```{r results='hide'}
+
+```{r}
+
 coef(turbine.glm)
+
 exp(coef(turbine.glm))
+
 ```
 
 Now use this to predict the probability of fissuring in a turbine that has been running for 5000 hours:
-```{r results='hide'}
-newturbine = data.frame(Hours=5000)
-predict(turbine.glm, newturbine, 
-        type='response', se.fit=TRUE)
+
+```{r}
+
+newturbine = data.frame(Hours = 5000)
+
+predicted_probability <- predict(turbine.glm, 
+                                 newdata = newturbine, 
+                                 type = 'response', 
+                                 se.fit = TRUE)
+
 ```
-Which tells us that the probability is about `r round(predict(turbine.glm, newturbine, type='response', se.fit=TRUE)$fit,3)`.
+
+Which tells us that the probability is about `r round(predicted_probability$fit, 3)`.
 
 ## Poisson Models
 
 Poisson models are used to build relationships with count data, for example to explain what factors may contribute to the number of awards won by students. Load the dataset from the file *hsa.csv* into a data frame called `hsa`, and explore the relationships using boxplots. As before, the school program is stored as numerical value, so we will need to convert it to a factor.
 
 ```{r}
+
 hsa <- read.csv("../datafiles/hsa.csv")
+
 ```
 
-```{r fig.keep='none'}
-hsa$prog <- factor(hsa$prog, levels = c(1, 2, 3), 
+```{r}
+
+hsa$prog <- factor(hsa$prog, 
+                   levels = c(1, 2, 3), 
                    labels = c("General", "Academic", "Vocational"))
-boxplot(math ~ num_awards, data=hsa)
+
+boxplot(math ~ num_awards, data = hsa)
+
 boxplot(math ~ prog, data=hsa)
+
 ```
 
 - What relationships or differences can you see in the dataset?
 
 Now build a poisson regression model using two explanatory variables, math score and school program
 
-```{r results='hide'}
+```{r}
+
 hsa.glm <- glm(num_awards ~ math + prog, 
-               data=hsa, family=poisson(link='log'))
+               data = hsa, 
+               family = poisson(link = 'log'))
+
 summary(hsa.glm)
+
 ```
 
 - What information can you derive from the summary statement about the coefficients? Refer back to the lecture notes to help interpret these. 
@@ -168,9 +249,14 @@ summary(hsa.glm)
 Predict the number of awards obtained by a student in the Academic program, who has a math score of 70. You will again need to make up a data frame for the prediction, however, this time it will need to contain two variables:
 
 ```{r results='hide'}
-newstudent <- data.frame(math=70, prog='Academic')
-predict(hsa.glm, newdata=newstudent, 
-        type='response', se.fit=TRUE)
+
+newstudent <- data.frame(math = 70, prog = 'Academic')
+
+predict(hsa.glm, 
+        newdata = newstudent, 
+        type = 'response', 
+        se.fit = TRUE)
+
 ```
 
 - What is the expected number of awards?
@@ -192,13 +278,13 @@ Try building a second, simpler model, which only uses the math score to explain 
     - Using the `summary()` function, report the coefficients as log-values and their significance and the model AIC 
     - Transform the cofficients to the original (non-log) scale
     - Give a brief interpretation of the model: Are the explanatory variables useful? What does the sign of the coefficients tell you about the relationship between Hemlock abundance and elevation and/or stream distance. 
- 
-\newpage
+
 
 # Where to get help
 
 ```{r, child = '../get-help.Rmd'}
 ```
+
 
 # Files used in lab
 

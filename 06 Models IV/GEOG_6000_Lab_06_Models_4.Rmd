@@ -125,12 +125,12 @@ The output from the `summary()` command consists of several sections:
 - The first panel gives the AIC (Akaike information criterion) and BIC (Bayesian information criterion), which can be used for model selection, along with the log of the maximized restricted likelihood.
 - The next panel displays estimates of the variance and covariance parameters for the random effects, in the form of standard deviations and correlations (see below for interpretation)
 - The table of fixed effects is similar to output from `lm()`; to interpret the coefficients in this table, refer to the hierarchical form of the model given in the equation above.
-- *Intercept*: Average math achievement score in public schools (for a perfectly average student in a perfectly average public school)
-- *sectorCatholic*: Difference of average math achievement in Catholic schools. So all else being equal, students at Catholic schools do better
-- *cses*: Average slope in public schools (i.e. the rate of increase in math score for a unit increase in centered SES, for students in a perfectly average public school)
-- *cses:sectorCatholic*: Difference of average slope in Catholic schools. All else being equal, student math scores are less affected by their SES level in Catholic schools as the slope is lower. 
-- *meanses*: Relationship of schools' average level of math achievement to their average level of SES. In other words, this tells us how the school-level characteristics are related to each other. For a one unit increase in mean school SES, the average school math score increases by about 5.3 points (note that this is the same for both sectors)
-- *meanses:cses*: Within school slope change for one unit increase in mean SES. This final coefficient tells us about the impact of the mean school level SES on the relationhsip between math and SES for individuals at that school. As this is positive, this implies that as the overall mean SES of a school increases, the within school effect of SES on math score also increases. 
+    - `(Intercept)`: The grand mean intercept - the average math achievement score in public schools (for a perfectly average student in a perfectly average public school)
+    - `sectorCatholic`: Difference of average math achievement in Catholic schools. So all else being equal, students at Catholic schools do better
+    - `cses`: The grand mean slope - average slope in public schools (i.e. the rate of increase in math score for a unit increase in centered SES, for students in a perfectly average public school)
+    - `cses:sectorCatholic`: Difference of average slope in Catholic schools. All else being equal, student math scores are less affected by their SES level in Catholic schools as the slope is lower. 
+    - `meanses`: Relationship of schools' average level of math achievement to their average level of SES. In other words, this tells us how the school-level characteristics are related to each other. For a one unit increase in mean school SES, the average school math score increases by about 5.3 points (note that this is the same for both sectors)
+    - `meanses:cses`: Within school slope change for one unit increase in mean SES. This final coefficient tells us about the impact of the mean school level SES on the relationhsip between math and SES for individuals at that school. As this is positive, this implies that as the overall mean SES of a school increases, the within school effect of SES on math score also increases. 
 
 We can check to see how the variance in the dataset is partitioned among the levels of the model, using the `VarCorr()` function. 
 
@@ -140,11 +140,11 @@ VarCorr(math.lme1)
 
 ```
 
-The first column gives the variance explained by the random effects:
+The first column gives the variance partitioned across the random effects:
 
-- The first line gives the amount explained by variation in intercepts among schools (6\%)
-- The second line the amount due to variation in slope (0.25\%)
-- The last gives the residual amount (94\%)
+- The first line gives the amount explained by variation in intercepts among schools ($2.379 \approx 6\%$)
+- The second line the amount due to variation in slope ($0.101 \approx 0.25\%$)
+- The last gives the residual amount ($36.72 \approx 93.7\%$)
 
 In general, this can be used to assess the relative contribution of each random effect. If the variance is relatively large (in general $>5\%$), then the variation of that coefficient between the different groups is important, and worth retaining in the model. 
 
@@ -205,7 +205,7 @@ boxplot(prop ~ location, sppint)
 
 ## Model
 
-As the success variable is proportional ([0,1]), we use the `glmer()` function from the **lme4**. This uses the same arguments as the `glm()` models we looked at earlier this semester, with a `family` parameter to specify the distribution of the dependent variable. As this is a binary variable, we specify it as a two-column matrix (success and failure) in the model, using `cbind()`. As we are modeling proportions, we also need to include the `weights` argument to specify the total number of trials for each species. 
+As the success variable is proportional ([0,1]), we use the `glmer()` function from the **lme4**. This uses the same arguments as the `glm()` models we looked at earlier this semester, with a `family` parameter to specify the distribution of the dependent variable. As we are modeling proportions, we also need to include the `weights` argument to specify the total number of trials for each species. 
 
 Note that the syntax here is a little different from the previous example; random effects are not specified as a separate parameter, but are included directly in the model formula. These are specified as an effect/variable pair; in the example below `(1|species)` means vary intercept across species groups.
 

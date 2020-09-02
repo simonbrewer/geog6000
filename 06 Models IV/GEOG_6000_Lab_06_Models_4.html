@@ -1645,13 +1645,15 @@ summary(math.lme1)</code></pre>
 <ul>
 <li>The first panel gives the AIC (Akaike information criterion) and BIC (Bayesian information criterion), which can be used for model selection, along with the log of the maximized restricted likelihood.</li>
 <li>The next panel displays estimates of the variance and covariance parameters for the random effects, in the form of standard deviations and correlations (see below for interpretation)</li>
-<li>The table of fixed effects is similar to output from <code>lm()</code>; to interpret the coefficients in this table, refer to the hierarchical form of the model given in the equation above.</li>
-<li><em>Intercept</em>: Average math achievement score in public schools (for a perfectly average student in a perfectly average public school)</li>
-<li><em>sectorCatholic</em>: Difference of average math achievement in Catholic schools. So all else being equal, students at Catholic schools do better</li>
-<li><em>cses</em>: Average slope in public schools (i.e. the rate of increase in math score for a unit increase in centered SES, for students in a perfectly average public school)</li>
-<li><em>cses:sectorCatholic</em>: Difference of average slope in Catholic schools. All else being equal, student math scores are less affected by their SES level in Catholic schools as the slope is lower.</li>
-<li><em>meanses</em>: Relationship of schools’ average level of math achievement to their average level of SES. In other words, this tells us how the school-level characteristics are related to each other. For a one unit increase in mean school SES, the average school math score increases by about 5.3 points (note that this is the same for both sectors)</li>
-<li><em>meanses:cses</em>: Within school slope change for one unit increase in mean SES. This final coefficient tells us about the impact of the mean school level SES on the relationhsip between math and SES for individuals at that school. As this is positive, this implies that as the overall mean SES of a school increases, the within school effect of SES on math score also increases.</li>
+<li>The table of fixed effects is similar to output from <code>lm()</code>; to interpret the coefficients in this table, refer to the hierarchical form of the model given in the equation above.
+<ul>
+<li><code>(Intercept)</code>: The grand mean intercept - the average math achievement score in public schools (for a perfectly average student in a perfectly average public school)</li>
+<li><code>sectorCatholic</code>: Difference of average math achievement in Catholic schools. So all else being equal, students at Catholic schools do better</li>
+<li><code>cses</code>: The grand mean slope - average slope in public schools (i.e. the rate of increase in math score for a unit increase in centered SES, for students in a perfectly average public school)</li>
+<li><code>cses:sectorCatholic</code>: Difference of average slope in Catholic schools. All else being equal, student math scores are less affected by their SES level in Catholic schools as the slope is lower.</li>
+<li><code>meanses</code>: Relationship of schools’ average level of math achievement to their average level of SES. In other words, this tells us how the school-level characteristics are related to each other. For a one unit increase in mean school SES, the average school math score increases by about 5.3 points (note that this is the same for both sectors)</li>
+<li><code>meanses:cses</code>: Within school slope change for one unit increase in mean SES. This final coefficient tells us about the impact of the mean school level SES on the relationhsip between math and SES for individuals at that school. As this is positive, this implies that as the overall mean SES of a school increases, the within school effect of SES on math score also increases.</li>
+</ul></li>
 </ul>
 <p>We can check to see how the variance in the dataset is partitioned among the levels of the model, using the <code>VarCorr()</code> function.</p>
 <pre class="r"><code>VarCorr(math.lme1)</code></pre>
@@ -1660,11 +1662,11 @@ summary(math.lme1)</code></pre>
 ## (Intercept)  2.3797631 1.5426481 (Intr)
 ## cses         0.1010235 0.3178419 0.391 
 ## Residual    36.7211868 6.0598009</code></pre>
-<p>The first column gives the variance explained by the random effects:</p>
+<p>The first column gives the variance partitioned across the random effects:</p>
 <ul>
-<li>The first line gives the amount explained by variation in intercepts among schools (6%)</li>
-<li>The second line the amount due to variation in slope (0.25%)</li>
-<li>The last gives the residual amount (94%)</li>
+<li>The first line gives the amount explained by variation in intercepts among schools (<span class="math inline">\(2.379 \approx 6\%\)</span>)</li>
+<li>The second line the amount due to variation in slope (<span class="math inline">\(0.101 \approx 0.25\%\)</span>)</li>
+<li>The last gives the residual amount (<span class="math inline">\(36.72 \approx 93.7\%\)</span>)</li>
 </ul>
 <p>In general, this can be used to assess the relative contribution of each random effect. If the variance is relatively large (in general <span class="math inline">\(&gt;5\%\)</span>), then the variation of that coefficient between the different groups is important, and worth retaining in the model.</p>
 </div>
@@ -1718,7 +1720,7 @@ sppint$prop = sppint$success / sppint$total</code></pre>
 </div>
 <div id="model-1" class="section level2">
 <h2>Model</h2>
-<p>As the success variable is proportional ([0,1]), we use the <code>glmer()</code> function from the <strong>lme4</strong>. This uses the same arguments as the <code>glm()</code> models we looked at earlier this semester, with a <code>family</code> parameter to specify the distribution of the dependent variable. As this is a binary variable, we specify it as a two-column matrix (success and failure) in the model, using <code>cbind()</code>. As we are modeling proportions, we also need to include the <code>weights</code> argument to specify the total number of trials for each species.</p>
+<p>As the success variable is proportional ([0,1]), we use the <code>glmer()</code> function from the <strong>lme4</strong>. This uses the same arguments as the <code>glm()</code> models we looked at earlier this semester, with a <code>family</code> parameter to specify the distribution of the dependent variable. As we are modeling proportions, we also need to include the <code>weights</code> argument to specify the total number of trials for each species.</p>
 <p>Note that the syntax here is a little different from the previous example; random effects are not specified as a separate parameter, but are included directly in the model formula. These are specified as an effect/variable pair; in the example below <code>(1|species)</code> means vary intercept across species groups.</p>
 <pre class="r"><code>library(lme4)
 

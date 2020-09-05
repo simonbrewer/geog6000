@@ -35,7 +35,6 @@ You will also need to install the following packages:
 ```{r, eval = FALSE}
 
 pkgs <- c("ggplot2",
-          "mapview",
           "raster",
           "RColorBrewer"
           "sf",
@@ -48,7 +47,6 @@ install.packages(pkgs)
 ```{r, message = FALSE}
 
 library(ggplot2)
-library(mapview)
 library(raster)
 library(RColorBrewer)
 library(sf)

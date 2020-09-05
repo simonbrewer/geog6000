@@ -39,7 +39,6 @@ pkgs <- c("ggplot2",
           "raster",
           "RColorBrewer"
           "sf",
-          "tmap",
           "viridis")
 
 install.packages(pkgs)
@@ -53,7 +52,6 @@ library(mapview)
 library(raster)
 library(RColorBrewer)
 library(sf)
-library(tmap)
 library(viridis)
 
 ```

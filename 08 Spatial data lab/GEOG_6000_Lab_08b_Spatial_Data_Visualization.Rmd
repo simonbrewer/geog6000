@@ -1,0 +1,1411 @@
+---
+title: "GEOG 6000 Lab 08 Spatial Data in R"
+author: "Simon Brewer and Blake Vernon"
+date: "9/2/2020"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    fig_caption: true
+    css: "../style.css"
+---
+
+```{r include = FALSE}
+
+knitr::opts_chunk$set(echo = TRUE,
+                      fig.align = "center")
+
+```
+
+In this lab, we will explore some of R's functionality with spatial data, with special attention given to the `sf` package. For more information about `sf`, you can visit their [website](https://r-spatial.github.io/sf/). Robin Lovelace's book _Geocomputation with R_ (available [online](https://geocompr.robinlovelace.net/)) is also a really helpful and educational source for learning `sf`. In fact, much of this lab is just an abbreviated version of that book. For some of the longer examples, it is highly recommended to use R's scripting functions to run the examples to save on re-typing.  
+
+Before starting the lab, you will need to set up a new folder for your working directory. Go to your `geog6000` folder now and create a new folder for today's class called `lab08`. The following files will be used in this lab, all available on Canvas:  
+
+- Climate dataset for Western North America: *WNAclimate.csv*
+- Temperature dataset for Oregon in shapefile format: *oregon.zip*
+- New York state polygon data in a shapefile: *NY_Data.zip*
+- Digital elevation map from Switzerland: *swiss_dem.grd*
+- A NetCDF file of global monthly air temperature: *air.mon.ltm.nc*
+
+You will need to download these files from Canvas, and move them from your `Downloads` folder to the `datafiles` folder that you made previously. Make sure to unzip the zip files so that R can access the content. Note that on Windows, you will need to right-click on the file and select 'Extract files'.  
+
+
+You will also need to install the following packages:  
+
+```{r, eval = FALSE}
+
+pkgs <- c("ggplot2",
+          "mapview",
+          "raster",
+          "RColorBrewer"
+          "sf",
+          "tmap",
+          "viridis")
+
+install.packages(pkgs)
+
+```
+
+```{r, message = FALSE}
+
+library(ggplot2)
+library(mapview)
+library(raster)
+library(RColorBrewer)
+library(sf)
+library(tmap)
+library(viridis)
+
+```
+
+# Intro to `sf`
+
+### What is `sf`?
+
+`sf` is an R package designed to work with spatial data organized as "simple features" (hence, 'sf'). Mostly, it supersedes the `sp` package (written by the same people), but it also collapses a lot of other R packages into one. In fact, just a few years ago, if you were to take this course, you would have loaded all of these packages:  
+
+```{r, eval = FALSE}
+
+library(maptools)
+library(rgdal)
+library(rgeos)
+library(sp)
+
+```
+
+Now, a simple  
+
+```{r}
+
+library(sf)
+
+```
+
+will suffice. The `sf` package is able to provide all the functionality it does because it interfaces with three widely adopted programming standards: PROJ, GDAL, and GEOS. These provide for coordinate reference systems, reading and writing of spatial data, and geometric operations, respectively, but more on this in a moment. 
+
+Note that all `sf` functions are prefixed with `st_` (a legacy of this R package's origins in PostGIS, where 'st' means "spatial type").
+
+<br>
+
+### What is a simple feature?
+
+A simple feature is, in the words of the `sf` authors, "a formal standard (ISO 19125-1:2004) that describes how objects in the real world can be represented in computers, with emphasis on the spatial geometry of these objects" ([ref](https://r-spatial.github.io/sf/articles/sf1.html)). In other words, its structured data that provides information about a location in space, including its shape.
+
+The way that `sf` chooses to represent simple features in R should be familiar to you because they are just fancy data.frames. To demonstarte this, we'll load a file of county outlines for North Carolina (this file is included when you install the `sf` package):
+
+```{r}
+
+path_to_data <- system.file("shape/nc.shp", package="sf")
+
+north_carolina <- st_read(path_to_data, quiet = TRUE)
+
+north_carolina <- north_carolina[ , c("CNTY_ID", "NAME", "AREA", "PERIMETER")]
+
+north_carolina
+
+```
+
+<br>
+
+You can summarize this somewhat verbose printout by noting that simple features fit a simple formula:
+
+<br>
+
+$$ sf = attributes + geometry + crs $$ 
+<br>
+
+This formula also sugests the kinds of ways that you might interact with an `sf` object by, for example, changing its crs, or filtering based on its attributes (or geometry), or manipulating its geometry.
+
+<br>
+
+##### __Attributes__
+_Attributes_ are properties of a feature. In this case, the features are counties in North Carolina, and their attributes are things like name and area. In an `sf` data.frame, __each feature is a row, and each attribute is a column__. In the `north_carolina` object, for example, the first feature has the name "Ashe" and its county ID is 1825. 
+
+<br>
+
+##### __Geometry__
+A very special attribute column is called the _geometry_ (sometimes labeled 'geom' or 'shape'). It consists of a point or set of points (specifically, their coordinates) that define the shape and location of the feature. The simple feature standard includes 17 geometry types, 7 of which are supported by `sf`: point, multipoint, linestring, multilinestring, polygon, multipolygon, and geometry collection.  
+
+<br>
+
+<center>
+![](https://geocompr.robinlovelace.net/figures/sf-classes.png)  
+Figure 2.2 in _Geocomputation with R_
+</center>
+
+<br>
+
+As mentioned already, these geometries are just a series of points:
+
+```{r}
+
+point_one <- st_point(c(0, 3))
+
+point_two <- st_point(c(5, 7))
+
+a_line <- st_linestring(c(point_one, point_two))
+
+```
+
+```{r, echo = FALSE}
+
+plot(a_line)
+plot(point_one, pch = 19, col = "red", add = TRUE)
+plot(point_two, pch = 19, col = "red", add = TRUE)
+
+```
+
+
+If you print these geometries
+
+```{r}
+
+point_one
+
+a_line
+
+```
+
+<br>
+
+you see that they are represented as a text string. This is the [Well Known Text](https://en.wikipedia.org/wiki/Well-known_text_representation_of_geometry) (WKT) standard for specifying geometries. It tells us what kind of geometry the feature is and lists its x-y coordinates separated by commas.
+
+If you want to know what geometry type your simple feature contains, try:
+
+```{r}
+
+st_geometry_type(a_line)
+
+```
+
+<br>
+
+##### __CRS__
+
+The final ingredient in a simple feature is its a spatial or [_coordinate reference system_](https://en.wikipedia.org/wiki/Spatial_reference_system) (CRS). A CRS provides two crucial pieces of information:  (i) what rule we use to assign coordinates to points and (ii) what datum to use. It is not an exaggeration to say that __the CRS is the most important element of a simple feature__, for without a CRS, the numbers in the geometry column are just that, numbers, rather than full-blooded _spatial_ coordinates.  
+
+Understanding what a coordinate assignment rule does is beyond the scope of this lab, but the datum deserves some attention. In effect, it specifies three things:  
+
+1. the origin or the point on the earth's surface where the coordinates are `POINT (0 0)`, 
+2. the scale of the coordinates, for example, whether we should think of `POINT (5 7)` as being 5 _meters_ east and seven _meters_ north of the origin, or - worse - 5 _feet_ east and 7 _feet_ north, and
+3. the orientation of the system, or which way is up?
+
+As with the geometries, the standard for representing CRS is WKT, though the easiest way to identify a CRS is to use its EPSG code. To find the EPSG code for a CRS, you can visit this website: [spatialreference.org](https://spatialreference.org/).  
+
+The most widely used CRS is the World Geodetic System 84 (WGS 84, a geographic system) whose EPSG code is 4326:
+
+```{r}
+
+st_crs(4326)
+
+```
+
+<br>
+
+If you are familiar with the PROJ4-string syntax, you can retrieve that from a CRS with:
+
+```{r}
+
+st_crs(4326)$proj4string
+
+```
+
+However, current open standards specified by PROJ and GDAL discourage the use of PROJ4-string syntax in favor of WKT, so it is probably best to get use to the latter now. 
+
+<br>
+
+##### __Bounding Box__
+
+There's actually one more element to a simple feature, but it is not as vital as the others and is really already implicit in the geometry. That is the bounding box. This is an object defined by the spatial extent of the data: the minimum and maximum x and y coordinates. You can retrieve the bounding box of a simple feature this way:
+
+```{r}
+
+st_bbox(north_carolina)
+
+```
+
+There are myriad uses for the bounding box, though we need not dwell on them here.
+
+
+# Read and Write
+
+Reading and writing spatial data, it turns out, is quite the chore. The solution `sf` relies on is to interface with GDAL, which handles lots of different spatial data types (it's kinda its whole purpose). Currently supported (vector) spatial data types can be found at [GDAL.org](https://gdal.org/drivers/vector/index.html). Perhaps the most common spatial data type - because ESRI is a thing - is the shapefile, which has a _.shp_ file extension. 
+
+<br>
+
+### Reading in spatial data
+
+In `sf`, the function for reading in spatial data is `st_read`. Here is the nitty-gritty and, perhaps, needlessly verbose version first:
+
+```{r}
+
+NY8 <- st_read(dsn = "../datafiles/NY_data/NY8_utm18.shp",
+               layer = "NY8_utm18",
+               drivers = "ESRI Shapefile")
+
+```
+
+`dsn` stands for "data source name" and specifies where the data is coming from, whether a file directory, a database, or something else. `layer` is the layer in the data source to be read in. Finally, `drivers` tells GDAL what format the file is in or what structure it has, so it knows how to correctly interpret the file. All of this information is printed to the console when you execute `st_read`. 
+
+In this case, we are using a simple ESRI shapefile, so the data source and layer are basically the same thing. Furthermore, `sf` is good at guessing the driver based on the file extension, so the driver does not normally need to be specified. Hence, we could just as well have written:
+
+```{r}
+
+NY8 <- st_read("../datafiles/NY_data/NY8_utm18.shp")
+
+```
+
+And here's what this looks like:
+
+```{r, echo = FALSE}
+
+plot(st_geometry(NY8))
+
+```
+
+
+<br>
+
+### Converting non-spatial data to simple features
+
+Sometimes you have spatial data, but it is not in a spatial data format. Usually, this means you have a table or spreadsheet with columns for the x and y coordinates. 
+
+```{r}
+
+wna_climate <- read.csv("../datafiles/WNAclimate.csv")
+
+head(wna_climate)
+
+```
+
+<br>
+
+This can be converted to a simple feature using the `st_as_sf` function like so:
+
+```{r}
+
+wna_climate <- st_as_sf(wna_climate, 
+                        coords = c("LONDD", "LATDD"),
+                        crs = 4326)
+
+wna_climate
+
+```
+
+The function just needs to know what columns the x and y coordinates are in and what CRS they are specified in. And here's what it looks like:
+
+```{r, echo = FALSE}
+
+plot(st_geometry(wna_climate), pch = 19, col = alpha("darkgreen", 0.5))
+
+```
+
+
+<br>
+
+### Writing spatial data
+
+The `sf` function for writing simple features to disk is `st_write`. It is almost an exact mirror of `st_read`, but it also requires that you specify the simple feature object in your R environment that you want to write to disk. If the layer already exists, you will need to specify `delete_layer = TRUE`. 
+
+```{r, eval = FALSE}
+
+st_write(obj = wna_climate,
+         dsn = "../datafiles/wnaclim.shp",
+         layer = "wnaclim",
+         drivers = "ESRI Shapefile")
+
+```
+
+<br> 
+
+or, more simply:
+
+```{r, eval = FALSE}
+
+st_write(wna_climate, dsn = "../datafiles/wnaclim.shp")
+
+```
+
+
+
+
+# CRS operations
+
+__The cardinal rule for working with any spatial data is to make sure all of it is in the same CRS.__ This ensures that any analysis which combines multiple sources is correctly comparing values at the same locations. Never ever ever ever do anything with your data until you are sure you've got the CRS right.
+
+<br>
+
+### Check CRS
+
+The `st_crs()` function allows you to quickly chekck the CRS for any object. 
+
+```{r}
+
+st_crs(NY8)
+
+```
+
+<br>
+
+You can also check the EPSG code (if specified):
+
+```{r}
+
+st_crs(NY8)$epsg
+
+st_crs(wna_climate)$epsg
+
+```
+
+<br>
+
+And you can get the name of a CRS this way:
+
+```{r}
+
+format(st_crs(NY8))
+
+```
+<br>
+
+
+### Set CRS
+
+There are two methods to set the CRS for a spatial object: `st_crs<-` and `st_set_crs`. 
+
+```{r}
+
+wna_climate <- st_set_crs(wna_climate, 4326)
+
+st_crs(wna_climate) <- 4326
+
+# st_crs(wna_climate)
+
+```
+
+Note: this should only be used when the simple feature is missing a CRS and you know what it is. It is __NOT__ for _re-projecting_ the sf object to a new coordinate system.
+
+<br>
+
+### Reprojecting CRS
+
+The `st_transform()` function allows you to project your sf object to a new CRS. This is particularly useful if you have multiple data sources with different original coordinate systems. 
+
+```{r}
+
+# st_crs(NY8)
+
+NY8 <- st_transform(NY8, crs = 4326)
+
+# st_crs(NY8)
+
+```
+
+As a reminder: when you read in spatial data, the first thing you should use is `st_crs` to check the CRS and `st_transform` to re-project if necessary. 
+
+
+# Attribute operations
+
+The attribute part of a `sf` object is a data.frame, so you can use all the methods we have previously looked at for data manipulation in working with attributes.
+
+```{r}
+
+oregon_tann <- read_sf("../datafiles/oregon/oregontann.shp")
+
+class(oregon_tann)
+
+```
+
+```{r, echo = FALSE}
+
+plot(st_geometry(oregon_tann), col = "darkred", pch = 19)
+
+```
+
+If you enter the name of an `sf` object, it will print the first few rows of the attribute table:
+
+```{r}
+
+oregon_tann
+
+```
+
+
+<br>
+
+### Select Columns
+
+```{r}
+
+# get elevation and tann columns
+
+# method 1
+oregon_tann2 <- oregon_tann[ , c("elevation", "tann")]
+
+# method 2
+oregon_tann2 <- subset(oregon_tann, select = c(elevation, tann))
+
+names(oregon_tann)
+
+names(oregon_tann2)
+
+```
+
+Notice this very important difference between regular data.frames and `sf` data.frames: when you subset by columns, even though you do not explicitly state that you want to keep the geometry column, it keeps that column anyway. In this sense, the geometry column is said to be "sticky."
+
+<br>
+
+### Filter Rows
+
+Subsetting the data by rows works in the same way as before. So we can carry out conditional selection of locations by using the usual comparison operators (`<, <=, ==, !=, >=, >`). For example, to select only the points above 1000 m elevation in the Oregon data set:
+
+```{r}
+
+# get features above 1000 meters
+
+# method 1
+oregon_tann3 <- oregon_tann[oregon_tann$elevation > 1000, ]
+
+# method 2
+oregon_tann3 <- subset(oregon_tann, subset = elevation > 1000)
+
+```
+
+```{r, echo = FALSE}
+
+plot(st_geometry(oregon_tann), col = alpha("gray", 0.2), pch = 19)
+
+plot(st_geometry(oregon_tann3), col = "darkred", pch = 19, add = TRUE)
+
+```
+
+
+<br>
+
+### Add Column
+
+New variables can easily be appended to an existing `sf` object using the following notation:
+
+```{r}
+
+# method 1
+oregon_tann$rando <- runif(n = nrow(oregon_tann))
+
+# method 2
+oregon_tann[, "rando"] <- runif(n = nrow(oregon_tann))
+
+names(oregon_tann)
+
+```
+
+<br>
+
+### Extract Column
+
+If you need to extract any variable from a `sf` object to a standard R vector, you can again use the standard notation. Note that if you use `[,]` to specify the columns, you need to add `drop = TRUE` to remove the geometry:
+
+```{r}
+
+# method 1
+elevaton <- oregon_tann$elevation
+
+# method 2
+# if you don't specify drop = TRUE, it'll keep the sticky geometry column
+elevation <- oregon_tann[ , "elevation", drop = TRUE] 
+
+elevation[1:10]
+
+```
+
+<br>
+
+### Get Geometry
+
+If you need only the geometry (the set of coordinates, or vector definitions), these can be extracted as follows:
+
+```{r}
+
+# method 1
+geometry <- st_geometry(oregon_tann)
+
+# method 2
+geometry <- oregon_tann$geometry
+
+geometry
+
+```
+
+<br>
+
+### Drop Geometry
+
+In case you just want the attributes, not the geometry: 
+
+```{r}
+
+attributes <- st_drop_geometry(oregon_tann)
+
+head(attributes)
+
+```
+
+Note: this is actually a special sort of `data.frame` called a `tibble`. Not important to know about here, but does print slightly differently. 
+
+
+
+# Spatial operations
+
+Spatial operations are like attribute operations, but they work with the geometry column rather than the attributes. There are loads of these functions, but will just review some of the more important ones here.
+
+### Spatial Filter
+
+This is probably the biggest one. Basically, you are taking one geometry and using it to filter other geometries. To demonstrate this, first we'll make some random points in the `north_carolina` simple feature. Well, first-first, we need to project the simple features, since `sf` will protest if you try to do spatial operations on longitude and latitude, as several of these methods require the calculation of distances between locations.
+
+```{r, message = FALSE}
+
+north_carolina <- st_transform(north_carolina, crs = 26918)
+
+```
+
+Now use `st_sample` to generate the random points:
+
+```{r, message = FALSE}
+
+set.seed(1234)
+
+random_pnts <- st_sample(north_carolina, size = 500)
+
+random_pnts <- st_as_sf(random_pnts)
+
+```
+
+```{r, echo = FALSE}
+
+plot(st_geometry(north_carolina))
+
+plot(st_geometry(random_pnts), 
+     col = alpha("red", 0.5), 
+     pch = 19, 
+     add = TRUE)
+
+```
+
+Now, we can use one geometry to filter out a second one. To obtain just the points in, say, Pasquotank County, we first subset the North Carolina `sf` object to extract only this county:
+
+```{r}
+
+pasquotank <- subset(north_carolina, NAME == "Pasquotank")
+
+```
+
+Then use the `st_filter()` function with the county polygon to get _only_ the points located in that polygon:
+
+```{r, message = FALSE}
+
+filtered_pnts <- st_filter(random_pnts, pasquotank)
+
+```
+
+```{r, echo = FALSE}
+
+plot(st_geometry(north_carolina))
+
+plot(st_geometry(filtered_pnts), 
+     col = "red", 
+     pch = 19, 
+     add = TRUE)
+
+```
+
+Now, you know where Pasquotank County is! 
+
+<br>
+
+##### __Topological Relations__
+
+Internally, `st_filter` assumes a "topological" or spatial relationship defined by what the `sf` authors refer to as spatial predicate (`.predicate`). By default, `st_intersects` works to find the geometry of one object located within another. We can, however, specify other spatial relationships. For example, to get all the points _outside_ Pasquotank:
+
+```{r, message = FALSE}
+
+filtered_pnts <- st_filter(random_pnts, pasquotank, .predicate = st_disjoint)
+
+```
+
+```{r, echo = FALSE}
+
+plot(st_geometry(north_carolina))
+
+plot(st_geometry(filtered_pnts), 
+     col = alpha("red", 0.5), 
+     pch = 19, 
+     add = TRUE)
+
+plot(st_geometry(pasquotank), 
+     col = alpha("darkblue", 0.35), 
+     add = TRUE)
+
+```
+
+Another useful predicate is `st_is_within_distance`, which requires that you pass an additional distance (`dist`) argument to the filter. The `dist` argument is in units specified by the CRS, in this case meters.
+
+```{r, message = FALSE}
+
+filtered_pnts <- st_filter(random_pnts, 
+                           pasquotank, 
+                           .predicate = st_is_within_distance,
+                           dist = 50000)
+
+```
+
+```{r, echo = FALSE}
+
+plot(st_geometry(north_carolina))
+
+plot(st_geometry(filtered_pnts), 
+     col = alpha("red", 0.5), 
+     pch = 19, 
+     add = TRUE)
+
+```
+
+<br>
+
+# Geometric operations
+
+With spatial operations, the geometry is preserved (mostly). With geometric operations, the whole point is to manipulate the geometry. Again, we are just going to hit the highlights. It is worth emphasizing that __these operations will often behave differently depending on the geometry type__.  
+
+<br>
+
+### Centroid
+
+```{r, message = FALSE}
+
+the_heart_of_pasquotank <- st_centroid(pasquotank)
+
+```
+
+```{r, echo = FALSE}
+
+plot(st_geometry(pasquotank))
+
+plot(st_geometry(the_heart_of_pasquotank), pch = 17, col = "red", cex = 2, add = TRUE)
+
+```
+
+<br>
+
+### Buffer
+
+```{r}
+
+the_heft_of_pasquotank <- st_buffer(pasquotank, dist = 50000)
+
+```
+
+```{r, echo = FALSE}
+
+plot(st_geometry(the_heft_of_pasquotank), col = "lightgray")
+
+plot(st_geometry(pasquotank), col = "white", add = TRUE)
+
+```
+
+<br>
+
+### Union
+
+This one merges geometries and dissolves interior borders when applied to polygons.
+
+```{r}
+
+north_carolina_boundary <- st_union(north_carolina)
+
+```
+
+```{r, echo = FALSE}
+
+plot(st_geometry(north_carolina_boundary))
+
+```
+
+<br>
+
+### Cast
+
+To cast a geometry is to change it from one geometry type to another. For example, to convert the boundary of North Carolina to points (the vertices of the polygon):
+
+```{r}
+
+north_carolina_points <- st_cast(north_carolina_boundary, "POINT")
+
+```
+
+```{r, echo = FALSE}
+
+plot(st_geometry(north_carolina_points), col = "darkorange", pch = 19)
+
+```
+
+If we convert to a `LINESTRING` objcet, this acts to separate out the individual polygons:
+
+```{r}
+
+north_carolina_lines <- st_cast(north_carolina_boundary, "MULTILINESTRING")
+
+north_carolina_lines <- st_cast(north_carolina_lines, "LINESTRING")
+
+```
+
+```{r, echo = FALSE}
+
+plot(st_geometry(north_carolina_lines))
+
+plot(st_geometry(north_carolina_lines[[1]]), col = "gray", add = TRUE)
+
+plot(st_geometry(north_carolina_lines[[2]]), col = "purple", add = TRUE)
+
+plot(st_geometry(north_carolina_lines[[3]]), col = "yellow", add = TRUE)
+
+plot(st_geometry(north_carolina_lines[[4]]), col = "red", add = TRUE)
+
+plot(st_geometry(north_carolina_lines[[5]]), col = "blue", add = TRUE)
+
+plot(st_geometry(north_carolina_lines[[6]]), col = "green", add = TRUE)
+
+```
+
+If you can't tell, it was broken into six lines: one for the mainland, and the other five for the ecological (and cultural) disaster known as the Outer Banks.
+
+# Plotting
+
+### `graphics`
+
+To make simple plots of an `sf` object, you can use R's base function `plot()`:
+
+```{r}
+
+plot(oregon_tann2)
+
+```
+
+<br>
+
+Notice that it creates separate plots for each attribute. If you would prefer to plot the geometry itself, you have to say so explicitly.
+
+```{r}
+
+plot(st_geometry(oregon_tann2))
+
+```
+
+### `ggplot2`
+
+One of the easiest ways to improve on these base plots is to use **ggplot2**. This contains a a special plotting geometry, `geom_sf`, designed to work with `sf` objects. Here, we'll use a subset of polygons from the `NY8` data to illustrate how this works. (Note that `geom_sf` refers to a **ggplot2** geometry, not a `sf` geometry.)
+
+```{r}
+
+binghamton <- subset(NY8, AREANAME == "Binghamton city")
+
+```
+
+We can now plot this by callin gthe `ggplot()` function and adding the `sf` object with `geom_sf`: 
+
+```{r}
+
+ggplot() + 
+  geom_sf(data = binghamton) +
+  theme_bw()
+
+```
+
+<br>
+
+##### __Multiple Geometries__
+
+Multiple layers can be added to a plot by adding additional `geom_sf` functions. Here, we first create a new `sf` object containing Binghamton and it's neighboring polygons, then create some random points for plotting:
+
+```{r, message = FALSE}
+
+bingies_neighbors <- st_filter(NY8, binghamton)
+
+random_pnts <- st_sample(bingies_neighbors, size = 25)
+
+random_pnts <- st_as_sf(random_pnts)
+
+```
+
+Now we can plot these: first the larger set of polygons, then Binghamton City and finally the points:
+
+```{r}
+
+ggplot() + 
+  geom_sf(data = bingies_neighbors) +
+  geom_sf(data = binghamton, fill = "blue") +
+  geom_sf(data = random_pnts, color = "darkgreen") +
+  theme_bw()
+
+```
+
+<br>
+
+##### __Plotting attributes__
+
+We can create thematic maps by specifying the name of a variable in the `geom_sf()` function:
+
+```{r}
+
+names(binghamton)
+
+```
+
+```{r}
+
+ggplot() + 
+  geom_sf(data = binghamton, aes(fill = POP8)) +
+  theme_bw()
+
+```
+
+<br>
+
+##### __Manual Color Scale__
+
+Here, we will use the `viridis` color scale, which is colorblind safe. This comes with several color palette `options`. 
+
+```{r}
+
+ggplot() + 
+  geom_sf(data = binghamton, aes(fill = PEXPOSURE)) +
+  scale_fill_viridis(option = "viridis") +
+  theme_bw()
+
+```
+
+```{r}
+
+ggplot() + 
+  geom_sf(data = binghamton, aes(fill = PEXPOSURE)) +
+  scale_fill_viridis(option = "magma") +
+  theme_bw()
+
+```
+
+<br>
+
+##### __Coordinates__
+
+By default, `geom_sf` transforms all `sf` objects to WGS84 (or latitude and longitude), but you can change this with `coord_sf`. This takes an argument `datum` that can be used to specify a different projection. Here we plot the Binghamton data using a UTM projection (zone 18N = EPSG code 26918). Note the change in both the projection of the data, and the axes:
+
+```{r}
+
+ggplot() + 
+  geom_sf(data = binghamton, aes(fill = PEXPOSURE)) +
+  scale_fill_viridis(option = "viridis") +
+  coord_sf(datum = 26918) +
+  theme_bw()
+
+```
+
+You can also use this to zoom in on different parts of the map.
+
+```{r}
+
+ggplot() + 
+  geom_sf(data = binghamton, aes(fill = PEXPOSURE)) +
+  scale_fill_viridis(option = "viridis") +
+  coord_sf(xlim = c(-75.93, -75.88), ylim = c(42.09, 42.13)) +
+  theme_bw()
+
+```
+
+
+# Rasters
+
+Up till now, we have been working with _vector_ spatial data. These are geometries composed of points defined by their coordinates. An alternative form of spatial data is known as a _raster_. This is gridded data. It takes the form of a rectangle composed of squares of equal size, which are sometimes called 'cells' or 'pixels'. Each cell stores some kind of value. 
+
+This simplifies the geometry, which can be specified by two pieces of information: the spatial extent of the raster and the resolution of the cells. Here we create a blank raster using the `raster` function, and assign random values to each cell:
+
+```{r, echo = FALSE}
+
+r <- raster(nrow = 10, ncol = 10)
+
+r[] <- runif(n = 100)
+
+r
+```
+
+`raster` objects can be plotted using the base `plot()` command:
+
+```{r}
+
+plot(r)
+
+```
+
+The **raster** package offers a wide array of functions for dealing with gridded data, including the ability to read from many widely used file formats, like remote sensing images (e.g. GeoTiffs), NetCDF, and HDF formats. We will use it here to work with gridded air temperature data (*air.mon.ltm.nc*) from the [NCAR NCEP reanalysis project](https://www.cpc.ncep.noaa.gov/products/wesley/reanalysis.html). This is the long term means for each month from 1981-2010. The file has 12 layers (one per month) and one variable (*air*). 
+
+<br>
+
+### Read and Write Rasters
+
+To read in gridded data, use the `raster()` function. 
+
+```{r, eval = FALSE}
+
+air_temp <- raster("../datafiles/air.mon.ltm.nc")
+
+```
+
+Note that we have only read the first layer (January). R will tell you that it loaded the variable called *air*. To avoid this message you can specify this directly, which is important for files containing multiple variables:
+
+```{r}
+
+air_temp <- raster("../datafiles/air.mon.ltm.nc", varname = "air")
+
+air_temp
+
+```
+
+<br>
+
+We can write `raster` objects back to file using `writeRaster()` (I'll bet you never thought it would be called that). Here we write out to a TIFF format. You can see the full list of available formats for reading and writing by running the `writeFormats()` function in the console. 
+
+```{r, eval = FALSE}
+
+writeRaster(air_temp, filename = "../datafiles/air_temp.tif")
+
+```
+
+
+<br>
+
+### Raster CRS
+
+Set CRS:
+
+```{r, message = FALSE, warning = FALSE}
+
+crs(air_temp) <- "+proj=longlat +ellps=WGS84 +towgs84=0,0,0 +no_defs "
+
+```
+
+Again, this should not be used to _change_ the CRS, only set it. 
+
+<br>
+
+Get CRS:
+
+```{r}
+
+crs(air_temp)
+
+```
+
+Also, note that `crs` is for rasters, `st_crs` for vectors. 
+
+<br>
+
+Transform CRS:
+
+```{r, warning = FALSE}
+
+weird_crs <- crs("+proj=tmerc +lat_0=0 +lon_0=15 +k=0.999923 +x_0=5500000 +y_0=0 +ellps=GRS80 +units=m +no_defs")
+
+air_temp_weird_crs <- projectRaster(air_temp, crs = weird_crs)
+
+crs(air_temp_weird_crs)
+
+```
+
+Note that **raster** still uses the PROJ4-string syntax. It's a holdover from its original development.  
+
+<br>
+
+### Basic Plotting
+
+`air_temp` is a raster object and has information about grid spacing, coordinates etc. Note that the description of the object tells you whether it is held in memory (small raster files) or on disk.
+
+```{r}
+
+plot(air_temp, main = "NCEP NCAR January LTM Tair")
+
+```
+
+<br>
+
+And you should be able to see the outline of the continents. By default, NCAR NetCDF files have longitudes running from 0 to 360. We can convert this to the more commonly used (and UK-centric :) ) -180 to 180 by the function `rotate()`. We can also use a different color palette and overlay country polygons:
+
+```{r}
+
+air_temp = rotate(air_temp)
+
+# using RColorBrewer
+my.pal <- brewer.pal(n = 9, name = "OrRd")
+
+plot(air_temp, 
+     main = "NCEP NCAR January LTM Tair", 
+     col = my.pal)
+
+countries <- st_read("../datafiles/ne_50m_admin_0_countries/ne_50m_admin_0_countries.shp", 
+                     quiet = TRUE)
+
+plot(st_geometry(countries), add = TRUE)
+
+```
+To see other color palettes in the **RColorBrewer** package, run `display.brewer.all()` in the console. You can find out more details and explore visualizations with these palettes [here](https://colorbrewer2.org/).
+
+<br>
+
+### Summary Statistics
+
+The function `cellStats()` can be used to calculate most summary statistics for a raster layer. So to get the mean global temperature (and standard deviation):
+
+```{r}
+
+cellStats(air_temp, mean)
+
+cellStats(air_temp, sd)
+
+```
+
+<br>
+
+### Subset Rasters
+
+If we want to use only a subset of the original raster layer, the function `crop()` will extract only the cells in a given region. This can be defined using another raster object or Spatial* object, or by defining an `extent` object:
+
+```{r}
+
+# extent method
+canada_ext <- extent(c(xmin = -142, 
+                       xmax = -52, 
+                       ymin = 41,
+                       ymax = 84))
+
+# this produces a slightly different result because I rounded the coordinates
+canada_air_temp <- crop(air_temp, canada_ext)
+
+# spatial method
+canada <- subset(countries, NAME == "Canada")
+
+canada_air_temp <- crop(air_temp, canada)
+
+# plot
+plot(canada_air_temp, main = "NCEP NCAR January LTM Tair", col = my.pal)
+
+plot(st_geometry(canada), add = TRUE)
+
+```
+
+Note that `crop` subsets the original raster to the extent of Canada's borders, rather than to the borders themselves. This is because rasters are _always_ rectangular. You can 'hide' the values of raster cells outside of a polygon by using the `mask` function. The raster has to be rectangular, so this does not remove the cells outside the polygon. Rather, it sets their value to `NA`. 
+
+```{r}
+
+canada_air_temp <- mask(canada_air_temp, mask = canada)
+
+# plot
+plot(canada_air_temp, main = "NCEP NCAR January LTM Tair", col = my.pal)
+
+plot(st_geometry(canada), add = TRUE)
+
+```
+
+<br>
+
+### Extract Data
+
+Values can be extracted from individual locations (or sets of locations) using `extract()`. This can take a set of coordinates in matrix form, or use a Spatial* object. To get the January temperature of Salt Lake City:
+
+```{r}
+
+extract(air_temp, cbind(-111.9,40.76))
+
+```
+
+By default this gives you the value of the cell in which the point falls. The value can equally be estimated by bilinear interpolation from the four closest cells with `method='bilinear'`:
+
+```{r}
+
+extract(air_temp, cbind(-111.9,40.76), method = 'bilinear')
+
+```
+
+We created a simple feature object earlier with the location of samples in Western North America (`wna_climate`). We can now use this, and the raster layer to get the January temperature for all locations. 
+
+```{r}
+
+wna_air_temp_df <- extract(air_temp, 
+                           wna_climate, 
+                           method = 'bilinear',
+                           df = TRUE) 
+
+head(wna_air_temp_df)
+
+```
+
+`df = TRUE` tells the function to return the extracted values as a data.frame, which has two columns the raster cell ID and the value in that cell.
+
+This same approach allows you to extract pixels by polygon overlays. 
+
+```{r}
+
+china <- subset(countries, NAME == "China")
+
+china_air_temp_df <- extract(air_temp, china, df = TRUE)
+
+head(china_air_temp_df)
+
+```
+
+When this function is used with a set of polygons, the output is in a list, but we can retrieve whatever we want from that list.
+
+```{r}
+
+two_countries <- rbind(china, canada)
+
+china_tjan <- extract(air_temp, two_countries)[[1]]
+
+hist(china_tjan)
+
+```
+
+The `extract()` function also takes an argument `fun`. This allows you to calculate a summary statistic for each set of pixels that is extracted (i.e. one per polygon). Here, we'll use this with `countries` to get an average value of January temperature. We add this back as a new column in the countries object, and then plot it:
+
+```{r}
+
+countries$Jan_Tmp <- extract(air_temp, countries, fun = mean)[,1]
+
+ggplot(countries) +
+  geom_sf(aes(fill = Jan_Tmp)) +
+  labs(fill = "Temperature",
+       title = "Country average January temperature")
+
+```
+
+<br>
+
+### Raster Stacks
+
+A useful extension to the basic raster functions is the use of stacks. These are a stack of raster layers which represent different variables, but have the same spatial extent and resolution. We can then read in and store all 12 months from the NetCDF file, and then work with this. We read these in with `stack()` and crop them.
+
+```{r}
+
+air_temp_stk <- stack("../datafiles/air.mon.ltm.nc", varname = "air")
+
+air_temp_stk <- rotate(air_temp_stk)
+
+myext <- extent(c(-130,-60,25,50))
+
+air_temp_stk <- crop(air_temp_stk, myext)
+
+```
+
+You can retrieve the a subset of rasters from the stack like you would values from a vector:
+
+```{r}
+
+air_temp_substk <- air_temp_stk[[1:3]]
+
+air_temp_substk
+
+```
+
+By typing the name of the stack object, we can see that this has 12 layers, each with 280 cells and the extent, etc. The names attributed to each layer are often unreadable, so we can add our own names:
+
+```{r}
+
+names(air_temp_stk) <- paste("TAS", month.abb)
+
+names(air_temp_stk)
+
+```
+
+And now you can also pull out rasters by name:
+
+```{r}
+
+# method 1
+air_temp_jan <- air_temp_stk$TAS.Jan
+
+# method 2
+air_temp_jan <- air_temp_stk[["TAS.Jan"]]
+
+```
+
+A useful feature of raster `stack`s is that any of the functions we used previously with one layer will be used across all layers when applied to the `stack.` The `plot()` function, for example, returns a grid with one plot per layer. Setting the `zlim` argument ensures that all figures use the same range of colors:
+
+```{r}
+
+plot(air_temp_stk, 
+     col = my.pal, 
+     zlim = c(-35, 35))
+
+```
+
+Adding a shapefile (or other spatial information) is a little more complex. We create a simple function to plot the country borders, then include this as an `addfun` in the call to `plot()`:
+
+```{r}
+
+addBorder = function(){ plot(as_Spatial(countries), add = TRUE) }
+
+plot(air_temp_stk, 
+     col = my.pal, 
+     zlim = c(-35,35), 
+     addfun = addBorder)
+
+```
+
+The `cellStats()` function now returns the mean (or other statistic) for all layers, allowing a quick look at the seasonal cycle of average air temperature.
+
+```{r}
+
+tavg <- cellStats(air_temp_stk, mean)
+
+plot(1:12, tavg, 
+     type = 'l', 
+     xlab = "Month", 
+     ylab = "Avg T (C)")
+
+```
+
+And we can do the same for an individual location using `extract()`:
+
+```{r fig.keep='none'}
+
+slc.tavg <- extract(air_temp_stk, cbind(-111.9,40.76), method = 'bilinear')
+
+plot(1:12, 
+     slc.tavg, 
+     type = 'l', 
+     xlab = "Month", 
+     ylab = "Avg T (C)")
+
+```
+
+
+
+
+
+
+
+# Appendix A: `tmap`
+
+[`tmap`](https://mtennekes.github.io/tmap/) is built on top of `ggplot2` and works in a similar way by building a series of layers with map geometries and elements. We start by using `tm_shape()` to identify the spatial object to be used, and then geometries are added, including filled polygons, borders, legends, etc. 
+
+We'll start by making some maps with the Syracuse dataset we made earlier. First, let's make a simple map showing the polygon outlines using `tm_borders()`:
+
+```{r}
+
+Syracuse <- NY8[NY8$AREANAME == "Syracuse city", ]
+
+tm_shape(Syracuse) + tm_borders()
+
+```
+
+The function `tm_fill()` will then fill these using one of the variables in the Syracuse data set (POP8). Note that this automatically adds a legend within the frame of the figure:
+
+```{r}
+
+tm_shape(Syracuse) + 
+  tm_borders() + 
+  tm_fill("POP8")
+
+```
+
+The color scale can be changed by setting the `palette` argument in `tm_fill()`. This includes the ColorBrewer scales described above,and the different intervals. For example, to use the 'Greens' palette with percentile breaks:
+
+```{r}
+
+tm_shape(Syracuse) + 
+  tm_borders() + 
+  tm_fill("POP8", palette = "Greens", style = "quantile")
+
+```
+
+Other map elements can be added. Here we add a longitude/latitude graticule with `tm_graticules()`, a north arrow and a line of text with the date the map was made. 
+
+```{r}
+
+tm_shape(Syracuse) + 
+  tm_graticules(col = "lightgray") + 
+  tm_borders() + 
+  tm_fill("POP8", palette = "Greens", style = "quantile") + 
+  tm_compass(position = c("left", "bottom")) + 
+  tm_credits("2019-10-19", position = c("right", "top"))
+
+```
+
+We'll next make some maps with the Western North American site data. Individual symbols can be plotted on a color scale using `tm_symbols`.
+
+```{r fig.keep='none', message=FALSE}
+
+tm_shape(wna_climate) + tm_symbols(col="Jan_Tmp")
+
+```
+
+This takes the same arguments as `tm_fill()` for the color palette. We'll use a red to blue color scale from **RColorBrewer**. The minus sign before the palette name reverses the order of the colors. As there is a large amount of overlap between the sites, we also add an alpha level to make the symbols transparent. 
+
+```{r fig.keep='none', message=FALSE}
+
+tm_shape(wna_climate) + 
+  tm_symbols(col="Jan_Tmp", alpha = 0.5, palette = "-RdBu") 
+
+```
+
+We'll next add country boundaries from the Natural Earth shapefile loaded earlier. Note that as this is a different spatial object, we have to use `tm_shape()` a second time to reference this, then use `tm_borders()` to add the lines.
+
+```{r fig.keep='none', message=FALSE}
+
+tm_shape(wna_climate) + 
+  tm_symbols(col="Jan_Tmp", alpha = 0.75, palette = "-RdBu") + 
+  tm_shape(countries) + tm_borders(col="gray")
+
+```
+
+We can also use this 
+```{r fig.keep='none', message=FALSE}
+
+tm_shape(wna_climate) + 
+  tm_symbols(col="Jan_Tmp", alpha = 0.75, palette = "-RdBu") + 
+  tm_shape(countries) + tm_borders(col="gray") + tm_style("cobalt")
+
+```
+
+In the final example, we'll make figures using the global air temperature dataset. Start by re-reading the data (we also change the name of the layer, to reduce the amount of typing later on...).
+
+```{r fig.keep='none', message=FALSE}
+
+r = raster("../datafiles/air.mon.ltm.nc", varname="air")
+r = rotate(r)
+names(r) <- "jan_tmp"
+proj4string(r) <- CRS("+init=epsg:4326")
+
+```
+
+Now let's make a plot using `tm_raster()`, which again takes similar options for color palettes. We'll also add the country borders. 
+
+```{r fig.keep='none', message=FALSE}
+
+tm_shape(r) + 
+  tm_raster("jan_tmp", style="fisher", palette="-RdBu") +
+  tm_shape(countries) + tm_borders() 
+
+```
+
+We can improve this a little by moving the color legend outside of the plotting area. We'll increase the number of color classes to 9, and add a histogram showing the frequency of different values. 
+
+```{r fig.keep='none', message=FALSE}
+
+tm_shape(r) + 
+  tm_raster("jan_tmp", style="fisher", palette="-RdBu", legend.hist = TRUE, n = 9) +
+  tm_shape(countries) + tm_borders() + tm_layout(legend.outside = TRUE, 
+                                                 legend.outside.position = "left")
+
+```
+
+
+# Appendix B: Interactive Maps
+
+### With `tmap`
+
+### With `mapview`

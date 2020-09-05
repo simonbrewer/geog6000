@@ -91,7 +91,7 @@ Note that all `sf` functions are prefixed with `st_` (a legacy of this R package
 
 A simple feature is, in the words of the `sf` authors, "a formal standard (ISO 19125-1:2004) that describes how objects in the real world can be represented in computers, with emphasis on the spatial geometry of these objects" ([ref](https://r-spatial.github.io/sf/articles/sf1.html)). In other words, its structured data that provides information about a location in space, including its shape.
 
-The way that `sf` chooses to represent simple features in R should be familiar to you because they are just fancy data.frames:
+The way that `sf` chooses to represent simple features in R should be familiar to you because they are just fancy data.frames. To demonstarte this, we'll load a file of county outlines for North Carolina (this file is included when you install the `sf` package):
 
 ```{r}
 
@@ -412,13 +412,21 @@ The attribute part of a `sf` object is a data.frame, so you can use all the meth
 
 oregon_tann <- read_sf("../datafiles/oregon/oregontann.shp")
 
-oregon_tann
+class(oregon_tann)
 
 ```
 
 ```{r, echo = FALSE}
 
 plot(st_geometry(oregon_tann), col = "darkred", pch = 19)
+
+```
+
+If you enter the name of an `sf` object, it will print the first few rows of the attribute table:
+
+```{r}
+
+oregon_tann
 
 ```
 
@@ -449,6 +457,8 @@ Notice this very important difference between regular data.frames and `sf` data.
 
 ### Filter Rows
 
+Subsetting the data by rows works in the same way as before. So we can carry out conditional selection of locations by using the usual comparison operators (`<, <=, ==, !=, >=, >`). For example, to select only the points above 1000 m elevation in the Oregon data set:
+
 ```{r}
 
 # get features above 1000 meters
@@ -474,6 +484,8 @@ plot(st_geometry(oregon_tann3), col = "darkred", pch = 19, add = TRUE)
 
 ### Add Column
 
+New variables can easily be appended to an existing `sf` object using the following notation:
+
 ```{r}
 
 # method 1
@@ -490,17 +502,16 @@ names(oregon_tann)
 
 ### Extract Column
 
-This is for extracting a column to a vector.  
+If you need to extract any variable from a `sf` object to a standard R vector, you can again use the standard notation. Note that if you use `[,]` to specify the columns, you need to add `drop = TRUE` to remove the geometry:
 
 ```{r}
 
 # method 1
-elevation <- oregon_tann[ , "elevation", drop = TRUE] 
-
-# if you don't specify drop = TRUE, it'll keep the sticky geometry column
+elevaton <- oregon_tann$elevation
 
 # method 2
-elevaton <- oregon_tann$elevation
+# if you don't specify drop = TRUE, it'll keep the sticky geometry column
+elevation <- oregon_tann[ , "elevation", drop = TRUE] 
 
 elevation[1:10]
 
@@ -509,6 +520,8 @@ elevation[1:10]
 <br>
 
 ### Get Geometry
+
+If you need only the geometry (the set of coordinates, or vector definitions), these can be extracted as follows:
 
 ```{r}
 
@@ -546,11 +559,17 @@ Spatial operations are like attribute operations, but they work with the geometr
 
 ### Spatial Filter
 
-This is probably the biggest one. Basically, you are taking one geometry and using it to filter other geometries. To demonstrate this, first we'll make some random points in the `north_carolina` simple feature. Well, first-first, we need to project the simple features, since `sf` will protest if you try to do spatial operations on longitude and latitude.
+This is probably the biggest one. Basically, you are taking one geometry and using it to filter other geometries. To demonstrate this, first we'll make some random points in the `north_carolina` simple feature. Well, first-first, we need to project the simple features, since `sf` will protest if you try to do spatial operations on longitude and latitude, as several of these methods require the calculation of distances between locations.
 
 ```{r, message = FALSE}
 
 north_carolina <- st_transform(north_carolina, crs = 26918)
+
+```
+
+Now use `st_sample` to generate the random points:
+
+```{r, message = FALSE}
 
 set.seed(1234)
 
@@ -571,13 +590,15 @@ plot(st_geometry(random_pnts),
 
 ```
 
-Now, we can collect just the points in, say, Pasquotank County.
+Now, we can use one geometry to filter out a second one. To obtain just the points in, say, Pasquotank County, we first subset the North Carolina `sf` object to extract only this county:
 
 ```{r}
 
 pasquotank <- subset(north_carolina, NAME == "Pasquotank")
 
 ```
+
+Then use the `st_filter()` function with the county polygon to get _only_ the points located in that polygon:
 
 ```{r, message = FALSE}
 
@@ -602,7 +623,7 @@ Now, you know where Pasquotank County is!
 
 ##### __Topological Relations__
 
-Internally, `st_filter` assumes a "topological" or spatial relationship defined by what the `sf` authors refer to as spatial predicate (`.predicate`), specifically, `st_intersects` (simplifying somewhat, that one geometry is inside the other), but we can specify other spatial relationships, too. For example, all the points _outside_ Pasquotank:
+Internally, `st_filter` assumes a "topological" or spatial relationship defined by what the `sf` authors refer to as spatial predicate (`.predicate`). By default, `st_intersects` works to find the geometry of one object located within another. We can, however, specify other spatial relationships. For example, to get all the points _outside_ Pasquotank:
 
 ```{r, message = FALSE}
 
@@ -711,7 +732,7 @@ plot(st_geometry(north_carolina_boundary))
 
 ### Cast
 
-To cast a geometry is to change it from one geometry type to another.
+To cast a geometry is to change it from one geometry type to another. For example, to convert the boundary of North Carolina to points (the vertices of the polygon):
 
 ```{r}
 
@@ -724,6 +745,8 @@ north_carolina_points <- st_cast(north_carolina_boundary, "POINT")
 plot(st_geometry(north_carolina_points), col = "darkorange", pch = 19)
 
 ```
+
+If we convert to a `LINESTRING` objcet, this acts to separate out the individual polygons:
 
 ```{r}
 
@@ -757,7 +780,7 @@ If you can't tell, it was broken into six lines: one for the mainland, and the o
 
 ### `graphics`
 
-Using the base R `graphics` package.
+To make simple plots of an `sf` object, you can use R's base function `plot()`:
 
 ```{r}
 
@@ -777,13 +800,15 @@ plot(st_geometry(oregon_tann2))
 
 ### `ggplot2`
 
-The heart of plotting `sf` objects with `ggplot2` is the special plotting geometry, `geom_sf`.
+One of the easiest ways to improve on these base plots is to use **ggplot2**. This contains a a special plotting geometry, `geom_sf`, designed to work with `sf` objects. Here, we'll use a subset of polygons from the `NY8` data to illustrate how this works. (Note that `geom_sf` refers to a **ggplot2** geometry, not a `sf` geometry.)
 
 ```{r}
 
 binghamton <- subset(NY8, AREANAME == "Binghamton city")
 
 ```
+
+We can now plot this by callin gthe `ggplot()` function and adding the `sf` object with `geom_sf`: 
 
 ```{r}
 
@@ -797,6 +822,8 @@ ggplot() +
 
 ##### __Multiple Geometries__
 
+Multiple layers can be added to a plot by adding additional `geom_sf` functions. Here, we first create a new `sf` object containing Binghamton and it's neighboring polygons, then create some random points for plotting:
+
 ```{r, message = FALSE}
 
 bingies_neighbors <- st_filter(NY8, binghamton)
@@ -806,6 +833,8 @@ random_pnts <- st_sample(bingies_neighbors, size = 25)
 random_pnts <- st_as_sf(random_pnts)
 
 ```
+
+Now we can plot these: first the larger set of polygons, then Binghamton City and finally the points:
 
 ```{r}
 
@@ -819,7 +848,9 @@ ggplot() +
 
 <br>
 
-##### __Aesthetics__
+##### __Plotting attributes__
+
+We can create thematic maps by specifying the name of a variable in the `geom_sf()` function:
 
 ```{r}
 
@@ -863,7 +894,7 @@ ggplot() +
 
 ##### __Coordinates__
 
-By default, `geom_sf` transforms all `sf` objects to WGS84 (or latitude and longitude), but you can change this with `coord_sf`.
+By default, `geom_sf` transforms all `sf` objects to WGS84 (or latitude and longitude), but you can change this with `coord_sf`. This takes an argument `datum` that can be used to specify a different projection. Here we plot the Binghamton data using a UTM projection (zone 18N = EPSG code 26918). Note the change in both the projection of the data, and the axes:
 
 ```{r}
 

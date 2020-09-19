@@ -40,7 +40,7 @@ library(ggplot2)
 
 We'll use several datasets in this lab:
 
-- the Iris morphological dataset (*iris.csv*)
+- A dataset of morphological measurements of three species of penguin *penguins.csv*
 - a dataset on the growth of five Orange trees (*orange.csv*) 
 - Gapminder data on countries population, GDP and life expectancy for the past 60 years (*gapminderData.csv*)
 - The VADeaths dataset (*VADeaths.csv*), showing death rates in West Virginia 

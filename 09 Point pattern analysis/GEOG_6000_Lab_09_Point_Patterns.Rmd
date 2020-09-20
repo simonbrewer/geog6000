@@ -1,5 +1,5 @@
 ---
-title: "GEOG 6000 Lab 08 Spatial point patterns"
+title: "GEOG 6000 Lab 09 Spatial point patterns"
 author: "Simon Brewer"
 date: "September 20, 2020"
 output:
@@ -17,9 +17,9 @@ options(width=50)
 set.seed(1234)
 ```
 
-In this lab, we will carry out some point pattern data analysis. 
+In this lab, we will carry out some point pattern data analysis. We will cover constructing point pattern objects, basic data exploration and building simple models. 
 
-Before starting the lab, you will need to set up a new folder for your working directory. Go to your `geog6000` folder now and create a new folder for today's class called `lab08`. The following files will be used in this lab, all available on Canvas:  
+Before starting the lab, you will need to set up a new folder for your working directory. Go to your `geog6000` folder now and create a new folder for today's class called `lab09`. The following files will be used in this lab, all available on Canvas:  
 
 - Locations of trees in tropical rainforest (*bei.csv*) and associated slope values (*beislope.csv*)
 - Zipped shapefile containing locations of redwood trees in a plot in Northern California: *redwood.zip*
@@ -27,7 +27,16 @@ Before starting the lab, you will need to set up a new folder for your working d
 
 You will need to download these files from Canvas, and move them from your `Downloads` folder to the `datafiles` folder that you made previously. Make sure to unzip the zip files so that R can access the content. Note that on Windows, you will need to right-click on the file and select 'Extract files'. 
 
-You will need three packages to carry out all the steps listed here: **rgdal**, **maptools** and **spatstat**, so make sure these are installed these before starting. The following files will be used:
+You will need two packages to carry out all the steps listed here: **sf** and **spatstat**, so make sure these are installed these before starting. 
+
+```{r, eval = FALSE}
+
+pkgs <- c("spatstat",
+          "sf")
+
+install.packages(pkgs)
+
+```
 
 \newpage
 
@@ -72,7 +81,7 @@ plot(bei.qt, cex=0.8)
 
 The $p$-value obtained suggests that we can reject the null hypothesis, and accept the alternative, that there is a non-homogenous distribution, which implies that there is some spatial process controlling the distribution of the trees. 
 
-As an alternative to the simple quadrat approach, we can use a covariate to see if there is an association between values of the covariate and the object distribution. Here we use gridded slope values for the study area, contained in the file `beislope.csv`, read into R as a pixel image object. In order for this to be used, we (1) read in the gridded dataset; (2) create a new window for the gridded data (on a 10m grid); (3) create the pixel object using the `as.im()` function. Note that we define the window size by hand by specifying a sequence of `x` and `y` coordinates. 
+As an alternative to the simple quadrat approach, we can use a covariate to see if there is an association between values of the covariate and the object distribution. Here we use gridded slope values for the study area, contained in the file `beislope.csv`, read into R as a pixel image object. In order for this to be used, we (1) read in the gridded dataset; (2) create a new window for the gridded data (on a 10m grid); (3) create the pixel object using the `as.im()` function. Note that we define the window size by hand by specifying minimum and maximum `x` and `y` coordinates of the region.
 
 ```{r fig.keep='high'}
 bei.slope <- read.csv("../datafiles/beislope.csv", header = FALSE)
@@ -132,19 +141,27 @@ plot(density(bei.ppp, sigma = bei.bw))
 
 Distance functions can be used to investigate the interaction between points in space. Various methods exist, all based on the idea of calculating distances between points and other points, or fixed points in the study region. The most well-known of these is Ripley's $K$ function, which describes the distribution as the set of all pairwise distances between points. 
 
-We will run this using a different point data set, the redwoods data: *redwood.shp*. Read this into R, and create a point process object. As the data is in a shape file, we will need to use the `readOGR()` function from the **rgdal** package, and we will also need the **maptools** package to convert these data to a `ppp` object, via a 'SpatialPoints' object. 
+We will run this using a different point data set, the redwoods data: *redwood.shp*. Read this into R, and create a point process object. As the data is in a shape file, we will need to use the `st_read()` function from the **sf** package. This package also includes a helper function `as.ppp()` to convert directly to a `ppp` object.  
 
-```{r echo=FALSE, message=FALSE}
-library(maptools)
-library(rgdal)
+```{r fig.keep='high', message=FALSE}
+library(sf)
+redwood.sf <- st_read("../datafiles/redwood/redwood.shp")
+redwood.ppp <- as.ppp(redwood.sf)
+redwood.ppp
+# redwood.sp <- readOGR("../datafiles/redwood/redwood.shp")
+# y <- as(redwood.sp, "SpatialPoints")
+# redwood <- as(y, "ppp")
+# redwood.owin <- owin(x = c(0, 1), y = c(0, 1))
+# redwood <- redwood[redwood.owin]
+# plot(redwood)
 ```
-```{r fig.keep='high', message=FALSE, results='hide'}
-redwood.sp <- readOGR("../datafiles/redwood/redwood.shp")
-y <- as(redwood.sp, "SpatialPoints")
-redwood <- as(y, "ppp")
-redwood.owin <- owin(x = c(0, 1), y = c(0, 1))
-redwood <- redwood[redwood.owin]
-plot(redwood)
+
+The function has created a `ppp` object, but by default it uses the first column in the `sf` data frame as a *mark*, a label on each point. We'll look at this later in the lab, but for now we want to ignore this by setting it to a NULL value. The other thing we'll correct is the window size, setting the minimum and maximum limits to 0 and 1 for both the $x$ and $y$ axes. 
+
+```{r}
+marks(redwood.ppp) <- NULL
+Window(redwood.ppp) <- owin(x = c(0, 1), y = c(0, 1))
+plot(redwood.ppp)
 ```
 
 ### Ripley's $K$
@@ -152,7 +169,7 @@ plot(redwood)
 Ripley's $K$ function is calculated using the \texttt{Kest()} function and similar functions exist for the $F$ and $G$ functions. Once calculated, we can plot out the results, including the observed values of Ripley's $K$ and a theoretical curve based on an homogenous poisson process with an intensity equal to our point process object. 
 
 ```{r fig.keep='high'}
-redwood.kest <- Kest(redwood)
+redwood.kest <- Kest(redwood.ppp)
 plot(redwood.kest)
 ```
 
@@ -165,7 +182,7 @@ The redwood data appear to be clustered. To test if these are significantly diff
 3. The number of random simulations to be performed (99)
 
 ```{r}
-redwood.kest.mc <- envelope(redwood, fun = 'Kest', 
+redwood.kest.mc <- envelope(redwood.ppp, fun = 'Kest', 
                             nsim = 99, verbose = FALSE)
 plot(redwood.kest.mc, shade = c("hi", "lo"))
 ```
@@ -173,7 +190,7 @@ plot(redwood.kest.mc, shade = c("hi", "lo"))
 Note that this uses point-wise estimates of uncertainty, and cannot be used as a post-hoc test. A better approach is to calculate the global uncertainty as the largest deviation between the randomly generated values of $K$ and the theoretical value:
 
 ```{r fig.keep='high'}
-redwood.kest.mc <- envelope(redwood, fun = 'Kest', 
+redwood.kest.mc <- envelope(redwood.ppp, fun = 'Kest', 
                             nsim = 99, verbose = FALSE, global = TRUE)
 plot(redwood.kest.mc, shade = c("hi", "lo"))
 ```
@@ -183,7 +200,7 @@ plot(redwood.kest.mc, shade = c("hi", "lo"))
 The $L$-function was proposed by Besag as a way to stabilize the variance of Ripley's $K$ and improve the interpretation. We can calculate this by simply replacing the function name in the `envelope()` function, as follows:
 
 ```{r fig.keep='high'}
-redwood.lest.mc <- envelope(redwood, fun = 'Lest', 
+redwood.lest.mc <- envelope(redwood.ppp, fun = 'Lest', 
                             nsim = 99, verbose = FALSE, global = TRUE)
 plot(redwood.lest.mc, shade = c("hi", "lo"))
 ```
@@ -194,7 +211,7 @@ plot(redwood.lest.mc, shade = c("hi", "lo"))
 The final function we will look at here is the pair correlation function. Instead of using cumulative pairs of distances, this is based on the number of pairs of points seperated by a band of distances. This has the advantage of providing a clearer idea of the range of interactions - as Ripley's $K$ is based on the cumulative set of distances, this can make it seem as though interactions are present over greater distances than they really are. Again, we can use the `envelope()` function, but this time we remove the `global` option by setting it to false, as this is no longer needed. 
 
 ```{r fig.keep='high'}
-redwood.pcf.mc <- envelope(redwood, fun = 'pcf', 
+redwood.pcf.mc <- envelope(redwood.ppp, fun = 'pcf', 
                             nsim = 99, verbose = FALSE)
 plot(redwood.pcf.mc, shade=c("hi", "lo"), ylim = c(0,5))
 ```
@@ -214,7 +231,7 @@ We'll now create a `ppp` object using the `species` to defined the *marks* or th
 
 ```{r fig.keep='high', message=FALSE, results='hide'}
 lansing$species <- as.factor(lansing$species)
-lansing.win <- readOGR("../datafiles/lansing/lansing.shp")
+lansing.win <- st_read("../datafiles/lansing/lansing.shp")
 lansing.ppp <- ppp(lansing$x, lansing$y, win = lansing.win, 
                    marks = lansing$species)
 plot(lansing.ppp)
@@ -223,14 +240,14 @@ plot(lansing.ppp)
 The plot shows all the different marks (species) plotted together. We can access different marks, using the `split()` function, and can use this to analyze the distribution of any single species:
 
 ```{r fig.keep='high'}
-plot(split(lansing.ppp))
-plot(split(lansing.ppp)$maple)
+plot(split(lansing.ppp), main = "All marks")
+plot(split(lansing.ppp)$maple, "Maple trees")
 ```
 
 While these plots show some clear evidence of species that have quite different distributions, the `density()` function can be used to make this clearer:
 
 ```{r fig.keep='high'}
-plot(density(split(lansing.ppp)))
+plot(density(split(lansing.ppp)), "Lansing density surfaces")
 ```
 
 To examine the co-occurrence of two marks or species, we can again use Ripley's $K$ function. We use the *cross* version: `Kcross()`, which examines pairwise differences between objects from the two classes. Again, we use the `envelope()` function to simulate random distributions, and specify the two species (marks) as $i$ and $j$ in the function:
@@ -242,6 +259,7 @@ lansing.kc <- envelope(lansing.ppp, Kcross,
 ```
 
 As before, we can plot the output as observed curves and the envelope of simulated random distributions. If the observed curve is above the envelope, this is evidence that the two species co-occur; if below then the two species tend to occur in different areas, suggesting some competitive interaction. If the observed curve is within the envelope, then the combined distribution is random.
+
 ```{r fig.keep='high'}
 plot(lansing.kc)
 ```
@@ -306,24 +324,17 @@ plot(fit2, how = 'image', se = FALSE, pause = FALSE)
 
 ### R code for reading Urkiola shape file and converting to ppp object
 
-Note that you will need to install and load the **maptools** package for this to work:
-
 ```{r eval=FALSE}
 # Tree locations
-urkiola.sp <- readOGR("./urkiola/urkiola.shp")
+urkiola.sp <- st_read("./urkiola/urkiola.shp")
 # Park boundary
 urkiola.win <- readOGR("./urkiola/urkiolaWindow.shp")
-# First convert boundary to owin object
-y <- as(urkiola.win, "SpatialPolygons")
-# Then convert SpatialPolygons to owin class
-urkiola.owin <- as(y, "owin")
-# Now get tree coordinates
-urkiola.x <- coordinates(urkiola.sp)[,1]
-urkiola.y <- coordinates(urkiola.sp)[,2]
-# Finally make up ppp object using coordinates, tree names and owin
-urkiola.ppp <- ppp(urkiola.x, urkiola.y, 
-                   window = urkiola.owin, 
-                   marks = urkiola.sp$tree)
+# First convert points to ppp
+urkiola.ppp <- as.ppp(urkiola.sf)
+# Set study window to park boundary
+Window(urkiola.ppp) <- as.owin(urkiola.win)
+# Set marks to the tree species
+marks(urkiola.ppp) <- urkiola.sf$tree
 ```
 
 

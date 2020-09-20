@@ -50,7 +50,7 @@ You will need to download these files from Canvas, and move them from your `Down
 ```{r}
 
 penguins <- read.csv("../datafiles/penguins.csv")
-str(iris)
+str(penguins)
 
 orange <- read.csv("../datafiles/orange.csv")
 str(orange)
@@ -204,7 +204,7 @@ In order to understand how `ggplot` makes a figure, we need to establish what th
 4. Scales – these are legends that show the relationship between variables and different symbols or colors (e.g. circular symbols represent females while squares represent males)
 5. Facets – these are groups in your data which may be used to make multiple graphs, each for one of the groups. For example, faceting by gender would cause the graph to repeat for the two genders.
 
-When making a `ggplot` figure, we generally start by creating the base figure. To do this we need to tell the function where the data is coming from, and the base aesthetic (i.e. which variable is `x`, which is `y`?). To remake the first iris plot with `ggplot()`, we would do the following:
+When making a `ggplot` figure, we generally start by creating the base figure. To do this we need to tell the function where the data is coming from, and the base aesthetic (i.e. which variable is `x`, which is `y`?). To remake the first penguin plot with `ggplot()`, we would do the following:
 
 ```{r}
 

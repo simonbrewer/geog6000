@@ -13,6 +13,8 @@ output:
 ```{r include = FALSE}
 
 knitr::opts_chunk$set(echo = TRUE,
+                      message = FALSE,
+                      warning = FALSE,
                       fig.align = "center")
 
 ```
@@ -30,8 +32,7 @@ You will also need to make sure the following packages are installed on your com
 
 ```{r, eval = FALSE}
 
-pkgs <- c("ggplot2",
-          "mapview",
+pkgs <- c("mapview",
           "raster",
           "RColorBrewer"
           "sf",
@@ -42,7 +43,7 @@ install.packages(pkgs)
 
 ```
 
-```{r, message = TRUE}
+```{r}
 
 library(mapview)
 library(raster)
@@ -53,11 +54,11 @@ library(viridis)
 
 ```
 
-# Static plots with **tmap**
-
+# Static Maps with `tmap`
 
 [`tmap`](https://mtennekes.github.io/tmap/) is built on top of `ggplot2` and works in a similar way by building a series of layers with map geometries and elements. We start by using `tm_shape()` to identify the spatial object to be used, and then geometries are added, including filled polygons, borders, legends, etc. 
 
+<br>
 
 ## Polygon data
 
@@ -65,14 +66,11 @@ We'll start by making some maps based on the NY shapefile. Start by loading this
 
 ```{r}
 
-NY8 <- st_read(dsn = "../datafiles/NY_data/NY8_utm18.shp",
-               layer = "NY8_utm18",
-               drivers = "ESRI Shapefile")
+NY8 <- st_read("../datafiles/NY_data/NY8_utm18.shp")
 
 Syracuse <- NY8[NY8$AREANAME == "Syracuse city", ]
 
 ```
-
 
 First, let's make a simple map showing the polygon outlines using `tm_borders()`:
 
@@ -82,7 +80,7 @@ tm_shape(Syracuse) + tm_borders()
 
 ```
 
-The function `tm_fill()` can be used to create a thematic map by using one of the attributes in the Syracuse data set (`POP8`). Note that this automatically adds a legend within the frame of the figure:
+The function `tm_fill()` can be used to define the polygon fill color based on an attribute in the Syracuse data set (`POP8`). Note that this automatically adds a legend within the frame of the figure:
 
 ```{r}
 
@@ -102,7 +100,7 @@ tm_shape(Syracuse) +
 
 ```
 
-Other map elements can be added. Here we add a longitude/latitude graticule with `tm_graticules()`, a north arrow and a line of text with the date the map was made. 
+Other map elements can be added. Here we add a longitude/latitude graticule with `tm_graticules()`, a north arrow with `tm_compass()`, and a line of text showing the date the map was made with `tm_credits()`. 
 
 ```{r}
 
@@ -115,6 +113,11 @@ tm_shape(Syracuse) +
 
 ```
 
+<<<<<<< HEAD
+=======
+<br>
+
+>>>>>>> 52ce36060e1cd3be65a05698f8fff40b0f2efe6f
 ## Point data
 
 We'll next make some maps with the Western North American site data. As before, we load the data, then convert to an `sf` object. We also load the shapefile of country outlines:
@@ -134,45 +137,51 @@ countries <- st_read("../datafiles/ne_50m_admin_0_countries/ne_50m_admin_0_count
 
 Individual symbols can be plotted on a color scale using `tm_symbols`.
 
-```{r fig.keep='none', message=FALSE}
+```{r}
 
-tm_shape(wna_climate) + tm_symbols(col="Jan_Tmp")
+tm_shape(wna_climate) + tm_symbols(col = "Jan_Tmp")
 
 ```
 
 This takes the same arguments as `tm_fill()` for the color palette. We'll use a red to blue color scale from **RColorBrewer**. The minus sign before the palette name reverses the order of the colors. As there is a large amount of overlap between the sites, we also add an alpha level to make the symbols transparent. 
 
-```{r fig.keep='none', message=FALSE}
+```{r}
 
 tm_shape(wna_climate) + 
-  tm_symbols(col="Jan_Tmp", alpha = 0.5, palette = "-RdBu") 
+  tm_symbols(col = "Jan_Tmp", alpha = 0.5, palette = "-RdBu") 
 
 ```
 
 We'll next add country boundaries from the Natural Earth shapefile loaded earlier. Note that as this is a different spatial object, we have to use `tm_shape()` a second time to reference this, then use `tm_borders()` to add the lines.
 
-```{r fig.keep='none', message=FALSE}
+```{r}
 
 tm_shape(wna_climate) + 
-  tm_symbols(col="Jan_Tmp", alpha = 0.75, palette = "-RdBu") + 
-  tm_shape(countries) + tm_borders(col="gray")
+  tm_symbols(col = "Jan_Tmp", alpha = 0.75, palette = "-RdBu") + 
+  tm_shape(countries) + 
+  tm_borders(col = "gray")
 
 ```
 
 We can also use this 
-```{r fig.keep='none', message=FALSE}
+
+```{r}
 
 tm_shape(wna_climate) + 
-  tm_symbols(col="Jan_Tmp", alpha = 0.75, palette = "-RdBu") + 
-  tm_shape(countries) + tm_borders(col="gray") + tm_style("cobalt")
+  tm_symbols(col = "Jan_Tmp", alpha = 0.75, palette = "-RdBu") + 
+  tm_shape(countries) + 
+  tm_borders(col = "gray") + 
+  tm_style("cobalt")
 
 ```
+
+<br>
 
 ## Raster data
 
 In the final example, we'll make figures using the global air temperature dataset. Start by re-reading the data (we also change the name of the layer, to reduce the amount of typing later on...).
 
-```{r fig.keep='none', message=FALSE}
+```{r}
 
 air_temp <- rotate(raster("../datafiles/air.mon.ltm.nc", varname = "air"))
 
@@ -186,28 +195,161 @@ proj4string(air_temp) <- CRS("+init=epsg:4326")
 
 Now let's make a plot using `tm_raster()`, which again takes similar options for color palettes. We'll also add the country borders. 
 
-```{r fig.keep='none', message=FALSE}
+```{r}
 
 tm_shape(air_temp) + 
-  tm_raster(col = "jan_tmp", style="fisher", palette="-RdBu") +
-  tm_shape(countries) + tm_borders() 
+  tm_raster(col = "jan_tmp", style = "fisher", palette = "-RdBu") +
+  tm_shape(countries) + 
+  tm_borders() 
 
 ```
 
 We can improve this a little by moving the color legend outside of the plotting area. We'll increase the number of color classes to 9, and add a histogram showing the frequency of different values. 
 
-```{r fig.keep='none', message=FALSE}
+```{r}
 
 tm_shape(air_temp) + 
-  tm_raster("jan_tmp", style="fisher", palette="-RdBu", legend.hist = TRUE, n = 9) +
-  tm_shape(countries) + tm_borders() + tm_layout(legend.outside = TRUE, 
-                                                 legend.outside.position = "left")
+  tm_raster("jan_tmp", 
+            style = "fisher", 
+            palette = "-RdBu", 
+            legend.hist = TRUE, 
+            n = 9) +
+  tm_shape(countries) + 
+  tm_borders() + 
+  tm_layout(legend.outside = TRUE, legend.outside.position = "left")
 
 ```
 
+<br>
 
-# Interactive Maps
+## Tips and Tricks
 
-### With `tmap`
+For helpful tips and tricks, try:
 
-### With `mapview`
+```{r}
+
+tmap_tip()
+
+```
+
+<br>
+
+# Interactive maps with `mapview`
+
+The [`mapview`](https://r-spatial.github.io/mapview/index.html) package provides functions to produce interactive maps in R by building on the R [`leaflet`](https://rstudio.github.io/leaflet/) package, which provides a low-level interface to the [javascript library](https://leafletjs.com/) of the same name. `mapview` supports multiple spatial data types, including points, lines, polygons, and rasters.
+
+```{r, out.width = '100%'}
+
+mapview(wna_climate, 
+        col.regions = "darkred", # fill color
+        color = "gray",          # outline color
+        alpha.regions = 0.2,     # fill transparency
+        alpha = 0.3)             # outline transparency
+
+mapview(Syracuse, 
+        col.regions = "darkgreen",
+        color = "black")
+
+fn <- system.file("extdata", "kiliNDVI.tif", package = "mapview")
+
+kilimanjaro_NDVI <- raster::stack(fn)[[1]]
+
+mapview(kilimanjaro_NDVI,
+        col.regions = viridis::viridis(n = 10)) # supply custom color palette 
+
+```
+
+<br>
+
+Here we will only review a few of the many features that `mapview` provides.
+
+## Basemaps
+
+The default basemap called when using `mapview()` is _CartoDB.positron_. To use other third-party map tiles, we use the `map.types` argument in `mapview()`. For a list of basemap services, see [here](https://leaflet-extras.github.io/leaflet-providers/preview/). For convenience, the `leaflet` package also provides a named vector of these tile services supported by the leaflet plugin. The vector is called `providers` and you can access elements of the vector like you would any other:
+
+```{r}
+
+leaflet::providers[[35]]
+
+leaflet::providers$CartoDB.Positron # for the minimalists out there
+
+```
+
+```{r, out.width = '100%'}
+
+mapview(Syracuse, 
+        col.regions = "darkgreen",
+        color = "black",
+        map.types = c("Stamen.Watercolor", "Stamen.TonerLite"))
+
+```
+
+<br>
+
+## Layers
+
+`mapview` provides for layering much in the same way that `ggplot2` does.  
+
+```{r, out.width = '100%'}
+
+Syracuse_centers <- st_centroid(Syracuse) 
+
+lyr1 <- mapview(Syracuse, 
+                col.regions = "darkgreen",
+                color = "black")
+
+lyr2 <- mapview(Syracuse_centers,
+                col.regions = "darkblue",
+                cex = 3) # size of point
+
+lyr1 + lyr2
+
+```
+
+<br>
+
+## Aesthetic Mapping
+
+We can also map attributes of the spatial data to various aesthetics.
+
+```{r, out.width = '100%'}
+
+mapview(Syracuse,
+        zcol = "POP8",
+        col.regions = viridis::cividis(n = 10),
+        alpha.regions = 0.85)
+
+```
+
+```{r, out.width = '100%'}
+
+# breweries in Franconia, Germany
+franconia_breweries <- mapview::breweries
+
+# set point size to number of different types of beer served at each brewery
+mapview(franconia_breweries, cex = "number.of.types")
+
+```
+
+<br>
+
+## Inset Map
+
+For whatever reason, `mapview` does not currently support interactive inset maps. However, these can still be added using `leaflet` and a little tinkering with the mapview object.
+
+```{r, out.width = '100%'}
+
+add_miniMap <- function(x) leaflet::addMiniMap(x@map) 
+
+imap <- mapview(franconia_breweries, cex = "number.of.types")
+
+add_miniMap(imap)
+
+```
+
+<br>
+
+
+
+
+

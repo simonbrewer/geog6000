@@ -115,7 +115,7 @@ tm_shape(Syracuse) +
 
 ```
 
-## Poitn data
+## Point data
 
 We'll next make some maps with the Western North American site data. As before, we load the data, then convert to an `sf` object. We also load the shapefile of country outlines:
 

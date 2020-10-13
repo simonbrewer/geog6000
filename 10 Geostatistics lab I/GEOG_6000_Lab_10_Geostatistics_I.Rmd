@@ -90,8 +90,8 @@ ggplot() +
 Now load the Meuse datasets. Here, we'll just load the points data from a shapefile (*meuse.shp*) and a shapefile of the river for plotting (*meuseriv.shp*). 
 
 ```{r results='hide'}
-meuse = st_read("../datafiles/meuse/meuse.shp")
-meuseriv = st_read("../datafiles/meuse/meuseriv.shp")
+meuse <- st_read("../datafiles/meuse/meuse.shp")
+meuseriv <- st_read("../datafiles/meuse/meuseriv.shp")
 ```
 
 # Variogram analysis
@@ -114,7 +114,7 @@ As most methods we will be using here are based on normally distributed data, we
 
 ```{r fig.keep='none'}
 hist(meuse$zinc)
-meuse$lzinc = log(meuse$zinc)
+meuse$lzinc <- log(meuse$zinc)
 plot(meuse["zinc"], pch = 16, cex = 1.25, reset = FALSE)
 plot(meuseriv, add = TRUE, col = NA)
 ```
@@ -126,20 +126,20 @@ We will now use the `variogram()` function to build a sample variogram for the l
 ```{r}
 library(gstat)
 mzinc.var <- variogram(lzinc ~ 1, meuse)
-plot(mzinc.var, plot.numbers=TRUE, pch='+')
+plot(mzinc.var, plot.numbers = TRUE, pch = '+')
 ```
 
 We can specify the number of lags to be included by using two parameters, which allows us to search for spatial dependence over a larger or smaller range of distances. The first of these, `cutoff`, specifies the maximum distance over which we will consider pairwise differences between points. The second, `width`, specifies the size of each lag. Try experimenting with these parameters to obtain the optimal variogram. 
 
 ```{r fig.keep='high'}
-mzinc.var2 <- variogram(lzinc ~ 1, meuse, cutoff=1200, width=50)
-plot(mzinc.var2, plot.numbers=TRUE, pch='+')
+mzinc.var2 <- variogram(lzinc ~ 1, meuse, cutoff = 1200, width = 50)
+plot(mzinc.var2, plot.numbers = TRUE, pch = '+')
 ```
 
 Now use the `variogram()` function to build a sample variogram for the Swiss precipitation data. 
 ```{r fig.keep='high'}
 ppt.var <- variogram(ppt ~ 1, swiss.sf)
-plot(ppt.var, plot.numbers=TRUE)
+plot(ppt.var, plot.numbers = TRUE)
 ```
 
 ## Variogram modeling
@@ -163,15 +163,15 @@ Here we specify these as separate variables, then use the `vgm()` function to bu
 modNugget <- 0.1
 modRange <- 1100
 modSill <- 0.6
-mzinc.vgm1 <- vgm(psill=modSill, "Cir", range=modRange, nugget=modNugget)
-plot(mzinc.var, mzinc.vgm1, main="Meuse zinc variogram")
+mzinc.vgm1 <- vgm(psill = modSill, "Cir", range = modRange, nugget = modNugget)
+plot(mzinc.var, mzinc.vgm1, main = "Meuse zinc variogram")
 ```
 
 The model only fits approximately to the sample variogram, so we can now use an iterative weighted OLS method (`fit.variogram()`) to fit the model variogram to the sample variogram. 
 
 ```{r fig.keep='high'}
 mzinc.vgm2 <- fit.variogram(mzinc.var, mzinc.vgm1)
-plot(mzinc.var, mzinc.vgm2, main="Meuse zinc variogram")
+plot(mzinc.var, mzinc.vgm2, main = "Meuse zinc variogram")
 ```
 
 You can see the final fitted parameters of the variogram by typing the name of the fitted model object:
@@ -188,9 +188,9 @@ Now follow the same steps to obtain a variogram model for the precipitation data
 modNugget <- 10
 modRange <- 75000
 modSill <- 140
-ppt.vgm1 <- vgm(psill=modSill, "Sph", range=modRange, nugget=modNugget)
+ppt.vgm1 <- vgm(psill = modSill, "Sph", range = modRange, nugget = modNugget)
 ppt.vgm2 <- fit.variogram(ppt.var, ppt.vgm1)
-plot(ppt.var, ppt.vgm2, main="Swiss precip. variogram")
+plot(ppt.var, ppt.vgm2, main = "Swiss precip. variogram")
 ```
 
 # Spatial prediction
@@ -208,7 +208,7 @@ We now use our fitted model to predict precipitation values across Switzerland. 
 See `?krige` for other parameters. 
 
 ```{r message=FALSE, results='hide'}
-ppt.pred.ok <- krige(ppt ~ 1, swiss.sf, swiss.dem, ppt.vgm2, nmax=40)
+ppt.pred.ok <- krige(ppt ~ 1, swiss.sf, swiss.dem, ppt.vgm2, nmax = 40)
 ```
 
 ### Plotting the results
@@ -231,10 +231,10 @@ plot(ppt.pred.ok["var1.var"], main = "Interpolated precipitation prediction erro
 
 ## Assessing model quality
 
-To assess the performance of our kriging model, we use a $n$-fold cross-validation (also called $k$-fold). This splits the data into $n$ subsets, then iteratively predicts each subset from the other $n-1$ sets. The `krige.cv()` function performs the cross-validation: this takes the same arguments as the `krige()` function, but we leave out the object with coordinates for new predictions, and specify `nfold`, the number of subsets to be used. 
+To assess the performance of our kriging model, we use a $n$-fold cross-validation (also called $k$-fold). This splits the data into $n$ subsets, then iteratively predicts each subset from the other $n-1$ sets. The `krige.cv()` function performs the cross-validation: this takes the same arguments as the `krige()` function, but we leave out the object with coordinates for new predictions, and specify `nfold`, the number of subsets to be used. You will see some warnings about the projection. You can safely ignore these. 
 
-```{r  fig.keep='none', results='hide', message=FALSE}
-ppt.cv.ok <- krige.cv(ppt ~ 1, swiss.sf, ppt.vgm2, nmax=40, nfold=5)
+```{r fig.keep='none', results='hide', message=FALSE, warning=FALSE}
+ppt.cv.ok <- krige.cv(ppt ~ 1, swiss.sf, ppt.vgm2, nmax = 40, nfold = 5)
 head(ppt.cv.ok)
 ```
 
@@ -261,7 +261,7 @@ The first of these (RMSEP) gives the average error that might be expected when m
 The output of `krige.cv()` contains, for each observation, the predicted value when that location was omitted from the model, the S.E., the observed value and the residual (predicted - observed). We can use the `bubble()` function to plot these, which shows both the size and the direction of the residual. Note that to use this we need to convert the `sf` object to the older `sp` class by using the `as_Spatial()` function:
 
 ```{r fig.keep='none'}
-bubble(as_Spatial(ppt.cv.ok)[,"residual"], pch = 16)
+sp::bubble(as_Spatial(ppt.cv.ok)[,"residual"], pch = 16)
 ```
 
 The map shows little pattern, which is good. Any systematic under or over estimation would suggest that there is a trend or other structural component which is not being captured by the model.
@@ -270,29 +270,38 @@ Finally, we can produce a plot of residuals against predicted values to look for
 
 ```{r fig.keep='none'}
 plot(ppt.cv.ok$var1.pred, ppt.cv.ok$residual, 
-     xlab='PPT Predicted Values', ylab='PPT Residuals')
-abline(h=0,lty=2)
+     xlab = 'PPT Predicted Values', ylab = 'PPT Residuals')
+abline(h = 0,lty = 2)
 ```
 
 # Exercise
 
-1. The compressed file *oregontann.zip* contains data on average annual temperatures for Oregon from a set of climate stations in the shapefile `oregontann.shp` in a variable called 'tann', and station elevation in a variable called 'elevation'. A second file *orgrid.shp* contains a set of gridded elevations for the state. Code is given below to read in these data and convert to Spatial\* objects for geostatistical analysis. Using the **gstat** library, carry out the following analyses:
+1. The compressed file *oregontann.zip* contains data on average annual temperatures for Oregon from a set of climate stations in the shapefile `oregontann.shp` in a variable called 'tann', and station elevation in a variable called `elevation`. A second file *orgrid.shp* contains a set of gridded elevations for the state at 10 minute resolution. Code is given below to read in these data and convert to `sf` and `stars` objects for geostatistical analysis. Using the **gstat** library, carry out the following analyses:
+
 + Read in the files and produce a sample variogram for average annual temperatures in Oregon. (Use the `variogram()` function)
 + Create a variogram model for this data using the `vgm()` function. You will need to choose an appropriate model and initial parameters for the nugget, sill and range. Report the values and model you have used
 + Use the `fit.variogram()` function to fit this model to the sample variogram from step a. Produce a plot showing the final variogram
 + Now use this model to interpolate the annual temperatures using the grid from the DEM, using the `krige()` function. Produce a map showing the predicted value on the grid and the prediction error. 
 + Use the `krige.cv()` function with 5-fold cross-validation to report the root mean squared error and R$^2$
 
+
+This is the code to read in and convert all the necessary data to `sf` and `starts` objects. Note that we have to assign the CRS to each object. The data are in unprojected longitude/latitude, so we use the WGS84 description (EPSG code 4326). The gridded elevation is in an odd format: point data into a shapefile. Here we use `st_rasterize()` to force this into a full grid for interpolation. 
+
+
 ```{r eval=TRUE, results='hide'}
 # Oregon boundaries
-orotl <- readOGR(dsn="oregontann", layer="orotl")
+orotl <- st_read("../datafiles/oregon/orotl.shp")
+st_crs(orotl) <- 4326
+# Oregon temperatures
+ortann <- st_read("../datafiles/oregon/oregontann.shp")
+st_crs(ortann) <- 4326
 # Oregon DEM file
-orgrid <- readOGR(dsn="oregontann", layer="orgrid") 
-orgrid.dem <- SpatialPixelsDataFrame(points=orgrid[c("lon", "lat")],   
-                                     data=data.frame(elevation=orgrid$elevation), 
-                                     tolerance = 0.00060024)
-# Oregon average annual temperatures
-ortann <- readOGR(dsn="oregontann", layer="oregontann")
+orgrid <- st_read("../datafiles/oregon/orgrid.shp") 
+st_crs(orgrid) <- 4326
+orgrid.dem <- st_rasterize(orgrid, dx = 0.1667, dy = 0.1667)
+plot(orgrid.dem, reset = FALSE)
+plot(ortann["tann"], add = TRUE, pch = 16, cex = 1.5)
+
 ```
 
 # File details

@@ -25,8 +25,22 @@ ggplot() +
   geom_sf(data = swiss.sf, aes(col = ppt), size = 2.5) +
   theme_bw()
 
+## DEM SHOFT
+x.ll <- -185835.4
+y.ll <- -128266.825
 
+x.new = x.ll - 17791.29 + 2672591
+x.new
+y.new = y.ll- 13224.66 + 1200225
+y.new
 
+swiss.dem <- raster("../datafiles/swiss/swiss_dem.asc")
+crs(swiss.dem) <- CRS("+init=epsg:2056")
+tm_shape(swiss.dem) + tm_raster() +
+  tm_shape(swiss.bord) + tm_borders() +
+  tm_shape(swiss.sf) + tm_symbols("ppt")
+
+plot(swiss.sf["ppt"])
 
 
 tm_shape(swiss.sf) + tm_symbols("ppt")
@@ -64,6 +78,8 @@ newx = 2600000 - 17791.29 + 2672591
 newx
 newy = 1200000 - 13224.66 + 1200225
 newy
+
+
 proj4string(swiss.sp) <- CRS("+proj=somerc +lat_0=46.9524055555556 +lon_0=7.43958333333333 +k_0=1 +x_0=2600000 +y_0=1200000 +ellps=bessel +towgs84=674.374,15.056,405.346,0,0,0,0 +units=m +no_defs")
 
 tm_shape(swiss.sp) + tm_lines()

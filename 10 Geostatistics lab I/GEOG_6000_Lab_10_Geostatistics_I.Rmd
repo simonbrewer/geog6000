@@ -142,11 +142,19 @@ plot(ppt.var, plot.numbers=TRUE)
 ## Variogram modeling
 
 Having made the sample variogram, we now fit a variogram model to this. There are a set of standard parametric models that are used. To see the ones available in **gstat**, type:
-```{r results='hide'}
+
+```{r}
 vgm()
 ```
 
-To fit a model, it is necessary to create a first model by hand, then use the `fit.variogram()` function, which uses a weighted least squares method to fit this to the sample variogram. The first model requires you to specify: a) the model form; b) the value of the nugget (the intercept with the Y axis); c) the model range (the distance at which the sample variogram becomes flat); d) the sill, the semivariance value (y-axis) of the range. Here we specify these as separate variables, then use the `vgm()` function to build the initial model. As in the previous section, we will start by doing this for the Meuse dataset. Some suggested values are given in the code below, but it is worth replotting the original variogram, to see how these values compare to the sample variable.
+To fit a model, it is necessary to create a first model by hand, then use the `fit.variogram()` function, which uses a weighted least squares method to fit this to the sample variogram. The first model requires you to specify: 
+
+- the model form
+- the value of the nugget (the intercept with the Y axis)
+- the model range (the distance at which the sample variogram becomes flat)
+- the sill, the semivariance value (y-axis) of the range
+
+Here we specify these as separate variables, then use the `vgm()` function to build the initial model. As in the previous section, we will start by doing this for the Meuse dataset. Some suggested values are given in the code below, but it is worth replotting the original variogram, to see how these values compare to the sample variable.
 
 ```{r fig.keep='high'}
 modNugget <- 0.1
@@ -158,9 +166,15 @@ plot(mzinc.var, mzinc.vgm1, main="Meuse zinc variogram")
 
 The model only fits approximately to the sample variogram, so we can now use an iterative weighted OLS method (`fit.variogram()`) to fit the model variogram to the sample variogram. 
 
-```{r fig.keep='none'}
+```{r fig.keep='high'}
 mzinc.vgm2 <- fit.variogram(mzinc.var, mzinc.vgm1)
 plot(mzinc.var, mzinc.vgm2, main="Meuse zinc variogram")
+```
+
+You can see the final fitted parameters of the variogram by typing the name of the fitted model object:
+
+```{r}
+mzinc.vgm2
 ```
 
 The fitting routine is generally fairly robust and will fit an initial model that may be somewhat different from the sample variogram, but it is always worth plotting the new model to be sure. Try remaking and fitting the initial model, using, for example, the spherical model. 

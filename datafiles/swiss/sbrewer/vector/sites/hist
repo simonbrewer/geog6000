@@ -1,3 +1,0 @@
-COMMAND: v.in.ascii input="/Users/sbrewer/Documents/Classes/GEOG6000/Lectures/18 Spatial VI/temp.csv" output="sites" format="point" skip=0 x=2 y=3 z=0 cat=0
-GISDBASE: /Users/sbrewer/Documents/Classes/GEOG6000/Lectures/18 Spatial VI
-LOCATION: swiss MAPSET: sbrewer USER: sbrewer DATE: Tue Nov  1 16:40:46 2011

@@ -128,18 +128,19 @@ plot(mzinc.var, plot.numbers=TRUE, pch='+')
 
 We can specify the number of lags to be included by using two parameters, which allows us to search for spatial dependence over a larger or smaller range of distances. The first of these, `cutoff`, specifies the maximum distance over which we will consider pairwise differences between points. The second, `width`, specifies the size of each lag. Try experimenting with these parameters to obtain the optimal variogram. 
 
-```{r fig.keep='none'}
+```{r fig.keep='high'}
 mzinc.var2 <- variogram(lzinc ~ 1, meuse, cutoff=1200, width=50)
 plot(mzinc.var2, plot.numbers=TRUE, pch='+')
 ```
 
 Now use the `variogram()` function to build a sample variogram for the Swiss precipitation data. 
-```{r fig.keep='none'}
-ppt.var <- variogram(ppt ~ 1, swiss.sp)
+```{r fig.keep='high'}
+ppt.var <- variogram(ppt ~ 1, swiss.sf)
 plot(ppt.var, plot.numbers=TRUE)
 ```
 
 ## Variogram modeling
+
 Having made the sample variogram, we now fit a variogram model to this. There are a set of standard parametric models that are used. To see the ones available in **gstat**, type:
 ```{r results='hide'}
 vgm()

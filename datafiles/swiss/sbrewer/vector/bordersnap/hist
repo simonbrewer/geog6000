@@ -1,7 +1,0 @@
-COMMAND: v.in.dxf input="/Users/sbrewer/Documents/Classes/GEOG6000/Lectures/18 Spatial VI/borders.dxf"
-GISDBASE: /Users/sbrewer/Documents/Classes/GEOG6000/Lectures/18 Spatial VI
-LOCATION: swiss MAPSET: sbrewer USER: sbrewer DATE: Tue Nov  1 15:09:42 2011
----------------------------------------------------------------------------------
-COMMAND: v.clean input="borders@sbrewer" output="bordersnap" type="point,line,boundary,centroid,area" tool="snap"
-GISDBASE: /Users/sbrewer/Documents/Classes/GEOG6000/Lectures/18 Spatial VI
-LOCATION: swiss MAPSET: sbrewer USER: sbrewer DATE: Tue Nov  1 15:41:28 2011

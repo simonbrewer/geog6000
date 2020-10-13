@@ -25,12 +25,12 @@ Before starting the lab, you will need to set up a new folder for your working d
 
 You will need to download these files from Canvas, and move them from your `Downloads` folder to the `datafiles` folder that you made previously. Make sure to unzip the zip files so that R can access the content. Note that on Windows, you will need to right-click on the file and select 'Extract files'. 
 
-You will need three packages to carry out all the steps listed here: **sf**, **raster** and **gstat**, so make sure these are installed these before starting. 
+You will need three packages to carry out all the steps listed here: **sf**, **stars** and **gstat**, so make sure these are installed these before starting. 
 
 ```{r, eval = FALSE}
 
 pkgs <- c("gstat",
-          "raster",
+          "stars",
           "sf")
 
 install.packages(pkgs)
@@ -39,11 +39,11 @@ install.packages(pkgs)
 
 # Reading the data
 
-Start by loading the **sf** and **raster** packages to get the functions for reading files, then load each data set and process it for further analysis:
+Start by loading the **sf** and **stars** packages to get the functions for reading files, then load each data set and process it for further analysis:
 
 ```{r message=FALSE, results='hide'}
 library(sf)
-library(raster)
+library(stars)
 ```
 
 ## Swiss precipitation
@@ -62,8 +62,9 @@ swiss.sf <- st_as_sf(swiss,
 Next we'll load a digital elevation model for Switzerland: *swiss_dem.asc* as a `raster` object:
 
 ```{r}
-swiss.dem <- raster("../datafiles/swiss_ppt//swiss_dem.asc")
-crs(swiss.dem) <- CRS("+init=epsg:2056")
+swiss.dem <- read_stars("../datafiles/swiss_ppt//swiss_dem.asc")
+st_crs(swiss.dem) <- 2056
+plot(swiss.dem)
 ```
 
 And finally, we'll load the shapefile of country borders (*ne_50m_admin_0_countries.shp*) and extract only the border of Switzerland:
@@ -74,7 +75,7 @@ swiss.bord <- subset(countries, NAME == "Switzerland")
 swiss.bord <- st_transform(swiss.bord, 2056)
 ```
 
-And finally, we'll plot all the layers together
+And finally, we'll plot the adata and country outline using **ggplot2**
 
 ```{r}
 library(ggplot2)
@@ -90,7 +91,7 @@ Now load the Meuse datasets. Here, we'll just load the points data from a shapef
 
 ```{r results='hide'}
 meuse = st_read("../datafiles/meuse/meuse.shp")
-meuseriv = readOGR("../datafiles/meuse/meuseriv.shp")
+meuseriv = st_read("../datafiles/meuse/meuseriv.shp")
 ```
 
 # Variogram analysis
@@ -98,7 +99,8 @@ meuseriv = readOGR("../datafiles/meuse/meuseriv.shp")
 We will first use the Meuse dataset as an example of how to perform variogram analysis. Start by making a simple plot of the zinc concentrations using the `plot()` function:
 
 ```{r fig.keep='high', results='hide'}
-plot(meuse["zinc"], pch = 16)
+plot(meuse["zinc"], pch = 16, cex = 1.25, reset = FALSE)
+plot(meuseriv, add = TRUE, col = NA)
 ```
 
 Note that plotting the histogram of zinc values suggest that they are right skewed with a few high values. Check this by plotting a histogram of the values.
@@ -108,12 +110,13 @@ hist(meuse$zinc)
 ```
 
 
-As most methods we will be using here are based on normally distributed data, we will log-transform them:
+As most methods we will be using here are based on normally distributed data, we will log-transform them. Plotting these now emphasizes the higher concentrations located along the edge of the river. 
 
 ```{r fig.keep='none'}
 hist(meuse$zinc)
 meuse$lzinc = log(meuse$zinc)
-plot(meuse["lzinc"], pch = 16)
+plot(meuse["zinc"], pch = 16, cex = 1.25, reset = FALSE)
+plot(meuseriv, add = TRUE, col = NA)
 ```
 
 ## Sample variogram
@@ -205,7 +208,7 @@ We now use our fitted model to predict precipitation values across Switzerland. 
 See `?krige` for other parameters. 
 
 ```{r message=FALSE, results='hide'}
-ppt.pred.ok <- krige(ppt ~ 1, swiss.sp, swiss.dem, ppt.vgm2, nmax=40)
+ppt.pred.ok <- krige(ppt ~ 1, swiss.sf, swiss.dem, ppt.vgm2, nmax=40)
 ```
 
 ### Plotting the results
@@ -218,27 +221,21 @@ names(ppt.pred.ok)
 
 To see the predicted values, we can simply plot the first of these:
 ```{r fig.keep='none'}
-my.pal <- brewer.pal(9, "Blues")
-spplot(ppt.pred.ok, "var1.pred", col.regions=my.pal, cuts=8,
-       sp.layout=list(swiss.bord), colorkey=TRUE, 
-       edge.col=1, main="Swiss precipitation (OK)")
+plot(ppt.pred.ok, main = "Interpolated precipitation values (OK)")
 ```
 
 And we can equally plot the prediction errors:
 ```{r fig.keep='none'}
-my.pal <- brewer.pal(9, "YlOrRd")
-my.brks = classIntervals(ppt.pred.ok$var1.var, n = 8)
-spplot(ppt.pred.ok, "var1.var", col.regions=my.pal, at=my.brks$brks,
-       sp.layout=list(swiss.bord), colorkey=TRUE, 
-       edge.col=1, main="Swiss precipitation (OK)")
+plot(ppt.pred.ok["var1.var"], main = "Interpolated precipitation prediction error (OK)")
 ```
 
 ## Assessing model quality
 
 To assess the performance of our kriging model, we use a $n$-fold cross-validation (also called $k$-fold). This splits the data into $n$ subsets, then iteratively predicts each subset from the other $n-1$ sets. The `krige.cv()` function performs the cross-validation: this takes the same arguments as the `krige()` function, but we leave out the object with coordinates for new predictions, and specify `nfold`, the number of subsets to be used. 
 
-```{r  fig.keep='none', results='hide'}
-ppt.cv.ok <- krige.cv(ppt ~ 1, swiss.sp, ppt.vgm2, nmax=40, nfold=5)
+```{r  fig.keep='none', results='hide', message=FALSE}
+ppt.cv.ok <- krige.cv(ppt ~ 1, swiss.sf, ppt.vgm2, nmax=40, nfold=5)
+head(ppt.cv.ok)
 ```
 
 The output of this function is a spatial object with the following variables:
@@ -261,16 +258,15 @@ cor(ppt.cv.ok$observed, ppt.cv.ok$var1.pred)^2
 
 The first of these (RMSEP) gives the average error that might be expected when making a prediction, the second (R$^2_P$) gives the amount of variance in the test dataset predicted by the model.
 
-The output of `krige.cv()` contains, for each observation, the predicted value when that location was omitted from the model, the S.E., the observed value and the residual (predicted - observed). We can use the `bubble()` function to plot these, to look for any possible spatial pattern in the residuals:
+The output of `krige.cv()` contains, for each observation, the predicted value when that location was omitted from the model, the S.E., the observed value and the residual (predicted - observed). We can use the `bubble()` function to plot these, which shows both the size and the direction of the residual. Note that to use this we need to convert the `sf` object to the older `sp` class by using the `as_Spatial()` function:
 
 ```{r fig.keep='none'}
-bubble(ppt.cv.ok[,"residual"], key.entries=seq(-15,15,by=5), 
-       sp.layout=list(swiss.bord), main="Swiss ppt OK CV")
+bubble(as_Spatial(ppt.cv.ok)[,"residual"], pch = 16)
 ```
 
 The map shows little pattern, which is good. Any systematic under or over estimation would suggest that there is a trend or other structural component which is not being captured by the model.
 
-Finally, we can produce a plot of residuals against predicted values to look for any bias in the model predictions. 
+Finally, we can produce a plot of residuals against predicted values to look for any bias in the model predictions. Again these show little bias, but some hetereoscedascity at higher values. 
 
 ```{r fig.keep='none'}
 plot(ppt.cv.ok$var1.pred, ppt.cv.ok$residual, 

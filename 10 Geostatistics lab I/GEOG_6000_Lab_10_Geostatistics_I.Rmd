@@ -81,7 +81,7 @@ swiss.bord <- subset(countries, NAME == "Switzerland")
 swiss.bord <- st_transform(swiss.bord, 2056)
 ```
 
-And finally, we'll plot the data and country outline using **ggplot2**
+And finally, we'll plot the data and country outline:
 
 ```{r}
 plot(swiss.sf["ppt"], reset = FALSE, pch = 16)

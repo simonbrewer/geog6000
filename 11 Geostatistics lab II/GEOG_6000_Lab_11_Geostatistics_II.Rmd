@@ -93,6 +93,12 @@ swiss.bord <- st_transform(swiss.bord, 2056)
 
 Make a simple plot of precipitation amounts:
 
+```{r}
+plot(swiss.sf["ppt"], reset = FALSE, pch = 16)
+plot(st_geometry(swiss.bord), add = TRUE)
+```
+
+
 ```{r fig.keep='high', message=FALSE}
 library(ggplot2)
 ggplot() + 
@@ -120,13 +126,13 @@ meuse.grid <- st_rasterize(meuse.grid["dist"], dx = 40, dy = 40)
 
 Kriging can be extended to include covariates to improve prediction. One of the most flexible methods is kriging with an external drift, where the drift refers to any covariate that has been recorded both at the sampling locations and at the prediction locations. A scatterplot of the precipitation against the elevation of each site shows a weak negative relationship, with generally higher values at lower elevations:
 ```{r fig.keep='none'}
-plot(ppt ~ elev, swiss.sp)
+plot(ppt ~ elev, swiss.sf)
 ```
 
 We will use this model together with elevation data from the DEM to perform kriging with an external drift on the precipitation data. As we are incorporating a covariate in our model, we first need to remake the precipitation variogram, so that the variogram takes this into account: 
 
 ```{r}
-ppt.var <- variogram(ppt ~ elev, swiss.sp)
+ppt.var <- variogram(ppt ~ elev, swiss.sf)
 plot(ppt.var, plot.numbers=TRUE)
 ```
 
@@ -141,30 +147,38 @@ ppt.vgm2 <- fit.variogram(ppt.var, ppt.vgm1)
 plot(ppt.var, ppt.vgm2, main="Swiss precip. variogram")
 ```
 
-We will now use this variogram to interpolate the precipitation data. We use the same function as in the previous lab (`krige()`), but now specify 'elev' as an independent variable in the model formula. This requires that both the spatial points (`swiss.sp`) and the new locations (`swiss.dem`) have a variable called `elev', so let's check this first:
+We will now use this variogram to interpolate the precipitation data. We use the same function as in the previous lab (`krige()`), but now specify 'elev' as an independent variable in the model formula. This requires that both the spatial points (`swiss.sf`) and the new locations (`swiss.dem`) have a variable called `elev', so let's check this first:
+
 ```{r results='hide'}
 ## Check to see that both the data and grid have elev variables
-names(swiss.sp@data)
-names(swiss.dem@data)
+names(swiss.sf)
+names(swiss.dem)
+```
+This shows that the `swiss.dem` variable was named using the original file name. let's rename this
+
+```{r}
+names(swiss.dem) <- "elev"
 ```
 
-Now let's go ahead and run the model:
+Now we can go ahead and run the model:
+
 ```{r}
 ## kriging with external drift
-ppt.pred.ked <- krige(ppt ~ elev, swiss.sp, swiss.dem, ppt.vgm2)
+ppt.pred.ked <- krige(ppt ~ elev, swiss.sf, swiss.dem, ppt.vgm2)
 ```
 
 Plot the new predictions:
 ```{r fig.keep='none'}
-my.pal <- brewer.pal(9, "Blues")
-spplot(ppt.pred.ked, "var1.pred", col.regions=my.pal, cuts=8,
-       sp.layout=list(swiss.bord), colorkey=TRUE, 
-       edge.col=1, main="Swiss precipitation (KED)")
+ppt.pred.ked
+library(RColorBrewer)
+my.pal = brewer.pal(9, "Blues")
+plot(ppt.pred.ked["var1.pred"], col = my.pal, 
+     main = "Swiss precipitation (KED)")
 ```
 
 As before, we can estimate the prediction skill of the model using cross-validation:
 ```{r results='hide'}
-ppt.cv.ked <- krige.cv(ppt ~ 1, swiss.sp, ppt.vgm2, nmax=40, nfold=5)
+ppt.cv.ked <- krige.cv(ppt ~ elev, swiss.sf, ppt.vgm2, nmax=40, nfold=5)
 sqrt(mean(ppt.cv.ked$residual^2))
 cor(ppt.cv.ked$observed, ppt.cv.ked$var1.pred)^2
 ```
@@ -176,9 +190,9 @@ Regression kriging provides a more flexible approach to including covariates tha
 As a simple example, we will build a linear model of precipitation using elevation as the covariate, and use the residuals from this as the basis for kriging. Note that as we have specified the covariate in the regression model, we no longer need to include it in the variogram or the `krige()` function. 
 
 ```{r fig.keep='none'}
-fit1 = lm(ppt ~ elev, swiss.sp)
-swiss.sp$resid = residuals(fit1)
-resid.var = variogram(resid ~ 1, swiss.sp)
+fit1 = lm(ppt ~ elev, swiss.sf)
+swiss.sf$resid = residuals(fit1)
+resid.var = variogram(resid ~ 1, swiss.sf)
 plot(resid.var)
 ```
 
@@ -191,14 +205,15 @@ plot(resid.var, resid.vgm)
 We now interpolate the residuals (I haven't fit the variogram model to the sample data, but feel free to do so). Note that as these are residuals, the mean is assumed known ($=0$), so we use simple kriging for the interpolation. The parameter `beta` is used to set the value of the mean:
 
 ```{r fig.keep='none'}
-resid.sk = krige(resid ~ 1, swiss.sp, swiss.dem, resid.vgm, nmax=40, beta=0)
-my.pal <- brewer.pal(9, "Purples")
-spplot(resid.sk, "var1.pred", col.regions=my.pal, cuts=8,
-       sp.layout=list(swiss.bord), colorkey=TRUE, 
-       edge.col=1, main="Swiss precipitation residuals (SK)")
+resid.sk = krige(resid ~ 1, swiss.sf, swiss.dem, resid.vgm, nmax=40, beta=0)
+my.pal <- brewer.pal(9, "PRGn")
+plot(resid.sk["var1.pred"], col = my.pal, 
+     main = "Swiss precipitation residuals (RK)")
+
 ```
 
-To make the final estimates, we first predict the precipitation using the simple linear model and the elevation values on the DEM, and store this in the SpatialPixelsDataFrame:
+To make the final estimates, we first predict the precipitation using the simple linear model and the elevation values on the DEM, and store this in the `stars` DEM object:
+
 ```{r}
 swiss.dem$ppt.lm = predict(fit1, swiss.dem)
 ```
@@ -211,21 +226,24 @@ swiss.dem$ppt.rk = swiss.dem$ppt.lm + resid.sk$var1.pred
 And finally visualize the predictions:
 ```{r fig.keep='high'}
 my.pal <- brewer.pal(9, "Blues")
-spplot(swiss.dem, "ppt.rk", col.regions=my.pal, cuts=8,
-       sp.layout=list(swiss.bord), colorkey=TRUE, 
-       edge.col=1, main="Swiss precipitation (RK)")
+plot(swiss.dem["ppt.rk"], col = my.pal, 
+     main = "Swiss precipitation (Regression Kriging)")
+
 ```
 
 Note that there are various issues with this model, not least of which are the presence of negative precipitation values at higher elevations. This is partly limited by the poor relationship between elevation and precipitation in this data, and by the fact that a linear model may not be the best choice. A log-transformation of precipitation may help with the link between elevation and we could replace the linear model with a more flexible approach (e.g. generalized additive models or machine learning methods). 
 
 # Indicator Kriging
+
 Indicator kriging is used to interpolate binary variables as probabilities. It can be used to estimate whether the variable of interest will be over or below a given threshold at a new location, or the probability that a new location will have a binary or categorical variable. In either case, the method consists quite simply of interpolating binary values (0/1) using ordinary kriging. As this uses the same function as before, you can include a trend or external drift if necessary. 
 
 ## Thresholds
-We'll first use this method to find all locations in Switzerland with over 40mm of rainfall. Here, we create a new variable in the `swiss.sp` data frame, which is whether or not the station had $>$ 40mm rainfall, and use `spplot()` to make a quick figure. 
+
+We'll first use this method to find all locations in Switzerland with over 40mm of rainfall. Here, we create a new variable in the `swiss.sf` data frame, which is whether or not the station had $>$ 40mm rainfall, and use `spplot()` to make a quick figure. 
+
 ```{r fig.keep='none'}
-swiss.sp$ppt40 = swiss.sp$ppt > 40
-spplot(swiss.sp["ppt40"], sp.layout=list(swiss.bord),
+swiss.sf$ppt40 = swiss.sf$ppt > 40
+plot(swiss.sf["ppt40"], pch = 16, 
        main="PPT > 40mm")
 ```
 
@@ -233,8 +251,7 @@ Now we proceed as in the previous lab:
 
 1. Create the sample variogram
 ```{r fig.keep='none'}
-library(gstat)
-ppt40.var <- variogram(ppt40 ~ 1, swiss.sp)
+ppt40.var <- variogram(ppt40 ~ 1, swiss.sf)
 plot(ppt40.var)
 ppt40.vgm = vgm(0.035, "Sph", 40000, 0.01)
 plot(ppt40.var, ppt40.vgm)
@@ -246,14 +263,11 @@ plot(ppt40.var, ppt40.vgm2)
 ```
 3. Interpolate using ordinary kriging:
 ```{r fig.keep='none', message=FALSE, results='hide'}
-ppt40.ik <- krige(ppt40 ~ 1, swiss.sp, swiss.dem, ppt40.vgm2, nmax=40)
+ppt40.ik <- krige(ppt40 ~ 1, swiss.sf, swiss.dem, ppt40.vgm2, nmax=40)
 ```
 4. Plot the new predictions:
 ```{r fig.keep='none'}
-my.pal <- rev(brewer.pal(9, "Spectral"))
-spplot(ppt40.ik, "var1.pred", col.regions=my.pal, cuts=8,
-       sp.layout=list(swiss.bord), colorkey=TRUE, 
-       edge.col=1, main="Swiss precipitation (OK)")
+plot(ppt40.ik)
 ```
 
 Note that these are not true probabilities (some values $<0$ are obtained). For the purposes of geostatistical interpolation, however, these are considered as close to being probabilities and are often corrected to between 0 and 1. Indicator simulation (see below) offers a method to interpolate true probabilities.
@@ -261,7 +275,8 @@ Note that these are not true probabilities (some values $<0$ are obtained). For 
 ## Categorical variables
 The Meuse data set contains soil type for each of the sampling sites, split into three classes. Use the `spplot()` function to look at their spatial distribution:
 ```{r fig.keep='none'}
-spplot(meuse["soil"], main="Soil class", cex=1.5, sp.layout=list(meuseriv))
+plot(meuse["soil"], pch = 16, reset = FALSE)
+plot(meuse.riv, add = TRUE, col = NA)
 ```
 
 The individual categories can be interpolated to new locations using indicator kriging. As before we start by making and modeling the variogram, then interpolate onto a grid. 
@@ -277,11 +292,8 @@ plot(s1.var, s1.vgm, main="Soil class 1")
 
 We now interpolate using the `krige()` function:
 ```{r fig.keep='none', results='hide'}
-s1.ik <- krige(I(soil==1)~1, meuse, meusegrid, s1.vgm)
-my.pal <- rev(brewer.pal(9, "Spectral"))
-spplot(s1.ik, "var1.pred", col.regions=my.pal, cuts=8,
-       sp.layout=list(meuseriv), colorkey=TRUE, 
-       edge.col=1, main="Soil class 1 (IK)")
+s1.ik <- krige(I(soil==1)~1, meuse, meuse.grid, s1.vgm)
+plot(s1.ik)
 ```
 
 Now do the same for the other two soil classes, to get interpolated probabilities for class 2 (`s2.ik`) and 3 (`s3.ik`).
@@ -290,24 +302,24 @@ Now do the same for the other two soil classes, to get interpolated probabilitie
 s2.var <- variogram(I(soil==2)~1, meuse, cutoff=2000)
 s2.vgm <- fit.variogram(s2.var, 
                         model=vgm(psill=0.25, model="Sph", range=900, nugget=0.1))
-s2.ik <- krige(I(soil==2)~1, meuse, meusegrid, s2.vgm)
 plot(s2.var, s2.vgm, main="Soil class 2")
+s2.ik <- krige(I(soil==2)~1, meuse, meuse.grid, s2.vgm)
 
 s3.var <- variogram(I(soil==3)~1, meuse, cutoff=2000)
 s3.vgm <- fit.variogram(s3.var, 
                         model=vgm(psill=0.25, model="Sph", range=900, nugget=0.1))
-s3.ik <- krige(I(soil==3)~1, meuse, meusegrid, s3.vgm)
 plot(s3.var, s3.vgm, main="Soil class 3")
+s3.ik <- krige(I(soil==3)~1, meuse, meuse.grid, s3.vgm)
 ```
 
-Once you have the probabilities for all three classes, we can use these to estimate the most probable class at each new location. We do this in three steps: first, combine the individual probability interpolations into a single matrix; second, find for each row, the column with the highest probability using `which.max()` and assign the output as a new variable in 'meusegrid'; third, plot the results.
+Once you have the probabilities for all three classes, we can use these to estimate the most probable class at each new location. We do this in three steps: first, combine the individual probability interpolations into a single matrix; second, find for each row, the column with the highest probability using `which.max()` and assign the output as a new variable in `meuse.grid`; third, plot the results.
+
 ```{r fig.keep='none'}
 soil.prob = cbind(s1.ik$var1.pred, s2.ik$var1.pred, s3.ik$var1.pred)
-meusegrid$soil.pred = max.col(soil.prob)
-my.pal = brewer.pal(3, "Set2")
-spplot(meusegrid, "soil.pred", 
-       sp.layout=list(meuseriv), colorkey=TRUE, 
-       edge.col=1, main="Soil classes (IK)")
+meuse.grid$soil.pred = max.col(soil.prob)
+plot(meuse.grid["soil.pred"])
+
+?max.col
 ```
 
 This can be extended to larger numbers of classes, as long as there is sufficient data to produce a variogram for each one, and that you have the patience to model them all. 
@@ -325,7 +337,7 @@ Like ordinary kriging, Gaussian simulation can be performed with continuous vari
 modNugget <- 10
 modRange <- 75000
 modSill <- 140
-ppt.var <- variogram(ppt ~ 1, swiss.sp)
+ppt.var <- variogram(ppt ~ 1, swiss.sf)
 ppt.vgm1 <- vgm(psill=modSill, "Sph", range=modRange, nugget=modNugget)
 ppt.vgm2 <- fit.variogram(ppt.var, ppt.vgm1)
 plot(ppt.var, ppt.vgm2, main="Swiss precip. variogram")
@@ -333,7 +345,7 @@ plot(ppt.var, ppt.vgm2, main="Swiss precip. variogram")
 
 To carry out 6 random simulations of the Swiss precipitation data, we use the `krige()` function again, with the spatial data, output grid, variogram, etc. The new parameter used here is `nsim` which controls the number of output simulations:
 ```{r eval=TRUE}
-ppt.pred.sgs <- krige(ppt ~ 1, swiss.sp, swiss.dem, 
+ppt.pred.sgs <- krige(ppt ~ 1, swiss.sf, swiss.dem, 
                       ppt.vgm2, nmax=40, nsim=6)
 ```
 
@@ -350,7 +362,7 @@ In general, single simulations are only of interest to examine the degree of var
 In the next bit of code, we will produce one hundred simulations of precipitation, then extract the predicted values for a single point and make this into a histogram. We use the function `over()` for extracting points. This is a very useful overlay method for spatial data, and will work with most combinations (e.g. extracting grids within polygons, polygons from points, etc.).
 
 ```{r eval=FALSE}
-ppt.pred.sgs <- krige(ppt ~ 1, swiss.sp, swiss.dem, 
+ppt.pred.sgs <- krige(ppt ~ 1, swiss.sf, swiss.dem, 
                       ppt.vgm2, nmax=40, nsim=100)
 x = SpatialPoints(cbind(0,0))
 x.ppt = over(x, ppt.pred.sgs)

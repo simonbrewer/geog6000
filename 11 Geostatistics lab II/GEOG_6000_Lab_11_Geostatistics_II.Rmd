@@ -22,10 +22,13 @@ Before starting the lab, you will need to set up a new folder for your working d
 - *swiss_ppt.zip*. This contains a set of point observations of rainfall in Switzerland
 - *meuse.zip*. This contains the shapefiles for the Meuse soil sample data set as well as the river borders 
 - *ne_50m_admin_0_countries.zip*. This contains a shapefile of country outlines
+- *oregon.zip*: Oregon temperature dataset 
 
-You will need to download these files from Canvas, and move them from your `Downloads` folder to the `datafiles` folder that you made previously. Make sure to unzip the zip files so that R can access the content. Note that on Windows, you will need to right-click on the file and select 'Extract files'. 
+You should have these files from last week's lab, but if not you will need to download these files from Canvas, and move them from your `Downloads` folder to the `datafiles` folder that you made previously. Make sure to unzip the zip files so that R can access the content. Note that on Windows, you will need to right-click on the file and select 'Extract files'. 
 
-You will need three packages to carry out all the steps listed here: **sf**, **stars** and **gstat**, so make sure these are installed these before starting. 
+Now start RStudio and change the working directory to `lab11`. As a reminder, you can do this by going to the [Session] menu in RStudio, then [Change working directory]. This will open a file browser that you can use to browse through your computer and find the folder. 
+
+You will also need three packages to carry out all the steps listed here: **sf**, **stars** and **gstat**. Again, you should these installed from last weeks lab, but if not make sure these are installed these before starting. 
 
 ```{r, eval = FALSE}
 
@@ -37,35 +40,17 @@ install.packages(pkgs)
 
 ```
 
-
-You will need the **gstat** package to perform the variogram analysis and spatial prediction, and the **rgdal** and **sp** packages to load data. You will need to download the following files and unzip them in your working directory: 
-
-- Swiss precipitation dataset: *swiss_ppt.csv*, *swiss_dem.grd* and *borders.shp* (in *borders.zip*)
-- Oregon temperature dataset: *oregontann.zip*
-- Meuse soil dataset: *meuse.zip* and *meusegrid.zip* 
-
-Things to remember:
-
-- The following font conventions are used:
-    - Normal font = text, comments etc
-    - `Courier font` = R commands
-    - *Italic font* = file names
-- R is case-sensitive for variables and functions. Iris is not the same as iris or IRIS.
-- `#` indicates comments - no need to type these
-- **Remember to change your R working directory to where your files are stored**
-
 **With all the examples given, it is important to not just type in the code, but to try changing the parameters and re-running the functions multiple times to get an idea of their effect.** Help on the parameters can be obtained by typing `help(functionname)` or `?functionname`. 
-
-\newpage
 
 # Setting projections for **gstat**
 
 By default **gstat** assumes that your data are in a Cartesian projection, unless the Spatial* object containing the data has projection metadata specifying that it is on a spherical (lat/lon) coordinate system. Without this, longitude and latitude coordinates will be treated as Cartesian, and distances will be incorrectly calculated for variogram analysis and kriging. We can illustrate this with the Oregon dataset. Load this and check the associated projection (this should read 'NA'):
 
 ```{r}
-library(rgdal)
-oregon = readOGR("oregontann/oregontann.shp")
-proj4string(oregon)
+library(sf)
+library(stars)
+oregon = st_read("../datafiles/oregon/oregontann.shp")
+st_crs(oregon)
 ```
 
 Now make a variogram for the temperature variable (first load the **gstat** package):
@@ -75,53 +60,64 @@ library(gstat)
 plot(variogram(tann ~ 1, oregon))
 ```
 
-The distance lags are calculated in degrees. To correct this, we can either project the data or simply specify that these data are spherical coordinates. In general, the second of these is a better approach, unless you are working in a very small area, as all projections will distort distances and/or directions over large areas. Here, we set the `proj4string` to [EPSG 4326][epsgID], which is the WGS84 standard:
+The distance lags are calculated in degrees. To correct this, we can either project the data or simply specify that these data are spherical coordinates. In general, the second of these is a better approach, unless you are working in a very small area, as all projections will distort distances and/or directions over large areas. Here, we set the `st_crs` to [EPSG 4326][epsgID], which is the WGS84 standard:
 
 ```{r}
-proj4string(oregon) <- CRS("+init=EPSG:4326")
+st_crs(oregon) <- 4326
 ```
 
-Now if we remake the variogram, **gstat** recognizes this as spherical coordinates, and calculates distances as great circles, rather than Euclidean, reduceing the bias in distances.
+Now if we remake the variogram, **gstat** recognizes this as spherical coordinates, and calculates distances as great circle distances in km, rather than Euclidean degrees, reducing the bias in distances.
 
 ```{r message=FALSE, fig.keep='none'}
 plot(variogram(tann ~ 1, oregon))
 ```
 
 # Reading the data
-For the Swiss data, there are three files: the precipitation data at individual stations: *swiss_ppt.csv*; a digital elevation model for Switzerland: *swiss_dem.grd*; a shapefile of the Swiss border: *borders.shp*. Start by loading the **rgdal** package to get the functions for reading files, then load each data set and convert to the relevant Spatial* object. 
+
+This code is taken from last week's lab and will load and convert all the necessary files for the Swiss precipitation data:
+
 ```{r message=FALSE, results='hide'}
-ppt <- read.csv("swiss_ppt.csv")
-# Convert data into spatial point data frame for analysis
-swiss.sp <- SpatialPointsDataFrame(cbind(ppt$x, ppt$y),
-                          data.frame(ppt=ppt$ppt,elev=ppt$elev))
-# DEM for Switzerland
-swiss.dem <- read.asciigrid("swiss_dem.grd",colname='elev')
-# Convert to SpatialPixelDataFrame
-swiss.dem <- as(swiss.dem,'SpatialPixelsDataFrame')
-# Swiss border
-swiss.bord <- readOGR(dsn="borders", layer="borders")
+## Precipitation data
+swiss <- read.csv("../datafiles/swiss_ppt/swiss_ppt.csv")
+swiss.sf <- st_as_sf(swiss, 
+                     coords = c("x", "y"),
+                     crs = 2056)
+## Elevation grid
+swiss.dem <- read_stars("../datafiles/swiss_ppt//swiss_dem.asc")
+st_crs(swiss.dem) <- 2056
+## Swiss border
+countries <- st_read("../datafiles/ne_50m_admin_0_countries/ne_50m_admin_0_countries.shp")
+swiss.bord <- subset(countries, NAME == "Switzerland")
+swiss.bord <- st_transform(swiss.bord, 2056)
 ```
 
 Make a simple plot of precipitation amounts:
+
 ```{r fig.keep='high', message=FALSE}
-require(classInt)
-require(RColorBrewer)
-my.pal <- brewer.pal(9, "Blues")
-spplot(swiss.sp, "ppt", col.regions=my.pal, cuts=8,
-       sp.layout=list(swiss.bord), colorkey=TRUE, 
-       edge.col=1, main="Swiss precipitation")
+library(ggplot2)
+ggplot() + 
+  geom_sf(data = swiss.bord) +
+  geom_sf(data = swiss.sf, aes(col = ppt), size = 2.5) +
+  theme_bw()
 ```
 
 Now load the Meuse datasets:
 
 ```{r results='hide'}
-meuse = readOGR("./meuse/meuse.shp")
-meuseriv = readOGR("./meuse/meuseriv.shp")
-meusegrid = readOGR("./meusegrid/meusegrid.shp")
-meusegrid = as(meusegrid, "SpatialPixelsDataFrame")
+meuse <- st_read("../datafiles/meuse/meuse.shp")
+st_crs(meuse) <- 28992
+
+meuse.riv <- st_read("../datafiles/meuse/meuseriv.shp")
+st_crs(meuse.riv) <- 28992
+
+meuse.grid <- st_read("../datafiles/meuse/meusegrid.shp")
+st_crs(meuse.grid) <- 28992
+meuse.grid <- st_rasterize(meuse.grid["dist"], dx = 40, dy = 40)
+
 ```
 
 # Kriging with external drift
+
 Kriging can be extended to include covariates to improve prediction. One of the most flexible methods is kriging with an external drift, where the drift refers to any covariate that has been recorded both at the sampling locations and at the prediction locations. A scatterplot of the precipitation against the elevation of each site shows a weak negative relationship, with generally higher values at lower elevations:
 ```{r fig.keep='none'}
 plot(ppt ~ elev, swiss.sp)

@@ -10,9 +10,20 @@ output:
     css: "../style.css"
 ---
 
+```{r setup, include=FALSE}
+
+knitr::opts_chunk$set(echo = TRUE,
+                      error = FALSE,
+                      message = FALSE,
+                      warning = FALSE,
+                      fig.align = "center")
+
+```
+
 ```{r echo=FALSE}
-options(width=50)
+
 set.seed(1234)
+
 ```
 
 In this lab, we will go through the steps of a geostatistical analysis, using a set of precipitation data for Switzerland, and the data set of soil samples from a floodplain near the Meuse river in the Netherlands. 
@@ -32,11 +43,25 @@ You will need three packages to carry out all the steps listed here: **sf**, **s
 
 ```{r, eval = FALSE}
 
-pkgs <- c("gstat",
+pkgs <- c("ggplot2",
+          "gstat",
+          "RColorBrewer",
           "stars",
-          "sf")
+          "sf",
+          "viridis")
 
 install.packages(pkgs)
+
+```
+
+```{r}
+
+library(ggplot2)
+library(gstat)
+library(RColorBrewer)
+library(sf)
+library(stars)
+library(viridis)
 
 ```
 
@@ -44,18 +69,14 @@ install.packages(pkgs)
 
 # Reading the data
 
-Start by loading the **sf** and **stars** packages to get the functions for reading files, then load each data set and process it for further analysis:
-
-```{r message=FALSE, results='hide'}
-library(sf)
-library(stars)
-```
+Load each data set and process it for further analysis:
 
 ## Swiss precipitation
 
 For the Swiss data, there are three files we need. The first of these contains precipitation data at individual stations in a csv file: *swiss_ppt.csv*. Start by loading this and converting it to an `sf` object. The coordinate reference system is a Lambert projection with the EPSG code of 2056. 
 
 ```{r}
+
 swiss <- read.csv("../datafiles/swiss_ppt/swiss_ppt.csv")
 head(swiss)
 
@@ -68,67 +89,103 @@ swiss.sf <- st_as_sf(swiss,
 Next we'll load a digital elevation model for Switzerland: *swiss_dem.asc* as a `raster` object:
 
 ```{r}
+
 swiss.dem <- read_stars("../datafiles/swiss_ppt//swiss_dem.asc")
 st_crs(swiss.dem) <- 2056
+
 plot(swiss.dem)
+
 ```
 
 And finally, we'll load the shapefile of country borders (*ne_50m_admin_0_countries.shp*) and extract only the border of Switzerland:
 
 ```{r message=FALSE}
+
 countries <- st_read("../datafiles/ne_50m_admin_0_countries/ne_50m_admin_0_countries.shp")
+
 swiss.bord <- subset(countries, NAME == "Switzerland")
 swiss.bord <- st_transform(swiss.bord, 2056)
+
 ```
 
 And finally, we'll plot the data and country outline:
 
 ```{r}
-plot(swiss.sf["ppt"], reset = FALSE, pch = 16)
+
+plot(swiss.sf["ppt"], 
+     reset = FALSE, 
+     pch = 16)
+
 plot(st_geometry(swiss.bord), add = TRUE)
+
 ```
 
 Or alternatively, we can plot with **ggplot2**:
+
 ```{r}
-library(ggplot2)
+
 ggplot() + 
   geom_sf(data = swiss.bord) +
   geom_sf(data = swiss.sf, aes(col = ppt), size = 2.5) +
   theme_bw()
+
 ```
 
 ## Meuse soil sample dataset
 
 Now load the Meuse datasets. Here, we'll just load the points data from a shapefile (*meuse.shp*) and a shapefile of the river for plotting (*meuseriv.shp*). 
 
-```{r results='hide'}
-meuse <- st_read("../datafiles/meuse/meuse.shp")
-meuseriv <- st_read("../datafiles/meuse/meuseriv.shp")
+```{r}
+
+meuse <- st_read("../datafiles/meuse/meuse.shp", quiet = TRUE)
+
+meuseriv <- st_read("../datafiles/meuse/meuseriv.shp", quiet = TRUE)
+
 ```
 
 # Variogram analysis
 
 We will first use the Meuse dataset as an example of how to perform variogram analysis. Start by making a simple plot of the zinc concentrations using the `plot()` function:
 
-```{r fig.keep='high', results='hide'}
-plot(meuse["zinc"], pch = 16, cex = 1.25, reset = FALSE)
-plot(meuseriv, add = TRUE, col = NA)
+```{r}
+
+plot(meuse["zinc"], 
+     pch = 16, 
+     cex = 1.25, 
+     reset = FALSE)
+
+plot(meuseriv, 
+     add = TRUE, 
+     col = NA)
+
 ```
 
 Note that plotting the histogram of zinc values suggest that they are right skewed with a few high values. Check this by plotting a histogram of the values.
 
-```{r fig.keep='none'}
+```{r}
+
 hist(meuse$zinc)
+
 ```
 
 
 As most methods we will be using here are based on normally distributed data, we will log-transform them. Plotting these now emphasizes the higher concentrations located along the edge of the river. 
 
-```{r fig.keep='none'}
+```{r}
+
 hist(meuse$zinc)
+
 meuse$lzinc <- log(meuse$zinc)
-plot(meuse["zinc"], pch = 16, cex = 1.25, reset = FALSE)
-plot(meuseriv, add = TRUE, col = NA)
+
+plot(meuse["zinc"], 
+     pch = 16, 
+     cex = 1.25, 
+     reset = FALSE)
+
+plot(meuseriv, 
+     add = TRUE, 
+     col = NA)
+
 ```
 
 ## Sample variogram
@@ -136,22 +193,33 @@ plot(meuseriv, add = TRUE, col = NA)
 We will now use the `variogram()` function to build a sample variogram for the log-transformed data. We start here by loading the **gstat** library, then build the sample variogram. This uses the usual R model syntax, which we will later use to include covariates. Here we simply use the formula `lzinc ~ 1`, which indicates that we are assuming the mean log zinc value does not vary across our region. Finally we plot the variogram, adding an argument to show the number of pairs of points used to calculate each point:
 
 ```{r}
-library(gstat)
-mzinc.var <- variogram(lzinc ~ 1, meuse)
+
+mzinc.var <- variogram(lzinc ~ 1, data = meuse)
+
 plot(mzinc.var, plot.numbers = TRUE, pch = '+')
+
 ```
 
 We can specify the number of lags to be included by using two parameters, which allows us to search for spatial dependence over a larger or smaller range of distances. The first of these, `cutoff`, specifies the maximum distance over which we will consider pairwise differences between points. The second, `width`, specifies the size of each lag. Try experimenting with these parameters to obtain the optimal variogram. 
 
-```{r fig.keep='high'}
-mzinc.var2 <- variogram(lzinc ~ 1, meuse, cutoff = 1200, width = 50)
+```{r}
+
+mzinc.var2 <- variogram(lzinc ~ 1, 
+                        data = meuse, 
+                        cutoff = 1200, 
+                        width = 50)
+
 plot(mzinc.var2, plot.numbers = TRUE, pch = '+')
+
 ```
 
 Now use the `variogram()` function to build a sample variogram for the Swiss precipitation data. 
-```{r fig.keep='high'}
+```{r}
+
 ppt.var <- variogram(ppt ~ 1, swiss.sf)
+
 plot(ppt.var, plot.numbers = TRUE)
+
 ```
 
 ## Variogram modeling
@@ -159,7 +227,9 @@ plot(ppt.var, plot.numbers = TRUE)
 Having made the sample variogram, we now fit a variogram model to this. There are a set of standard parametric models that are used. To see the ones available in **gstat**, type:
 
 ```{r}
+
 vgm()
+
 ```
 
 To fit a model, it is necessary to create a first model by hand, then use the `fit.variogram()` function, which uses a weighted least squares method to fit this to the sample variogram. The first model requires you to specify: 
@@ -171,38 +241,58 @@ To fit a model, it is necessary to create a first model by hand, then use the `f
 
 Here we specify these as separate variables, then use the `vgm()` function to build the initial model. As in the previous section, we will start by doing this for the Meuse dataset. Some suggested values are given in the code below, but it is worth replotting the original variogram, to see how these values compare to the sample variable.
 
-```{r fig.keep='high'}
+```{r}
+
 modNugget <- 0.1
 modRange <- 1100
 modSill <- 0.6
-mzinc.vgm1 <- vgm(psill = modSill, "Cir", range = modRange, nugget = modNugget)
+
+mzinc.vgm1 <- vgm(psill = modSill, 
+                  model = "Cir", 
+                  range = modRange, 
+                  nugget = modNugget)
+
 plot(mzinc.var, mzinc.vgm1, main = "Meuse zinc variogram")
+
 ```
 
 The model only fits approximately to the sample variogram, so we can now use an iterative weighted OLS method (`fit.variogram()`) to fit the model variogram to the sample variogram. 
 
-```{r fig.keep='high'}
+```{r}
+
 mzinc.vgm2 <- fit.variogram(mzinc.var, mzinc.vgm1)
+
 plot(mzinc.var, mzinc.vgm2, main = "Meuse zinc variogram")
+
 ```
 
 You can see the final fitted parameters of the variogram by typing the name of the fitted model object:
 
 ```{r}
+
 mzinc.vgm2
+
 ```
 
 The fitting routine is generally fairly robust and will fit an initial model that may be somewhat different from the sample variogram, but it is always worth plotting the new model to be sure. Try remaking and fitting the initial model, using, for example, the spherical model. 
 
 Now follow the same steps to obtain a variogram model for the precipitation data. Remember to start by plotting the sample variogram in the previous step to visually estimate the three parameters needed.
 
-```{r include=TRUE}
+```{r}
+
 modNugget <- 10
 modRange <- 75000
 modSill <- 140
-ppt.vgm1 <- vgm(psill = modSill, "Sph", range = modRange, nugget = modNugget)
+
+ppt.vgm1 <- vgm(psill = modSill, 
+                model = "Sph", 
+                range = modRange, 
+                nugget = modNugget)
+
 ppt.vgm2 <- fit.variogram(ppt.var, ppt.vgm1)
+
 plot(ppt.var, ppt.vgm2, main = "Swiss precip. variogram")
+
 ```
 
 # Spatial prediction
@@ -219,30 +309,43 @@ We now use our fitted model to predict precipitation values across Switzerland. 
 
 See `?krige` for other parameters. 
 
-```{r message=FALSE, results='hide'}
-ppt.pred.ok <- krige(ppt ~ 1, swiss.sf, swiss.dem, ppt.vgm2, nmax = 40)
+```{r}
+
+ppt.pred.ok <- krige(ppt ~ 1, 
+                     locations = swiss.sf, 
+                     newdata = swiss.dem, 
+                     model = ppt.vgm2, 
+                     nmax = 40)
+
 ```
 
 ### Plotting the results
 
 Now we make a plot of the predictions. The output from the `krige()` function is a SpatialPixelsDataFrame, which has a slot called `data`, containing predictions in a variable called `var1.pred` and prediction errors in `var1.var`:
 
-```{r results='hide'}
+```{r}
+
 names(ppt.pred.ok)
+
 ```
 
 To see the predicted values, we can simply plot the first of these:
-```{r fig.keep='none'}
+
+```{r}
+
 plot(ppt.pred.ok, main = "Interpolated precipitation values (OK)")
+
 ```
 
 We can add some color to this image using a couple of add-on packages (you'll need to install these if you haven't already). Here's an example using one of the **viridis** [palettes][virID]:
 
 ```{r}
-library(viridis)
+
 nbreaks <- 11
 my.pal <- rev(magma(10))
-plot(ppt.pred.ok, col = my.pal,
+
+plot(ppt.pred.ok, 
+     col = my.pal,
      main = "Interpolated precipitation values (OK)")
 
 ```
@@ -250,26 +353,37 @@ plot(ppt.pred.ok, col = my.pal,
 And here's an example using the [RColorBrewer][rcbID] package (use the `display.brewer.all()` function to see the full set of palettes):
 
 ```{r}
-library(RColorBrewer)
+
 my.pal <- brewer.pal(9, "Blues")
+
 plot(ppt.pred.ok, col = my.pal,
      main = "Interpolated precipitation values (OK)")
 
 ```
 
 And we can equally plot the prediction errors:
-```{r fig.keep='none'}
+
+```{r}
+
 plot(ppt.pred.ok["var1.var"], 
      main = "Interpolated precipitation prediction error (OK)")
+
 ```
 
 ## Assessing model quality
 
 To assess the performance of our kriging model, we use a $n$-fold cross-validation (also called $k$-fold). This splits the data into $n$ subsets, then iteratively predicts each subset from the other $n-1$ sets. The `krige.cv()` function performs the cross-validation: this takes the same arguments as the `krige()` function, but we leave out the object with coordinates for new predictions, and specify `nfold`, the number of subsets to be used. You will see some warnings about the projection. You can safely ignore these. 
 
-```{r fig.keep='none', results='hide', message=FALSE, warning=FALSE}
-ppt.cv.ok <- krige.cv(ppt ~ 1, swiss.sf, ppt.vgm2, nmax = 40, nfold = 5)
+```{r}
+
+ppt.cv.ok <- krige.cv(ppt ~ 1, 
+                      locations = swiss.sf, 
+                      model = ppt.vgm2, 
+                      nmax = 40, 
+                      nfold = 5)
+
 head(ppt.cv.ok)
+
 ```
 
 The output of this function is a spatial object with the following variables:
@@ -283,29 +397,38 @@ The output of this function is a spatial object with the following variables:
 
 
 We can calculate two statistics from this: the root mean squared error of prediction (RMSEP) and the R$^2_P$ of prediction: 
-```{r results='hide'}
+```{r}
+
 ## RMSEP
 sqrt(mean(ppt.cv.ok$residual^2))
+
 ##R2P
 cor(ppt.cv.ok$observed, ppt.cv.ok$var1.pred)^2
+
 ```
 
 The first of these (RMSEP) gives the average error that might be expected when making a prediction, the second (R$^2_P$) gives the amount of variance in the test dataset predicted by the model.
 
 The output of `krige.cv()` contains, for each observation, the predicted value when that location was omitted from the model, the S.E., the observed value and the residual (predicted - observed). We can use the `bubble()` function to plot these, which shows both the size and the direction of the residual. Note that to use this we need to convert the `sf` object to the older `sp` class by using the `as_Spatial()` function:
 
-```{r fig.keep='none'}
+```{r}
+
 sp::bubble(as_Spatial(ppt.cv.ok)[,"residual"], pch = 16)
+
 ```
 
 The map shows little pattern, which is good. Any systematic under or over estimation would suggest that there is a trend or other structural component which is not being captured by the model.
 
 Finally, we can produce a plot of residuals against predicted values to look for any bias in the model predictions. Again these show little bias, but some hetereoscedascity at higher values. 
 
-```{r fig.keep='none'}
+```{r}
+
 plot(ppt.cv.ok$var1.pred, ppt.cv.ok$residual, 
-     xlab = 'PPT Predicted Values', ylab = 'PPT Residuals')
-abline(h = 0,lty = 2)
+     xlab = 'PPT Predicted Values', 
+     ylab = 'PPT Residuals')
+
+abline(h = 0, lty = 2)
+
 ```
 
 # Exercise
@@ -322,91 +445,30 @@ abline(h = 0,lty = 2)
 This is the code to read in and convert all the necessary data to `sf` and `starts` objects. Note that we have to assign the CRS to each object. The data are in unprojected longitude/latitude, so we use the WGS84 description (EPSG code 4326). The gridded elevation is in an odd format: point data into a shapefile. Here we use `st_rasterize()` to force this into a full grid for interpolation. 
 
 
-```{r eval=TRUE, results='hide'}
+```{r}
+
 # Oregon boundaries
-orotl <- st_read("../datafiles/oregon/orotl.shp")
+orotl <- st_read("../datafiles/oregon/orotl.shp", quiet = TRUE)
 st_crs(orotl) <- 4326
+
 # Oregon temperatures
-ortann <- st_read("../datafiles/oregon/oregontann.shp")
+ortann <- st_read("../datafiles/oregon/oregontann.shp", quiet = TRUE)
 st_crs(ortann) <- 4326
+
 # Oregon DEM file
-orgrid <- st_read("../datafiles/oregon/orgrid.shp") 
+orgrid <- st_read("../datafiles/oregon/orgrid.shp", quiet = TRUE) 
 st_crs(orgrid) <- 4326
 orgrid.dem <- st_rasterize(orgrid, dx = 0.1667, dy = 0.1667)
+
+# plot
 plot(orgrid.dem, reset = FALSE)
-plot(ortann["tann"], add = TRUE, pch = 16, cex = 1.5)
+
+plot(ortann["tann"], 
+     add = TRUE, 
+     pch = 16, 
+     cex = 1.5)
 
 ```
-
-# File details
-## Swiss precipitation: *swiss_ppt.csv*
-\begin{tabularx}{\linewidth}{| l | X |}
-\hline
-Column header & Variable \\ 
-\hline
-id & Station identifier \\
-x & Easting \\
-y & Northing \\ 
-ppt & Precipitation amount (mm) \\ 
-elevation & Elevation a.s.l. (m) \\ 
-\hline
-\end{tabularx}
-
-## Meuse soil samples: *meuse.shp*
-\begin{tabularx}{\linewidth}{| l | X |}
-\hline
-Column header & Variable \\ 
-\hline
-cadmium & Cadmium concentration (ppm) \\
-copper & Copper concentration (ppm) \\
-lead & Lead concentration (ppm) \\ 
-zinc & Zinc concentration (ppm) \\ 
-elev & Elevation a.s.l. (m) \\ 
-dist & Distance to river (GIS) \\ 
-om & Organic matter (kg 100 kg$^{-1}$) \\ 
-ffreq & Flood frequency (class) \\ 
-soil & Soil type \\ 
-lime & Presence of lime \\ 
-landuse & Landuse class \\ 
-dist\_m & Distance to river (field) \\ 
-\hline
-\end{tabularx}
-
-## Oregon annual temperature: *ortann.shp*
-
-\begin{tabularx}{\linewidth}{| l | X |}
-\hline
-Column header & Variable \\ 
-\hline
-elevation & Elevation a.s.l. (m) \\ 
-tann & Annual temperature (Celsius) \\ 
-coords\_x1 & Longitude \\
-coords\_x2 & Latitude \\ 
-\hline
-\end{tabularx}
-
-# R code covered in lab
-\begin{tabularx}{\linewidth}{| l | X |}
-
-\hline
-R Command & Purpose \\
-\hline
-\multicolumn{2}{|l|}{\textbf{Variogram analysis}} \\
-\hline
-\texttt{variogram} & Build sample variogram using a SpatialPointsDataFrame or data frame. Parameters: \texttt{cutoff} define limit of variogram analysis; \texttt{width} defines the lag width. Anisotropy can be included with \texttt{anis}\\
-\texttt{vgm} & Construct a variogram model. Parameters are entered in the following order: (partial sill), model type, range, nugget\\
-\texttt{fit.variogram} & Fit a model built with \texttt{vgm} to a sample variogram using weighted OLS\\
-\hline
-\multicolumn{2}{|l|}{\textbf{Spatial prediction}} \\
-\hline
-\texttt{krige} & Carries out spatial prediction using kriging. Variable to be predicted is specified using R's model formula, and covariates can be introduced on the right hand side. \\
-& --- If no variogram model is include will perform inverse distance weighting \\
-& --- If variogram model is include will perform ordinary kriging \\
-& --- If parameter \texttt{nsim} is set will perform Gaussian simulation \\
-& --- If parameter \texttt{nsim} and parameter \texttt{indicators} are set will perform indicator simulation \\
-\texttt{krige.cv} & Carries out $n$-fold cross validation using kriging\\
-\hline
-\end{tabularx}
 
 [virID]: https://github.com/sjmgarnier/viridis
 [rcbID]: https://colorbrewer2.org/

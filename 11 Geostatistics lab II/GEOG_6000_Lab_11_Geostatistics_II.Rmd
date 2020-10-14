@@ -1,13 +1,13 @@
 ---
 title: "GEOG 6000 Lab 12 Geostatistics II"
 author: "Simon Brewer"
-date: "October 24, 2017"
-output: 
-  pdf_document: 
-    number_sections: yes
-urlcolor: blue
-header-includes:
-   - \usepackage{tabularx}
+date: "10/14/2020"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    fig_caption: true
+    css: "../style.css"
 ---
 
 ```{r echo=FALSE}
@@ -15,7 +15,30 @@ options(width=50)
 set.seed(1234)
 ```
 
-In this lab, we will continue the steps of a geostatistical analysis, using a set of precipitation data for Switzerland, and the data set of soil samples from a floodplain near the Meuse river in the Netherlands. You will need the **gstat** package to perform the variogram analysis and spatial prediction, and the **rgdal** and **sp** packages to load data. You will need to download the following files and unzip them in your working directory: 
+In this lab, we will continue the steps of a geostatistical analysis, using the set of precipitation data for Switzerland, and the data set of soil samples from a floodplain near the Meuse river in the Netherlands. 
+
+Before starting the lab, you will need to set up a new folder for your working directory. Go to your `geog6000` folder now and create a new folder for today's class called `lab11`. The following files will be used in this lab, all available on Canvas:  
+
+- *swiss_ppt.zip*. This contains a set of point observations of rainfall in Switzerland
+- *meuse.zip*. This contains the shapefiles for the Meuse soil sample data set as well as the river borders 
+- *ne_50m_admin_0_countries.zip*. This contains a shapefile of country outlines
+
+You will need to download these files from Canvas, and move them from your `Downloads` folder to the `datafiles` folder that you made previously. Make sure to unzip the zip files so that R can access the content. Note that on Windows, you will need to right-click on the file and select 'Extract files'. 
+
+You will need three packages to carry out all the steps listed here: **sf**, **stars** and **gstat**, so make sure these are installed these before starting. 
+
+```{r, eval = FALSE}
+
+pkgs <- c("gstat",
+          "stars",
+          "sf")
+
+install.packages(pkgs)
+
+```
+
+
+You will need the **gstat** package to perform the variogram analysis and spatial prediction, and the **rgdal** and **sp** packages to load data. You will need to download the following files and unzip them in your working directory: 
 
 - Swiss precipitation dataset: *swiss_ppt.csv*, *swiss_dem.grd* and *borders.shp* (in *borders.zip*)
 - Oregon temperature dataset: *oregontann.zip*

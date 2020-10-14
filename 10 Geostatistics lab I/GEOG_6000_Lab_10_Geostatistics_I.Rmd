@@ -241,8 +241,8 @@ We can add some color to this image using a couple of add-on packages (you'll ne
 ```{r}
 library(viridis)
 nbreaks <- 11
-cols <- rev(magma(10))
-plot(ppt.pred.ok, col = cols,
+my.pal <- rev(magma(10))
+plot(ppt.pred.ok, col = my.pal,
      main = "Interpolated precipitation values (OK)")
 
 ```
@@ -251,8 +251,8 @@ And here's an example using the [RColorBrewer][rcbID] package (use the `display.
 
 ```{r}
 library(RColorBrewer)
-cols <- brewer.pal(9, "Blues")
-plot(ppt.pred.ok, col = cols,
+my.pal <- brewer.pal(9, "Blues")
+plot(ppt.pred.ok, col = my.pal,
      main = "Interpolated precipitation values (OK)")
 
 ```

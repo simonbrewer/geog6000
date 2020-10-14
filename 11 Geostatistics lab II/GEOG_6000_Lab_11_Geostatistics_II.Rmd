@@ -312,14 +312,12 @@ plot(s3.var, s3.vgm, main="Soil class 3")
 s3.ik <- krige(I(soil==3)~1, meuse, meuse.grid, s3.vgm)
 ```
 
-Once you have the probabilities for all three classes, we can use these to estimate the most probable class at each new location. We do this in three steps: first, combine the individual probability interpolations into a single matrix; second, find for each row, the column with the highest probability using `which.max()` and assign the output as a new variable in `meuse.grid`; third, plot the results.
+Once you have the probabilities for all three classes, we can use these to estimate the most probable class at each new location. We do this in three steps: first, combine the individual probability interpolations into a single matrix; second, find for each row, the column with the highest probability using `max.col()` and assign the output as a new variable in `meuse.grid`; third, plot the results.
 
 ```{r fig.keep='none'}
-soil.prob = cbind(s1.ik$var1.pred, s2.ik$var1.pred, s3.ik$var1.pred)
-meuse.grid$soil.pred = max.col(soil.prob)
+soil.prob = cbind(c(s1.ik$var1.pred), c(s2.ik$var1.pred), c(s3.ik$var1.pred))
+meuse.grid$soil.pred <- max.col(soil.prob)
 plot(meuse.grid["soil.pred"])
-
-?max.col
 ```
 
 This can be extended to larger numbers of classes, as long as there is sufficient data to produce a variogram for each one, and that you have the patience to model them all. 

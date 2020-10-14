@@ -1534,19 +1534,22 @@ div.tocify {
 
 
 <p>In this lab, we will go through the steps of a geostatistical analysis, using a set of precipitation data for Switzerland, and the data set of soil samples from a floodplain near the Meuse river in the Netherlands.</p>
-<p>Before starting the lab, you will need to set up a new folder for your working directory. Go to your <code>geog6000</code> folder now and create a new folder for today’s class called <code>lab09</code>. The following files will be used in this lab, all available on Canvas:</p>
+<p>Before starting the lab, you will need to set up a new folder for your working directory. Go to your <code>geog6000</code> folder now and create a new folder for today’s class called <code>lab10</code>. The following files will be used in this lab, all available on Canvas:</p>
 <ul>
-<li><em>swiss_ppt.zip</em>. This contains a set of poitn observations of rainfall in Switzerland</li>
+<li><em>swiss_ppt.zip</em>. This contains a set of point observations of rainfall in Switzerland</li>
 <li><em>meuse.zip</em>. This contains the shapefiles for the Meuse soil sample data set as well as the river borders</li>
 <li><em>ne_50m_admin_0_countries.zip</em>. This contains a shapefile of country outlines</li>
+<li><em>oregon.zip</em>: Oregon temperature dataset:</li>
 </ul>
 <p>You will need to download these files from Canvas, and move them from your <code>Downloads</code> folder to the <code>datafiles</code> folder that you made previously. Make sure to unzip the zip files so that R can access the content. Note that on Windows, you will need to right-click on the file and select ‘Extract files’.</p>
+<p>Now start RStudio and change the working directory to <code>lab10</code>. As a reminder, you can do this by going to the [Session] menu in RStudio, then [Change working directory]. This will open a file browser that you can use to browse through your computer and find the folder.</p>
 <p>You will need three packages to carry out all the steps listed here: <strong>sf</strong>, <strong>stars</strong> and <strong>gstat</strong>, so make sure these are installed these before starting.</p>
 <pre class="r"><code>pkgs &lt;- c(&quot;gstat&quot;,
           &quot;stars&quot;,
           &quot;sf&quot;)
 
 install.packages(pkgs)</code></pre>
+<p><strong>With all the examples given, it is important to not just type in the code, but to try changing the parameters and re-running the functions multiple times to get an idea of their effect.</strong> Help on the parameters can be obtained by typing <code>help(functionname)</code> or <code>?functionname</code>.</p>
 <div id="reading-the-data" class="section level1">
 <h1>Reading the data</h1>
 <p>Start by loading the <strong>sf</strong> and <strong>stars</strong> packages to get the functions for reading files, then load each data set and process it for further analysis:</p>
@@ -1767,7 +1770,7 @@ abline(h = 0,lty = 2)</code></pre>
 <div id="exercise" class="section level1">
 <h1>Exercise</h1>
 <ol style="list-style-type: decimal">
-<li>The compressed file <em>oregontann.zip</em> contains data on average annual temperatures for Oregon from a set of climate stations in the shapefile <code>oregontann.shp</code> in a variable called ‘tann’, and station elevation in a variable called <code>elevation</code>. A second file <em>orgrid.shp</em> contains a set of gridded elevations for the state at 10 minute resolution. Code is given below to read in these data and convert to <code>sf</code> and <code>stars</code> objects for geostatistical analysis. Using the <strong>gstat</strong> library, carry out the following analyses:</li>
+<li>The compressed file <em>oregon.zip</em> contains data on average annual temperatures for Oregon from a set of climate stations in the shapefile <code>oregontann.shp</code> in a variable called ‘tann’, and station elevation in a variable called <code>elevation</code>. A second file <em>orgrid.shp</em> contains a set of gridded elevations for the state at 10 minute resolution. Code is given below to read in these data and convert to <code>sf</code> and <code>stars</code> objects for geostatistical analysis. Using the <strong>gstat</strong> library, carry out the following analyses:</li>
 </ol>
 <ul>
 <li>Read in the files and produce a sample variogram for average annual temperatures in Oregon. (Use the <code>variogram()</code> function)</li>

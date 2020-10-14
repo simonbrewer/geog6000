@@ -30,6 +30,8 @@ Before starting the lab, you will need to set up a new folder for your working d
 
 You will need to download these files from Canvas, and move them from your `Downloads` folder to the `datafiles` folder that you made previously. Make sure to unzip the zip files so that R can access the content. Note that on Windows, you will need to right-click on the file and select 'Extract files'. 
 
+Now start RStudio and change the working directory to `lab09`. As a reminder, you can do this by going to the [Session] menu in RStudio, then [Change working directory]. This will open a file browser that you can use to browse through your computer and find the folder. 
+
 You will need two packages to carry out all the steps listed here: **sf** and **spatstat**, so make sure these are installed these before starting. 
 
 ```{r, eval = FALSE}
@@ -40,6 +42,8 @@ pkgs <- c("spatstat",
 install.packages(pkgs)
 
 ```
+
+**With all the examples given, it is important to not just type in the code, but to try changing the parameters and re-running the functions multiple times to get an idea of their effect.** Help on the parameters can be obtained by typing `help(functionname)` or `?functionname`. 
 
 # Point pattern data
 

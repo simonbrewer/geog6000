@@ -81,8 +81,14 @@ swiss.bord <- subset(countries, NAME == "Switzerland")
 swiss.bord <- st_transform(swiss.bord, 2056)
 ```
 
-And finally, we'll plot the adata and country outline using **ggplot2**
+And finally, we'll plot the data and country outline using **ggplot2**
 
+```{r}
+plot(swiss.sf["ppt"], reset = FALSE, pch = 16)
+plot(st_geometry(swiss.bord), add = TRUE)
+```
+
+Or alternatively, we can plot with **ggplot2**:
 ```{r}
 library(ggplot2)
 ggplot() + 
@@ -230,9 +236,31 @@ To see the predicted values, we can simply plot the first of these:
 plot(ppt.pred.ok, main = "Interpolated precipitation values (OK)")
 ```
 
+We can add some color to this image using a couple of add-on packages (you'll need to install these if you haven't already). Here's an example using one of the **viridis** [palettes][virID]:
+
+```{r}
+library(viridis)
+nbreaks <- 11
+cols <- rev(magma(10))
+plot(ppt.pred.ok, col = cols,
+     main = "Interpolated precipitation values (OK)")
+
+```
+
+And here's an example using the [RColorBrewer][rcbID] package (use the `display.brewer.all()` function to see the full set of palettes):
+
+```{r}
+library(RColorBrewer)
+cols <- brewer.pal(9, "Blues")
+plot(ppt.pred.ok, col = cols,
+     main = "Interpolated precipitation values (OK)")
+
+```
+
 And we can equally plot the prediction errors:
 ```{r fig.keep='none'}
-plot(ppt.pred.ok["var1.var"], main = "Interpolated precipitation prediction error (OK)")
+plot(ppt.pred.ok["var1.var"], 
+     main = "Interpolated precipitation prediction error (OK)")
 ```
 
 ## Assessing model quality
@@ -380,3 +408,5 @@ R Command & Purpose \\
 \hline
 \end{tabularx}
 
+[virID]: https://github.com/sjmgarnier/viridis
+[rcbID]: https://colorbrewer2.org/

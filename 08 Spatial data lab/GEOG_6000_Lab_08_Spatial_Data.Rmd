@@ -921,7 +921,7 @@ Up till now, we have been working with _vector_ spatial data. These are geometri
 
 This simplifies the geometry, which can be specified by two pieces of information: the spatial extent of the raster and the resolution of the cells. Here we create a blank raster using the `raster` function, and assign random values to each cell:
 
-```{r, echo = FALSE}
+```{r, echo = TRUE}
 
 r <- raster(nrow = 10, ncol = 10)
 

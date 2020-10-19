@@ -28,12 +28,13 @@ You should have these files from last week's lab, but if not you will need to do
 
 Now start RStudio and change the working directory to `lab11`. As a reminder, you can do this by going to the [Session] menu in RStudio, then [Change working directory]. This will open a file browser that you can use to browse through your computer and find the folder. 
 
-You will also need three packages to carry out all the steps listed here: **sf**, **stars** and **gstat**. Again, you should these installed from last weeks lab, but if not make sure these are installed these before starting. 
+You will also need several packages to carry out all the steps listed here: **sf**, **stars**, **RColorBrewer** and **gstat**. Again, you should these installed from last weeks lab, but if not make sure these are installed these before starting. 
 
 ```{r, eval = FALSE}
 
 pkgs <- c("gstat",
           "stars",
+          "RColorBrewer",
           "sf")
 
 install.packages(pkgs)
@@ -46,9 +47,10 @@ install.packages(pkgs)
 
 By default **gstat** assumes that your data are in a Cartesian projection, unless the Spatial* object containing the data has projection metadata specifying that it is on a spherical (lat/lon) coordinate system. Without this, longitude and latitude coordinates will be treated as Cartesian, and distances will be incorrectly calculated for variogram analysis and kriging. We can illustrate this with the Oregon dataset. Load this and check the associated projection (this should read 'NA'):
 
-```{r}
+```{r message=FALSE, results='hide'}
 library(sf)
 library(stars)
+library(RColorBrewer)
 oregon = st_read("../datafiles/oregon/oregontann.shp")
 st_crs(oregon)
 ```
@@ -131,7 +133,7 @@ plot(ppt ~ elev, swiss.sf)
 
 We will use this model together with elevation data from the DEM to perform kriging with an external drift on the precipitation data. As we are incorporating a covariate in our model, we first need to remake the precipitation variogram, so that the variogram takes this into account: 
 
-```{r}
+```{r message=FALSE, warning=FALSE}
 ppt.var <- variogram(ppt ~ elev, swiss.sf)
 plot(ppt.var, plot.numbers=TRUE)
 ```
@@ -169,15 +171,16 @@ ppt.pred.ked <- krige(ppt ~ elev, swiss.sf, swiss.dem, ppt.vgm2)
 
 Plot the new predictions:
 ```{r fig.keep='none'}
-ppt.pred.ked
-library(RColorBrewer)
+names(ppt.pred.ked)
+
 my.pal = brewer.pal(9, "Blues")
 plot(ppt.pred.ked["var1.pred"], col = my.pal, 
      main = "Swiss precipitation (KED)")
 ```
 
 As before, we can estimate the prediction skill of the model using cross-validation:
-```{r results='hide'}
+
+```{r results='hide', message=FALSE, warning=FALSE}
 ppt.cv.ked <- krige.cv(ppt ~ elev, swiss.sf, ppt.vgm2, nmax=40, nfold=5)
 sqrt(mean(ppt.cv.ked$residual^2))
 cor(ppt.cv.ked$observed, ppt.cv.ked$var1.pred)^2
@@ -189,7 +192,7 @@ Regression kriging provides a more flexible approach to including covariates tha
 
 As a simple example, we will build a linear model of precipitation using elevation as the covariate, and use the residuals from this as the basis for kriging. Note that as we have specified the covariate in the regression model, we no longer need to include it in the variogram or the `krige()` function. 
 
-```{r fig.keep='none'}
+```{r fig.keep='none', warning=FALSE}
 fit1 = lm(ppt ~ elev, swiss.sf)
 swiss.sf$resid = residuals(fit1)
 resid.var = variogram(resid ~ 1, swiss.sf)
@@ -250,30 +253,36 @@ plot(swiss.sf["ppt40"], pch = 16,
 Now we proceed as in the previous lab: 
 
 1. Create the sample variogram
-```{r fig.keep='none'}
+
+```{r fig.keep='none', warning=FALSE}
 ppt40.var <- variogram(ppt40 ~ 1, swiss.sf)
 plot(ppt40.var)
 ppt40.vgm = vgm(0.035, "Sph", 40000, 0.01)
 plot(ppt40.var, ppt40.vgm)
 ```
 2. Fit a variogram model
-```{r fig.keep='none'}
+
+```{r fig.keep='none', warning=FALSE}
 ppt40.vgm2 = fit.variogram(ppt40.var, ppt40.vgm)
 plot(ppt40.var, ppt40.vgm2)
 ```
 3. Interpolate using ordinary kriging:
+
 ```{r fig.keep='none', message=FALSE, results='hide'}
 ppt40.ik <- krige(ppt40 ~ 1, swiss.sf, swiss.dem, ppt40.vgm2, nmax=40)
 ```
 4. Plot the new predictions:
-```{r fig.keep='none'}
+
+```{r fig.keep='high'}
 plot(ppt40.ik)
 ```
 
 Note that these are not true probabilities (some values $<0$ are obtained). For the purposes of geostatistical interpolation, however, these are considered as close to being probabilities and are often corrected to between 0 and 1. Indicator simulation (see below) offers a method to interpolate true probabilities.
 
 ## Categorical variables
+
 The Meuse data set contains soil type for each of the sampling sites, split into three classes. Use the `spplot()` function to look at their spatial distribution:
+
 ```{r fig.keep='none'}
 plot(meuse["soil"], pch = 16, reset = FALSE)
 plot(meuse.riv, add = TRUE, col = NA)
@@ -283,7 +292,7 @@ The individual categories can be interpolated to new locations using indicator k
 
 Star by making and modeling the sample variogram. Note that rather than creating a new variable, we use the `I()` function, which tells R to create a new variable internally in a model, here a binary value where soil class 1 equals 1, and other classes equal zero:
 
-```{r fig.keep='none'}
+```{r fig.keep='none', warning=FALSE}
 s1.var <- variogram(I(soil==1)~1, meuse, cutoff=2000)
 s1.vgm <- vgm(psill=0.25, model="Sph", range=900, nugget=0.1)
 s1.vgm <- fit.variogram(s1.var, s1.vgm)
@@ -293,7 +302,10 @@ plot(s1.var, s1.vgm, main="Soil class 1")
 We now interpolate using the `krige()` function:
 ```{r fig.keep='none', results='hide'}
 s1.ik <- krige(I(soil==1)~1, meuse, meuse.grid, s1.vgm)
-plot(s1.ik)
+my.pal <- brewer.pal(9, "Greens")
+plot(s1.ik["var1.pred"], col = my.pal, 
+     main = "P(Soil == 1)", reset = FALSE)
+plot(meuse.riv, col = NA, add = TRUE)
 ```
 
 Now do the same for the other two soil classes, to get interpolated probabilities for class 2 (`s2.ik`) and 3 (`s3.ik`).
@@ -314,10 +326,11 @@ s3.ik <- krige(I(soil==3)~1, meuse, meuse.grid, s3.vgm)
 
 Once you have the probabilities for all three classes, we can use these to estimate the most probable class at each new location. We do this in three steps: first, combine the individual probability interpolations into a single matrix; second, find for each row, the column with the highest probability using `max.col()` and assign the output as a new variable in `meuse.grid`; third, plot the results.
 
-```{r fig.keep='none'}
+```{r fig.keep='high'}
 soil.prob = cbind(c(s1.ik$var1.pred), c(s2.ik$var1.pred), c(s3.ik$var1.pred))
 meuse.grid$soil.pred <- max.col(soil.prob)
-plot(meuse.grid["soil.pred"])
+my.pal <- brewer.pal(3, "Set2")
+plot(meuse.grid["soil.pred"], col = my.pal)
 ```
 
 This can be extended to larger numbers of classes, as long as there is sufficient data to produce a variogram for each one, and that you have the patience to model them all. 
@@ -331,7 +344,7 @@ Geostatistical simulations come in two forms: constrained and unconstrained. In 
 ## Gaussian simulation
 Like ordinary kriging, Gaussian simulation can be performed with continuous variables, and uses a similar setup to the kriging carried out above and in previous labs. We'll use this with the Swiss precipitation data, so first make a variogram and fit a variogram model. 
 
-```{r include=TRUE}
+```{r include=TRUE, warning=FALSE}
 modNugget <- 10
 modRange <- 75000
 modSill <- 140
@@ -400,7 +413,8 @@ s1.sim = krige(I(soil==1)~1, meuse, meuse.grid, s1.vgm,
                nsim=1000, indicators=TRUE, nmax=40)
 
 s1.prob <- st_apply(s1.sim, c(1,2), sum) / 1000
-plot(s1.prob)
+my.pal <- brewer.pal(9, "Reds")
+plot(s1.prob, main = "P(Soil == 1)", col = my.pal)
 ```
 
 In contrast to the indicator kriging, the output from this function provides true probabilities of presence, constrained to the range [0,1].
@@ -417,41 +431,74 @@ In contrast to the indicator kriging, the output from this function provides tru
     
 ## Code to add shapefiles
 
-It may help to add other shapefiles to your maps for this exercise. The following code assumes that you have read in the ozone shapefile to a Spatial* object called `ozone.sp`, and adds state outlines, lakes and cities using the [Natural Earth datasets][neID]. The example here plots out the ozone concentrations, but you can adapt this pretty easily for the predicted values you obtain. Note that to run this code, you will need to make sure the **maptools** package is installed and download and unzip the following files from Canvas:
+It may help to add other shapefiles to your maps for this exercise. The following code assumes that you have read in the ozone shapefile to a `sf` object called `ozone.sf`, and adds state outlines, lakes and cities using the [Natural Earth datasets][neID]. The example here plots out the ozone concentrations, but you can adapt this pretty easily for the predicted values you obtain. Note that to run this code, you will need to make sure the **tmap** package is installed and download and unzip the following files from Canvas:
 
 - *ne_50m_admin_1_states_provinces.zip*
 - *ne_50m_lakes.zip*
 - *ne_50m_populated_places.zip*
 
-To overlay multiple shapefiles, we make a set of list objects, one per overlay, then include all of these in a list that is passed to the `sp.layout` argument. The purpose of making the individual lists is to allow you to specify parameters for each layer (e.g. fill colors):
+To overlay multiple shapefiles, we can make use of the `reset` and `add` arguments when plotting `sf` objects. Start by reading in the three extra layers:
 
-```{r eval=FALSE, echo=FALSE}
-ozone.sp = readOGR("mwozone/ozone.shp")
-head(ozone.sp)
+```{r echo=FALSE, message=FALSE, results='hide'}
+ozone.sf = st_read("../datafiles/mwozone/ozone.shp")
+st_crs(ozone.sf) <- 4326
 ```
-```{r eval=FALSE}
-library(maptools)
+
+```{r message=FALSE, results='hide'}
 ## Read data
-states = readOGR("ne_50m_admin_1_states_provinces/ne_50m_admin_1_states_provinces_shp.shp")
-lakes = readOGR("ne_50m_lakes/ne_50m_lakes.shp")
-places = readOGR("ne_50m_populated_places/ne_50m_populated_places.shp")
-## Make overlay lists
-statesl = list(states)
-lakesl = list(lakes, fill = "lightblue")
-placesl1 = list('sp.points', places, pch='+', cex=1.2, col='midnightblue')
-placesl2 = list('sp.pointLabel', places, label=places$NAME,
-            cex=0.7, col='midnightblue',
-            fontfamily='Palatino')
-## Pass all of this to spplot
-spplot(ozone.sp, "ozone", sp.layout = list(statesl, lakesl, 
-                                           placesl1, placesl2))
+states = st_read("../datafiles/ne_50m_admin_1_states_provinces/ne_50m_admin_1_states_provinces_shp.shp")
+lakes = st_read("../datafiles/ne_50m_lakes/ne_50m_lakes.shp")
+places = st_read("../datafiles/ne_50m_populated_places/ne_50m_populated_places.shp")
 ```
+
+Now we plot the layers. Each time we add the argument `reset = TRUE` to tell R to keep the same basic plot outline. For the second (and subsequent plots) we also set `add = TRUE` to prevent R from resetting the plot. 
+
+```{r}
+plot(st_geometry(ozone.sf), reset = FALSE)
+plot(st_geometry(lakes), reset = FALSE, add = TRUE, col = "lightblue")
+plot(st_geometry(states), reset = FALSE, add = TRUE)
+plot(ozone.sf["ozone"], add = TRUE, pch = 16)
+```
+
+Better plots with multiple layer can be made by using the `geom_sf` function from **ggplot2**:
+
+```{r message=FALSE, results='hide'}
+library(ggplot2)
+
+places <- cbind(places, st_coordinates(st_centroid(places)))
+
+ggplot() +
+  geom_sf(data = lakes, fill = "lightblue") +
+  geom_sf(data = states, fill = NA) +
+  geom_sf(data = ozone.sf, aes(col = ozone), size = 2) +
+  scale_color_viridis_c() +
+  geom_label(data = places, aes(X, Y, label = NAME), size = 2.5) +
+  coord_sf(xlim = c(-94, -82), ylim = c(36, 45), expand = FALSE) +
+  theme_bw()
+  
+```
+
+
+Alternatively you can use the **tmap** package to make a better plot:
+
+```{r message=FALSE, results='hide'}
+library(tmap)
+
+mybbox <- st_bbox(ozone.sf)
+tm_shape(lakes, bbox = mybbox) + tm_fill("lightblue") + 
+  tm_shape(states) + tm_borders() +
+  tm_shape(ozone.sf) + tm_symbols(col = "ozone", size = 0.5, palette = "viridis") +
+  tm_shape(places) + tm_text("NAME", size = 0.75)
+
+```
+
 ## Code to make a prediction grid
+
+
 ```{r eval=FALSE}
-llCRS <- CRS("+proj=longlat +ellps=WGS84")
-predgrid <- expand.grid(x=seq(-94, -82, 0.25), y=seq(36, 45, 0.25))
-predgrid.sp = SpatialPixels(SpatialPoints(predgrid))
-proj4string(predgrid.sp) <- llCRS
+pred.grid <- st_as_stars(mybbox, xlim = c(-94, -82), 
+                  ylim = c(36, 45), dx = 0.1, dy = 0.1)
+st_crs(pred.grid) <- 4326
 ```
 
 # File details
@@ -504,28 +551,6 @@ proj4string(predgrid.sp) <- llCRS
 \end{tabularx}
 
 
-# R code covered in lab
-\begin{tabularx}{\linewidth}{| l | X |}
-
-\hline
-R Command & Purpose \\
-\hline
-\multicolumn{2}{|l|}{\textbf{Variogram analysis}} \\
-\hline
-\texttt{variogram} & Build sample variogram using a SpatialPointsDataFrame or data frame. Parameters: \texttt{cutoff} define limit of variogram analysis; \texttt{width} defines the lag width. Anisotropy can be included with \texttt{anis}\\
-\texttt{vgm} & Construct a variogram model. Parameters are entered in the following order: (partial sill), model type, range, nugget\\
-\texttt{fit.variogram} & Fit a model built with \texttt{vgm} to a sample variogram using weighted OLS\\
-\hline
-\multicolumn{2}{|l|}{\textbf{Spatial prediction}} \\
-\hline
-\texttt{krige} & Carries out spatial prediction using kriging. Variable to be predicted is specified using R's model formula, and covariates can be introduced on the righthand side. \\
- & --- If no variogram model is include will perform inverse distance weighting \\
- & --- If variogram model is include will perform ordinary kriging \\
- & --- If parameter \texttt{nsim} is set will perform Gaussian simulation \\
- & --- If parameter \texttt{nsim} and parameter \texttt{indicators} are set will perform indicator simulation \\
-\texttt{krige.cv} & Carries out $n$-fold cross validation using kriging\\
-\hline
-\end{tabularx}
 
 [neID]: https://www.naturalearthdata.com
 [epsgID]: https://spatialreference.org/ref/epsg/wgs-84/

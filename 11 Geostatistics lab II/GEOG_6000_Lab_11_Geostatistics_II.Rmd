@@ -271,13 +271,25 @@ plot(ppt40.var, ppt40.vgm2)
 ```{r fig.keep='none', message=FALSE, results='hide'}
 ppt40.ik <- krige(ppt40 ~ 1, swiss.sf, swiss.dem, ppt40.vgm2, nmax=40)
 ```
+
 4. Plot the new predictions:
 
 ```{r fig.keep='high'}
-plot(ppt40.ik)
+plot(ppt40.ik["var1.pred"])
 ```
 
-Note that these are not true probabilities (some values $<0$ are obtained). For the purposes of geostatistical interpolation, however, these are considered as close to being probabilities and are often corrected to between 0 and 1. Indicator simulation (see below) offers a method to interpolate true probabilities.
+Note that these are not true probabilities (some values $<0$ are obtained). For the purposes of geostatistical interpolation, however, these are considered as close to being probabilities and are often corrected to between 0 and 1, which we'll do next. Indicator simulation (see below) offers a method to interpolate true probabilities.
+
+First, we use the `which()` function to find all pixels with a value below zero and reset this to zero. We then plot using one of the **viridis** color palettes (you will need to make sure this is installed):
+
+```{r fig.keep='high'}
+ppt40.ik$var1.pred[which(ppt40.ik$var1.pred < 0)] <- 0
+
+my.pal <- rev(viridis::magma(10))
+plot(ppt40.ik["var1.pred"], col = my.pal, 
+     breaks = seq(0, 1, length.out = 11),
+     main = "P(ppt > 40mm)")
+```
 
 ## Categorical variables
 

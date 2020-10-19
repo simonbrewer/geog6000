@@ -350,48 +350,57 @@ ppt.pred.sgs <- krige(ppt ~ 1, swiss.sf, swiss.dem,
 The `spplot()` function is very useful for visualizing the output as it plots a grid of all required simulations:
 ```{r eval=TRUE}
 my.pal <- brewer.pal(9, "Blues")
-spplot(ppt.pred.sgs, col.regions=my.pal, cuts=8,
-       sp.layout=list(swiss.bord), colorkey=TRUE, 
-       edge.col=1, main="Swiss precipitation (SGS)")
+plot(ppt.pred.sgs, col = my.pal, 
+     main = "Swiss ppt (SGS)")
 ```
 
 In general, single simulations are only of interest to examine the degree of variation between observations (as opposed to kriging which provides smoothed interpolations). The power of the simulation approach is in producing a large number of possible realizations of a spatial field. This allows a better assessment of uncertainty at any location, as we can obtain not just the mean estimated value and a confidence interval, but the full probability distribution of interpolated values. 
 
-In the next bit of code, we will produce one hundred simulations of precipitation, then extract the predicted values for a single point and make this into a histogram. We use the function `over()` for extracting points. This is a very useful overlay method for spatial data, and will work with most combinations (e.g. extracting grids within polygons, polygons from points, etc.).
+In the next bit of code, we will produce one hundred simulations of precipitation, then extract the predicted values for a single point and make this into a histogram. So first, re-run the `krige` function with a higher number of simulations:
 
-```{r eval=FALSE}
+```{r eval=TRUE}
 ppt.pred.sgs <- krige(ppt ~ 1, swiss.sf, swiss.dem, 
                       ppt.vgm2, nmax=40, nsim=100)
-x = SpatialPoints(cbind(0,0))
-x.ppt = over(x, ppt.pred.sgs)
-hist(as.numeric(x.ppt), breaks=20, col="darkorange", 
+```
+
+Next, we create a new point location to extract the simulated values. 
+
+```{r eval=TRUE}
+newloc <- st_geometry(st_point(c(2650000, 1200000)))
+st_crs(newloc) <- st_crs(swiss.dem)
+plot(swiss.dem, reset = FALSE, axes = TRUE)
+plot(newloc, pch = "x", cex = 3, col = 2, add = TRUE)
+```
+
+We use the function `st_extract()` for extracting points, and then plot the resulting values as a histogram:
+
+```{r eval=FALSE}
+newloc.ppt = st_extract(ppt.pred.sgs, newloc)
+hist(newloc.ppt$var1, breaks=20, col="darkorange", 
      main="Precipitation at (0,0)", xlab="mm")
 ```
 
-Note that as we are using the same formula notation as kriging, we can easily extend the basic simulation approach to include covariates to represent external drifts or trends. 
+Note that as we are using the same formula notation as kriging, we could easily extend the basic simulation approach to include covariates to represent external drifts or trends. 
 
 ## Indicator simulation
+
 The simulation approach can also be used for indicator interpolation. As in the previous example, we simply reuse the `krige()` function. In addition to the `nsim` parameter, we include a parameter `indicators=TRUE` to perform indicator kriging. In this case, rather than each simulation estimating a probability at each new location, the method estimates a binary value (presence or absence) by drawing from a binomial distribution. 
 To simulate 6 realizations of the distribution of soil class 1:
 
 ```{r eval=TRUE}
-s1.sis <- krige(I(soil==1)~1, meuse, meusegrid, s1.vgm, 
+s1.sis <- krige(I(soil==1)~1, meuse, meuse.grid, s1.vgm, 
                 nsim=6, indicators=TRUE, nmax=40)
-spplot(s1.sis, sp.layout=list(meuseriv), 
-       main="Soil class 1 (IK)")
+plot(s1.sis)
 ```
 
 If we now run multiple simulations, we can assess uncertainty. In this case, we get 1000 simulations of the presence of soil type 1 at each location. To estimate probability, we then take the sum of all presences (1) and divide by the number of simulations (1000). This is stored in the output, and then can be plotted using `spplot()`. 
 
 ```{r eval=FALSE}
-s1.sim = krige(I(soil==1)~1, meuse, meusegrid, s1.vgm,
+s1.sim = krige(I(soil==1)~1, meuse, meuse.grid, s1.vgm,
                nsim=1000, indicators=TRUE, nmax=40)
-s1.sim$prob = apply(s1.sim@data,1,sum)/1000
-my.pal <- rev(brewer.pal(9, "Spectral"))
-spplot(s1.sim, "prob", col.regions=my.pal, cuts=8,
-       sp.layout=list(meuseriv), colorkey=TRUE, 
-       edge.col=1, main="Soil class 1 (IK)")
-spplot(s1.sim["prob"], main="Pr Soil class 1")
+
+s1.prob <- st_apply(s1.sim, c(1,2), sum) / 1000
+plot(s1.prob)
 ```
 
 In contrast to the indicator kriging, the output from this function provides true probabilities of presence, constrained to the range [0,1].

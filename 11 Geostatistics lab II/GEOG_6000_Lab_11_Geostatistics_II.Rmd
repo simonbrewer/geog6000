@@ -55,7 +55,14 @@ oregon = st_read("../datafiles/oregon/oregontann.shp")
 st_crs(oregon)
 ```
 
-Now make a variogram for the temperature variable (first load the **gstat** package):
+Let's make a quick plot of the temperature data:
+
+```{r}
+names(oregon)
+plot(oregon["tann"], pch = 16)
+```
+
+This shows a fairly clear pattern with warmer temperatures at lower elevations and closer to the coast. We'll now make a variogram for to explore this pattern (first load the **gstat** package):
 
 ```{r message=FALSE, fig.keep='none'}
 library(gstat)
@@ -100,12 +107,14 @@ plot(swiss.sf["ppt"], reset = FALSE, pch = 16)
 plot(st_geometry(swiss.bord), add = TRUE)
 ```
 
+Alternatively, we can use the **ggplot2** library:
 
 ```{r fig.keep='high', message=FALSE}
 library(ggplot2)
 ggplot() + 
   geom_sf(data = swiss.bord) +
   geom_sf(data = swiss.sf, aes(col = ppt), size = 2.5) +
+  scale_color_viridis_c(direction = -1) +
   theme_bw()
 ```
 

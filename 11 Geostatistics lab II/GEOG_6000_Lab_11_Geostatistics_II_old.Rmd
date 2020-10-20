@@ -124,31 +124,26 @@ meuse.grid <- st_rasterize(meuse.grid["dist"], dx = 40, dy = 40)
 
 ```
 
-```{r}
-hist(swiss.sf$ppt)
-swiss.sf$lppt <- log(swiss.sf$ppt + 1e-1)
-```
-
 # Kriging with external drift
 
 Kriging can be extended to include covariates to improve prediction. One of the most flexible methods is kriging with an external drift, where the drift refers to any covariate that has been recorded both at the sampling locations and at the prediction locations. A scatterplot of the precipitation against the elevation of each site shows a weak negative relationship, with generally higher values at lower elevations:
 ```{r fig.keep='none'}
-plot(lppt ~ elev, swiss.sf)
+plot(ppt ~ elev, swiss.sf)
 ```
 
 We will use this model together with elevation data from the DEM to perform kriging with an external drift on the precipitation data. As we are incorporating a covariate in our model, we first need to remake the precipitation variogram, so that the variogram takes this into account: 
 
 ```{r message=FALSE, warning=FALSE}
-ppt.var <- variogram(lppt ~ elev, swiss.sf)
+ppt.var <- variogram(ppt ~ elev, swiss.sf)
 plot(ppt.var, plot.numbers=TRUE)
 ```
 
 Now let's fit a model as we did before:
 
 ```{r}
-modNugget <- 0.05
-modRange <- 100000
-modSill <- 0.75
+modNugget <- 10
+modRange <- 75000
+modSill <- 140
 ppt.vgm1 <- vgm(psill=modSill, "Sph", range=modRange, nugget=modNugget)
 ppt.vgm2 <- fit.variogram(ppt.var, ppt.vgm1)
 plot(ppt.var, ppt.vgm2, main="Swiss precip. variogram")
@@ -171,7 +166,7 @@ Now we can go ahead and run the model:
 
 ```{r}
 ## kriging with external drift
-ppt.pred.ked <- krige(lppt ~ elev, swiss.sf, swiss.dem, ppt.vgm2)
+ppt.pred.ked <- krige(ppt ~ elev, swiss.sf, swiss.dem, ppt.vgm2)
 ```
 
 Plot the new predictions:
@@ -180,26 +175,14 @@ names(ppt.pred.ked)
 
 my.pal = brewer.pal(9, "Blues")
 plot(ppt.pred.ked["var1.pred"], col = my.pal, 
-     main = "Swiss log precipitation (KED)")
-```
-
-Note that we can also back-transform to precipitation in mm by using `exp()`:
-
-```{r}
-ppt.pred.ked$ppt <- exp(ppt.pred.ked$var1.pred)
-plot(ppt.pred.ked["ppt"], col = my.pal, 
      main = "Swiss precipitation (KED)")
-
 ```
-
 
 As before, we can estimate the prediction skill of the model using cross-validation:
 
 ```{r results='hide', message=FALSE, warning=FALSE}
-ppt.cv.ked <- krige.cv(lppt ~ elev, swiss.sf, ppt.vgm2, nmax=40, nfold=5)
-## RMSE
+ppt.cv.ked <- krige.cv(ppt ~ elev, swiss.sf, ppt.vgm2, nmax=40, nfold=5)
 sqrt(mean(ppt.cv.ked$residual^2))
-## R2
 cor(ppt.cv.ked$observed, ppt.cv.ked$var1.pred)^2
 ```
 
@@ -210,7 +193,7 @@ Regression kriging provides a more flexible approach to including covariates tha
 As a simple example, we will build a linear model of precipitation using elevation as the covariate, and use the residuals from this as the basis for kriging. Note that as we have specified the covariate in the regression model, we no longer need to include it in the variogram or the `krige()` function. 
 
 ```{r fig.keep='none', warning=FALSE}
-fit1 = lm(lppt ~ elev, swiss.sf)
+fit1 = lm(ppt ~ elev, swiss.sf)
 swiss.sf$resid = residuals(fit1)
 resid.var = variogram(resid ~ 1, swiss.sf)
 plot(resid.var)
@@ -218,7 +201,7 @@ plot(resid.var)
 
 Now fit a variogram model to this:
 ```{r fig.keep='none'}
-resid.vgm = vgm(0.75, "Cir", 100000, 0.05)
+resid.vgm = vgm(145, "Cir", 75000, 5)
 plot(resid.var, resid.vgm)
 ```
 
@@ -251,7 +234,7 @@ plot(swiss.dem["ppt.rk"], col = my.pal,
 
 ```
 
-We can, of course, back-transform the data to the non-log scale using `exp()`. While the results here are not that much different to the kriging with an external drift listed above, the method is much more flexible. We could replace the linear model with generalized linear models, additive models, mixed-effects models and even machine learning methods. 
+Note that there are various issues with this model, not least of which are the presence of negative precipitation values at higher elevations. This is partly limited by the poor relationship between elevation and precipitation in this data, and by the fact that a linear model may not be the best choice. A log-transformation of precipitation may help with the link between elevation and we could replace the linear model with a more flexible approach (e.g. generalized additive models or machine learning methods). 
 
 # Indicator Kriging
 
@@ -374,10 +357,10 @@ Geostatistical simulations come in two forms: constrained and unconstrained. In 
 Like ordinary kriging, Gaussian simulation can be performed with continuous variables, and uses a similar setup to the kriging carried out above and in previous labs. We'll use this with the Swiss precipitation data, so first make a variogram and fit a variogram model. 
 
 ```{r include=TRUE, warning=FALSE}
-modNugget <- 0.05
-modRange <- 100000
-modSill <- 0.75
-ppt.var <- variogram(lppt ~ 1, swiss.sf)
+modNugget <- 10
+modRange <- 75000
+modSill <- 140
+ppt.var <- variogram(ppt ~ 1, swiss.sf)
 ppt.vgm1 <- vgm(psill=modSill, "Sph", range=modRange, nugget=modNugget)
 ppt.vgm2 <- fit.variogram(ppt.var, ppt.vgm1)
 plot(ppt.var, ppt.vgm2, main="Swiss precip. variogram")
@@ -385,7 +368,7 @@ plot(ppt.var, ppt.vgm2, main="Swiss precip. variogram")
 
 To carry out 6 random simulations of the Swiss precipitation data, we use the `krige()` function again, with the spatial data, output grid, variogram, etc. The new parameter used here is `nsim` which controls the number of output simulations:
 ```{r eval=TRUE}
-ppt.pred.sgs <- krige(lppt ~ 1, swiss.sf, swiss.dem, 
+ppt.pred.sgs <- krige(ppt ~ 1, swiss.sf, swiss.dem, 
                       ppt.vgm2, nmax=40, nsim=6)
 ```
 
@@ -401,7 +384,7 @@ In general, single simulations are only of interest to examine the degree of var
 In the next bit of code, we will produce one hundred simulations of precipitation, then extract the predicted values for a single point and make this into a histogram. So first, re-run the `krige` function with a higher number of simulations:
 
 ```{r eval=TRUE}
-ppt.pred.sgs <- krige(lppt ~ 1, swiss.sf, swiss.dem, 
+ppt.pred.sgs <- krige(ppt ~ 1, swiss.sf, swiss.dem, 
                       ppt.vgm2, nmax=40, nsim=100)
 ```
 
@@ -418,8 +401,7 @@ We use the function `st_extract()` for extracting points, and then plot the resu
 
 ```{r eval=FALSE}
 newloc.ppt = st_extract(ppt.pred.sgs, newloc)
-newloc.ppt$ppt <- exp(newloc.ppt$var1)
-hist(newloc.ppt$ppt, breaks=20, col="darkorange", 
+hist(newloc.ppt$var1, breaks=20, col="darkorange", 
      main="Precipitation at (0,0)", xlab="mm")
 ```
 

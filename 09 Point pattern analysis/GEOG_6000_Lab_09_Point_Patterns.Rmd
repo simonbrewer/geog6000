@@ -527,7 +527,7 @@ urkiola.win <- as.owin(urkiola.win)
 urkiola.crds <- st_coordinates(urkiola.sf)
 ## Convert to ppp
 urkiola.ppp <- ppp(x = urkiola.crds[, 1], y = urkiola.crds[,2], 
-                   marks = urkiola.sf$tree, window = urkiola.win)
+                   marks = as.factor(urkiola.sf$tree), window = urkiola.win)
 plot(urkiola.ppp)
 
 ```

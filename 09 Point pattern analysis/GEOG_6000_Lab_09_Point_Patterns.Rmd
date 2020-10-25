@@ -517,16 +517,19 @@ plot(fit2,
 ### R code for reading Urkiola shape file and converting to ppp object
 
 ```{r eval=FALSE}
+
 # Tree locations
-urkiola.sp <- st_read("./urkiola/urkiola.shp")
+urkiola.sf <- st_read("../datafiles/urkiola/urkiola.shp")
 # Park boundary
-urkiola.win <- readOGR("./urkiola/urkiolaWindow.shp")
-# First convert points to ppp
-urkiola.ppp <- as.ppp(urkiola.sf)
-# Set study window to park boundary
-Window(urkiola.ppp) <- as.owin(urkiola.win)
-# Set marks to the tree species
-marks(urkiola.ppp) <- urkiola.sf$tree
+urkiola.win <- st_read("../datafiles/urkiola/urkiolaWindow.shp")
+urkiola.win <- as.owin(urkiola.win)
+# First extract coordinates
+urkiola.crds <- st_coordinates(urkiola.sf)
+## Convert to ppp
+urkiola.ppp <- ppp(x = urkiola.crds[, 1], y = urkiola.crds[,2], 
+                   marks = urkiola.sf$tree, window = urkiola.win)
+plot(urkiola.ppp)
+
 ```
 
 

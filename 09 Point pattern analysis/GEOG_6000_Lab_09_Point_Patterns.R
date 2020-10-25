@@ -78,16 +78,29 @@ redwood.sf <- st_read("../datafiles/redwood/redwood.shp")
 redwood.sp <- as(redwood.sf, "Spatial")
 redwood.sp <- as(redwood.sp, "SpatialPoints")
 redwood <- as(redwood.sp, "ppp")
+Window(redwood) <- owin(x = c(0, 1), y = c(0, 1))
 
 ## Option 2
 redwood.sf <- st_read("../datafiles/redwood/redwood.shp")
 redwood.sp <- as(redwood.sf, "Spatial")
 redwood <- as(redwood.sp, "ppp")
 marks(redwood) <- NULL
+Window(redwood) <- owin(x = c(0, 2), y = c(0, 2))
 
 ## Option 3
 redwood.sf <- st_read("../datafiles/redwood/redwood.shp")
-redwood <- ppp(redwood.sf$x, redwood.sf$y)
+redwood.owin <- owin(x = c(0, 1), y = c(0, 1))
+redwood <- ppp(redwood.sf$x, redwood.sf$y, owin = redwood.owin)
+
+## Option 4
+redwood.crds <- st_coordinates(redwood.sf)
+redwood.owin <- owin(x = c(0, 1), y = c(0, 1))
+redwood <- ppp(redwood.crds[,1], redwood.crds[,2], owin = redwood.owin)
+
+## Option 5
+redwood <- as.ppp(redwood.sf)
+marks(redwood) <- NULL
+Window(redwood) <- owin(x = c(0, 1), y = c(0, 1))
 
 y <- as(redwood.sp, "SpatialPoints")
 redwood <- as(y, "ppp")
@@ -190,18 +203,29 @@ plot(fit2, how = 'image', se = FALSE, pause = FALSE)
 
 ## ----eval=FALSE-----------------------------------------------------------------------------
 ## # Tree locations
-## urkiola.sp <- readOGR("./urkiola/urkiola.shp")
-## # Park boundary
-## urkiola.win <- readOGR("./urkiola/urkiolaWindow.shp")
-## # First convert boundary to owin object
-## y <- as(urkiola.win, "SpatialPolygons")
-## # Then convert SpatialPolygons to owin class
-## urkiola.owin <- as(y, "owin")
-## # Now get tree coordinates
-## urkiola.x <- coordinates(urkiola.sp)[,1]
-## urkiola.y <- coordinates(urkiola.sp)[,2]
-## # Finally make up ppp object using coordinates, tree names and owin
-## urkiola.ppp <- ppp(urkiola.x, urkiola.y,
-##                    window = urkiola.owin,
-##                    marks = urkiola.sp$tree)
+urkiola.sf <- st_read("../datafiles/urkiola/urkiola.shp")
+# Park boundary
+urkiola.win <- st_read("../datafiles/urkiola/urkiolaWindow.shp")
+
+urkiola.ppp <- as.ppp(urkiola.sf)
+Window(urkiola.ppp) <- as.owin(urkiola.win)
+marks(urkiola.ppp) <- urkiola.sf$tree
+plot(urkiola.ppp)
+
+urkiola.ppp <- as.ppp(urkiola.sf, win = urkiola.win, 
+                      marks = lansing$species)
+
+
+
+# First convert boundary to owin object
+y <- as(urkiola.win, "SpatialPolygons")
+# Then convert SpatialPolygons to owin class
+urkiola.owin <- as(y, "owin")
+# Now get tree coordinates
+urkiola.x <- coordinates(urkiola.sp)[,1]
+urkiola.y <- coordinates(urkiola.sp)[,2]
+# Finally make up ppp object using coordinates, tree names and owin
+urkiola.ppp <- ppp(urkiola.x, urkiola.y,
+                   window = urkiola.owin,
+                   marks = urkiola.sp$tree)
 

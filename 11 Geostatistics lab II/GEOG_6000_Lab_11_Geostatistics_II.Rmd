@@ -1,5 +1,5 @@
 ---
-title: "GEOG 6000 Lab 12 Geostatistics II"
+title: "GEOG 6000 Lab 11 Geostatistics II"
 author: "Simon Brewer"
 date: "10/14/2020"
 output:
@@ -39,7 +39,7 @@ You should have these files from last week's lab, but if not you will need to do
 
 Now start RStudio and change the working directory to `lab11`. As a reminder, you can do this by going to the [Session] menu in RStudio, then [Change working directory]. This will open a file browser that you can use to browse through your computer and find the folder. 
 
-You will also need several packages to carry out all the steps listed here: **sf**, **stars**, **RColorBrewer** and **gstat**. Again, you should these installed from last weeks lab, but if not make sure these are installed these before starting. 
+You will also need several packages to carry out all the steps listed here: **sf**, **stars**, **RColorBrewer** and **gstat**. Again, you should have these from last weeks lab, but if not make sure these are installed these before starting. 
 
 ```{r, eval = FALSE}
 

@@ -1,63 +1,106 @@
 ---
-title: "GEOG 6000 Lab 14 Spatial Regression II"
+title: "GEOG 6000 Lab 13 Spatial Regression II"
 author: "Simon Brewer"
-date: "November 12, 2018"
-output: 
-  pdf_document: 
-    number_sections: yes
-header-includes:
-   - \usepackage{tabularx}
+date: "November 10, 2020"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    fig_caption: true
+    css: "../style.css"
 ---
 
-```{r echo=FALSE}
-options(width=50)
-set.seed(1234)
+```{r setup, include=FALSE}
+
+knitr::opts_chunk$set(echo = TRUE,
+                      error = FALSE,
+                      message = FALSE,
+                      warning = FALSE,
+                      fig.align = "center")
+
 ```
 
-In this lab, we will cover some of the more advanced methods for modeling spatial areal data. While you will be working with continuous normal data in the lab, these methods can be used in a generalized form with other data types. You will need several packages with to carry out all the steps listed here: **rgdal**, **spdep**, **spatialreg** and **spgwr**, as well as **classInt** and **RColorBrewer** to make the plots. The lab uses two datasets, both shapefiles, and you will need to download these and unzip them into a directory. 
+```{r echo=FALSE}
+
+set.seed(1234)
+
+```
+
+In this lab, we will cover some of the more advanced methods for modeling spatial areal data. While you will be working with continuous normal data in the lab, these methods can be used in a generalized form with other data types. Before starting the lab, you will need to set up a new folder for your working directory. Go to your `geog6000` folder now and create a new folder for today's class called `lab12`. The following files will be used in this lab, all available on Canvas:  
 
 - Crime rates in Columbus, Ohio (*columbus.zip*)
 - Boston housing prices (*boston.tr.zip*)
 
-Things to remember:
+Download these files from Canvas, and move them from your `Downloads` folder to the `datafiles` folder that you made previously. Make sure to unzip the zip files so that R can access the content. Note that on Windows, you will need to right-click on the file and select 'Extract files'. 
 
-- The following font conventions are used:
-    - Normal font = text, comments etc
-    - `Courier font` = R commands
-    - *Italic font* = file names
-- R is case-sensitive for variables and functions. Iris is not the same as iris or IRIS.
-- `#` indicates comments - no need to type these
-- **Remember to change your R working directory to where your files are stored**
+Now start RStudio and change the working directory to `lab11`. As a reminder, you can do this by going to the [Session] menu in RStudio, then [Change working directory]. This will open a file browser that you can use to browse through your computer and find the folder. 
+
+You will also need several packages to carry out all the steps listed here: **sf**, **spdep**, **spatialreg** and **spgwr**. Make sure these are installed (if you haven't already) before starting. I'm going to use **tmap** to map out some of the results, but you are welcome to use **ggplot2** or the basic `plot()` command. 
+
+```{r, eval = FALSE}
+
+pkgs <- c("sf",
+          "spdep",
+          "spatialreg",
+          "tmap")
+
+install.packages(pkgs)
+
+```
+
+```{r message=FALSE}
+
+library(sf)
+library(spdep)
+library(spatialreg)
+library(tmap)
+
+```
+
+You will need several packages with to carry out all the steps listed here: **sf**, **spdep**, **spatialreg** and **spgwr**, as well as **classInt** and **RColorBrewer** to make the plots. The lab uses two datasets, both shapefiles, and you will need to download these and unzip them into a directory. 
+
+- Crime rates in Columbus, Ohio (*columbus.zip*)
+- Boston housing prices (*boston.tr.zip*)
 
 **With all the examples given, it is important to not just type in the code, but to try changing the parameters and re-running the functions multiple times to get an idea of their effect.** Help on the parameters can be obtained by typing `help(functionname)` or `?functionname`. 
 
 # Columbus crime dataset
+
 ## Reading the dataset
+
 We will again use the crime dataset from Columbus. The dataset is available as a shapefile in *columbus.zip* - you should already have it available, but if not download and extract this before starting.
 
 ```{r message=FALSE, results='hide'}
-require(rgdal)
-col = readOGR("./columbus/columbus.shp")
+
+col <- st_read("../datafiles/columbus/columbus.shp")
+
 ```
 
 And log-transform the two covariates:
 
 ```{r}
-col$lINC = log(col$INC)
-col$lHOVAL = log(col$HOVAL)
+
+col$lINC <- log(col$INC)
+
+col$lHOVAL <- log(col$HOVAL)
+
 ```
 
 ## Building the spatial weight matrix
-Now build the neighborhood structure and the associated spatial weight matrix. The example below uses the Queen's case definition of neighbors and binary weights, but these can be replaced by other options fairly easily. You will need the **spdep** package for this. 
 
-```{r results='hide', fig.keep='high', results='hide', message=FALSE}
-library(spdep)
-coords <- coordinates(col)
-col.nbq <- poly2nb(col, queen=TRUE)
+Now build the neighborhood structure and the associated spatial weight matrix. The example below uses the Queen's case definition of neighbors and binary weights, but these can be replaced by other options fairly easily. 
+
+```{r results='hide', fig.keep='high', message=FALSE}
+
+col.geom <- st_geometry(col)
+coords <- st_coordinates(st_centroid(col))
+col.nbq <- poly2nb(col)
 col.nbq
-col.listw = nb2listw(col.nbq)
-plot(col, border="white", col="gray")
-plot(col.nbq, coords, add=T, col=1, lwd=2)
+col.listw <- nb2listw(col.nbq)
+
+plot(col.geom, col = "gray", border = "white")
+plot(col.nbq, coords, add = TRUE, col = 1, lwd = 2)
+
 ```
 
 # Spatial filtering
@@ -75,28 +118,33 @@ In R, spatial filtering is carried out as a series of steps:
 Here, we apply a spatial filter to the Columbus crime dataset. We start by building the OLS model (and run a Moran's $I$ test on the residuals):
 
 ```{r results='hide'}
+
 lm.ols <- lm(CRIME ~ lINC + lHOVAL, data=col)
 summary(lm.ols)
 moran.test(residuals(lm.ols), col.listw)
+
 ```
 
 Now build the spatial filter. Note that we have to give the following parameters:
 
 - The neighborhood structure (**not** the spatial weight matrix)
-- The weights to be used (`style`)
-- The stopping rule (`alpha`). Moran eigenvectors are selected until the $p$-value of the stepwise Moran's $I$ test reach this value
-- `ExactEV=TRUE` - calculates exact values for Moran's $I$ expected value and variance. If this is set to FALSE, the values will be calculated using a fast approximation. This can greatly reduce the amount of time required, especially with large datasets.
+- The weights to be used (`style`).We set this here to `C` which is a global standardization. To see other options, look at the help for `nb2listw()`.
+- The stopping rule (`alpha`). Moran eigenvectors are selected until the $p$-value of the stepwise Moran's $I$ test exceed this value
+- `ExactEV = TRUE` - calculates exact values for Moran's $I$ expected value and variance. If this is set to FALSE, the values will be calculated using a fast approximation. This can greatly reduce the amount of time required, especially with large datasets.
 
 ```{r results='hide', message=FALSE}
-library(spatialreg)
-sf.err = SpatialFiltering(lm.ols,nb = col.nbq, style = "C",
+
+sf.err <- SpatialFiltering(lm.ols,nb = col.nbq, style = "C",
                           alpha = 0.25, ExactEV = TRUE, data=col)
+
 ```
 
-The output from the `SpatialFiltering()` function is an object that contains both information about the stepwise process, and the selected Moran eigenvectors. Summary information about the stepwise process can be obtained by typing:
+The output from the `SpatialFiltering()` function is an object that contains both information about the stepwise process, and the selected Moran eigenvectors. Summary information can be obtained by typing:
 
 ```{r}
+
 sf.err
+
 ```
 
 Each row of the table is one step, and the columns include the following information:
@@ -112,161 +160,206 @@ Each row of the table is one step, and the columns include the following informa
 We can plot individual Moran eigenvectors to examine the spatial pattern they represent. The first selected eigenvector is 4:
 
 ```{r fig.keep='none'}
-library(classInt)
-library(RColorBrewer)
-col$ME4 = sf.err$dataset[,1]
-my.pal = brewer.pal(9, "BuGn")
-spplot(col, "ME4", col.regions = my.pal, cuts=8, col="lightgray",
-       main = "Moran eigenvector (4)")
+
+col$ME4 = sf.err$dataset[,"vec4"]
+
+tm_shape(col) + tm_fill("ME4", palette = "BuGn") +
+  tm_borders() +
+  tm_layout(main.title = "Moran eigenvector (4)", main.title.size = 1.2)
+
 ```
 
-We now can apply the spatial filter to the original `lm()` model. We first extract the values for the selected eigenvectors, then use this as a term in the model. As there are more than one selected vector, this makes a matrix. This can be included in the call to `lm()` directly, but each vector will be used as an individual covariate in the new regression:
+We now can apply the spatial filter to the original `lm()` model. We first extract the values for the selected eigenvectors using `fitted`, then use this as a term in the model. 
+
+As there are more than one selected vector, this makes a matrix. This can be included in the call to `lm()` directly, but each vector will be used as an individual covariate in the new regression:
 
 ```{r results='hide'}
+
 E.sel <- fitted(sf.err)
 lm.sf <- lm(CRIME ~ INC+HOVAL+E.sel, data=col) 
 summary(lm.ols)
 summary(lm.sf)
+
 ```
 
-Note that the coefficients have not changed from the original OLS model, but the significance of them has improved as the autocorrelation has been filtered. In addition, accounting for the extra variance has increased the R$^2$. Finally, we re-run Moran's $I$ test on the model residuals to check that the autocorrelation has been accounted for:
+Note that the coefficients have not changed from the original OLS model, but the significance of them has improved as the autocorrelation in the error term has been filtered. In addition, accounting for the extra variance has increased the R$^2$. Finally, we re-run Moran's $I$ test on the model residuals to check that the autocorrelation has been accounted for:
 
 ```{r results='hide'}
+
 moran.test(residuals(lm.sf), col.listw)
+
 ```
 
 As these are two nested linear models, we can use `anova()` to test whether the additional complexity in the SF model has resulted in a better overall model:
 
 ```{r}
+
 anova(lm.ols, lm.sf)
+
 ```
 
 And the low $p$-value suggests that we see a significant improvement in the fit. 
 
 # Geographically weighted regression
 
-Geographically weighted regression (GWR) was introduced by Fotheringham and others to deal with issues of autocorrelation and heterogeneity in spatial data. Rather than trying to build a single global model for an entire study region, GWR instead builds many local models within a small window of the total area. The choice of window size is important, as it dictates the number of observations used in each local model, and so the quality of that model. While there has been several papers criticizing this approach as a complete modeling method, it is very useful for exploring potential variation in the relationship between dependent and independent variables, as well as possible misspecification (missing independent variables). We will use it here to explore a dataset of childhood poverty rates in the SE USA. This data is in the file 'south00.shp', in the compressed file 'south.zip'. Download and extract this file, then read it into R:
+Geographically weighted regression (GWR) was introduced by Fotheringham and others to deal with issues of autocorrelation and heterogeneity in spatial data. Rather than trying to build a single global model for an entire study region, GWR instead builds many local models within a small window of the total area. The choice of window size is important, as it dictates the number of observations used in each local model, and so the quality of that model. While there has been several papers criticizing this approach as a complete modeling method, it is very useful for exploring potential variation in the relationship between dependent and independent variables, as well as possible misspecification (missing independent variables). We will use it here to explore a dataset of childhood poverty rates in the SE USA. This data is in the file *south00.shp*, in the compressed file 'south.zip'. Download and extract this file, then read it into R:
 
 ```{r fig.keep='none', results='hide'}
-sus.sp<-readOGR("./south/south00.shp")
+
+south.sf <- st_read("../datafiles/south/south00.shp")
 ## Map of poverty percentage
-my.pal <- rev(brewer.pal(9, "RdYlBu"))
-spplot(sus.sp, "PPOV", col.regions=my.pal, cuts=8,
-       main = "Southern US poverty rates")
+tm_shape(south.sf) + tm_fill("PPOV") +
+  tm_layout(main.title = "Southern US poverty rates")
+
 ```
 
 Now build a neighborhood structure for autocorrelation analysis:
+
 ```{r}
-south_nb <- poly2nb(sus.sp, queen=T)
-south_listw<- nb2listw(south_nb, style="W", zero.policy=TRUE)
+
+south_nb <- poly2nb(south.sf, queen = TRUE)
+south_listw <- nb2listw(south_nb, style = "W")
+
 ```
 
-And run Moran's $I$ to check the degree and significance of autocorrelation in the poverty variable (PPOV).
+And run Moran's $I$ to check the degree and significance of autocorrelation in the poverty variable (`PPOV`).
+
 ```{r results='hide'}
-moran.test(sus.sp$PPOV, listw=south_listw, zero.policy=T)
+
+moran.test(south.sf$PPOV, listw = south_listw)
+
 ```
 
 Next, we build an OLS regression, using the square root of the poverty percentages as dependent variable, and the following variables as independent variables:
 
-- PFHH: Percent female head of household
-- PUNEM: Percent unemployed
-- PBLK: Percent Black in population
-- P65UP: Percent over 65 years old
-- METRO: Metropolitan area (binary)
-- PHSPLUS: Percent with education beyond high school
+- `PFHH`: Percent female head of household
+- `PUNEM`: Percent unemployed
+- `PBLK`: Percent Black in population
+- `P65UP`: Percent over 65 years old
+- `METRO`: Metropolitan area (binary)
+- `PHSPLUS`: Percent with education beyond high school
 
-Once the model is built, we check for autocorrelation in the residuals with `lm.morantest()`:
-```{r results='hide'}
-fit1<-lm(SQRTPPOV ~ PFHH + PUNEM + PBLK + P65UP + METRO + PHSPLUS, sus.sp)
+Once the model is built, we check for autocorrelation in the residuals with `moran.test()`:
+
+```{r}
+
+fit1 <- lm(SQRTPPOV ~ PFHH + PUNEM + PBLK + P65UP + METRO + PHSPLUS, south.sf)
 summary(fit1)
+
+```
+
+```{r}
+
 moran.test(residuals(fit1), south_listw)
+
 ```
 
 And we can map the residuals from the model, which show a clear spatial pattern:
 
 ```{r eval=FALSE}
-## Map residuals
-sus.sp$lm.res <- residuals(fit1)
-breaks <- classIntervals(sus.sp$lm.res, 9, style = "quantile")
-my.pal <- brewer.pal(9, "RdBu") 
-spplot(sus.sp, "lm.res", col="transparent", col.regions=my.pal, at=breaks$brks,
-       main = "OLS residuals")
+
+south.sf$lm.res <- residuals(fit1)
+tm_shape(south.sf) + tm_fill("lm.res", palette = "PRGn") +
+  tm_layout(main.title = "OLS residuals")
+
 ```
 
-We now build the GWR model. This requires two steps, the first to assess the best window size, and the second to build and diagnose the local models using this window. The window can be chosen as
+We now build the GWR model, so start by loading the **spgwr** library.
+
+```{r}
+
+library(spgwr)
+
+```
+
+Building a GWR model requires two steps, the first to assess the best window size, and the second to build and diagnose the local models using this window. The window can be chosen as
 
 - Fixed size: each window will have the same bandwidth or size, so models in data sparse areas will have fewer observations
 - Adaptive: rather than setting a single window size, the window for each model is chosen to capture the same number of observations
 
-Here, we will use the second method, by setting the parameter `adapt=TRUE` in the GWR function. This is chosen as there is a lot of variation in the county sizes, so areas with smaller counties will have much a denser set of observations. 
+Here, we will use the second method, by setting the parameter `adapt = TRUE` in the GWR function. This is chosen as there is a lot of variation in the county sizes, so areas with smaller counties will have much a denser set of observations. We first need to extract polygon centroids for use in the distance calculations (these will be used to select the locations within a window around a point of interest). 
+
+```{r}
+
+coords <- st_coordinates(st_centroid(south.sf))
+
+```
 
 Start by finding the value of `q`: the proportion of points in each window:
-```{r eval=FALSE}
-library(spgwr)
-south.bw<-gwr.sel(SQRTPPOV ~PFHH + PUNEM + PBLK + P65UP + METRO + PHSPLUS,
-                  data= sus.sp, adapt = TRUE, gweight=gwr.Gauss,
-                  method = "cv", verbose=TRUE) 
+
+```{r eval=TRUE, cache=TRUE}
+
+south.bw<-gwr.sel(SQRTPPOV ~ PFHH + PUNEM + PBLK + P65UP + METRO + PHSPLUS,
+                  data = south.sf, coords = coords, adapt = TRUE, gweight = gwr.Gauss,
+                  method = "cv", verbose = TRUE) 
 south.bw
+
 ```
 
 There are several options used here:
 
-- `adapt=TRUE`: The function will use an adaptive bandwidth to ensure approximately the same number of observations are used in each local window to build a model
-- `gweight=gwr.Gauss`: Use Gaussian weights to fit each model (closer points will have a greater weight inthe OLS fit)
-- `method="cv"`: use cross-validation to test different bandwidth sizes/number of points
+- `adapt = TRUE`: The function will use an adaptive bandwidth to ensure approximately the same number of observations are used in each local window to build a model
+- `gweight = gwr.Gauss`: Use Gaussian weights to fit each model (closer points will have a greater weight inthe OLS fit)
+- `method = "cv"`: use cross-validation to test different bandwidth sizes/number of points
 
 
 We can estimate the approximate number of observations in each window as follows:
-```{r eval=FALSE}
-print(dim(sus.sp)[1] * south.bw)
+```{r eval=TRUE}
+
+print(dim(south.sf)[1] * south.bw)
+
 ```
 
 The outout from this function lists the changing value of `q`, as well as the RMSE results from cross-validation. The value of `q` is changed until no further improvement in the RMSE occurs. Note that we use the output from the previous step to set the window size (`adapt=south.bw`), and we set the window shape to Gaussian (`gweight = gwr.Gauss`)
 
 Now we build the final set of models using the function `gwr()`. 
-```{r eval=FALSE}
-south.gwr<-gwr(SQRTPPOV ~PFHH + PUNEM + PBLK + P65UP + METRO + PHSPLUS,
-               data= sus.sp, adapt = south.bw, gweight = gwr.Gauss, 
+```{r eval=TRUE}
+
+south.gwr <- gwr(SQRTPPOV ~ PFHH + PUNEM + PBLK + P65UP + METRO + PHSPLUS,
+               data = south.sf, coords = coords, adapt = south.bw, gweight = gwr.Gauss, 
                hatmatrix = TRUE)
-print(south.gwr)
+south.gwr
+
 ```
 
 The output of the model gives summary statistics about the range of coefficients across all models built ($n=1387$, the number of counties). In the model diagnostics, you will find an AIC value, which may be used in model comparison, and an R$^2$ value, which should be treated with some caution. 
 
-The output from the `gwr()` function is a large list object with a lot of information in it. One object in this list is a Spatial*DataFrame, with various information about the local models, and we can can now use this to plot out some of the model results. This adds a layer of recursion to the object, so you can access the Spatial object can be referenced by typing (I'd avoid typing this, as it will take a while to print everything held in the object):
+The output from the `gwr()` function includes a large list object with a lot of information in it. One object in this list is a `SpatialPointsDataFrame.` This is the older form of spatial object in R, and contains various information about the local models. We'll now use this to plot out some of the model results. It is possible to convert these to an `sf` object, but it is easier to simply assign new colums  in the existing `south.sf` object with the results we want to visualize.
 
 ```{r eval=FALSE}
-south.gwr$SDF
+
+class(south.gwr$SDF)
+
 ```
 
-And the GWR results are held in the `data` slot:
-```{r eval=FALSE}
-south.gwr$SDF@data
-names(south.gwr$SDF@data)
-```
-
-And individual results can be accessed from the `SDF` object:
+Individual results can be accessed from the `SpatialPointsDataFrame` object using the following notation:
 
 ```{r eval=FALSE}
+
 south.gwr$SDF$localR2
+
 ```
 
 First we plot the R$^2$ for each local measure. Areas with low R$^2$ values may indicate model misspecification - missing independent variables (e.g. West Texas). 
 
-```{r eval=FALSE}
-breaks <- classIntervals(south.gwr$SDF$localR2, 9, style = "quantile")
-my.pal <- brewer.pal(9, "YlOrRd") 
-spplot(south.gwr$SDF, "localR2", col="transparent", col.regions=my.pal, at=breaks$brks,
-       main = "Local R2 from GWR")
+```{r eval=TRUE}
+
+south.sf$localR2 <- south.gwr$SDF$localR2
+tm_shape(south.sf) + tm_fill("localR2") +
+  tm_layout(main.title = "Local R2 from GWR")
+
 ```
 
-And finally we plot the coefficients for one of the independent variables, the percent of the population aged 65 or over (P65UP). 
+And finally we plot the coefficients for one of the independent variables, the percent of the population aged 65 or over (`P65UP`). 
+
 ```{r eval=FALSE}
-breaks <- classIntervals(south.gwr$SDF$P65UP, 9, style = "quantile")
-my.pal <- brewer.pal(9, "Blues") 
-spplot(south.gwr$SDF, "P65UP", col="transparent", col.regions=my.pal, at=breaks$brks,
-       main = "Coefficient for P65UP")
+
+south.sf$beta_P65UP <- south.gwr$SDF$P65UP
+tm_shape(south.sf) + tm_fill("beta_P65UP", palette = "PRGn", n = 9) +
+  tm_layout(main.title = "Coefficient for P65UP")
+
 ```
+
 \newpage
 
 # Spatial hierarchical models
@@ -276,47 +369,62 @@ spplot(south.gwr$SDF, "P65UP", col="transparent", col.regions=my.pal, at=breaks$
 Hierarchical linear models (HLMs) offer yet another way to account for spatial dependency in your data. R has a couple of libraries that can be used to fit HLMs: **lme4** and **nlme**. We will use the second of these as it has a very flexible scheme for specifying the covariance between errors of a model, including spatial autocorrelation. Install this package if necessary:
 
 ```{r eval=FALSE}
+
 install.packages("nlme")
+
 ```
 
 And load it:
+
 ```{r eval=TRUE}
+
 library(nlme)
+
 ```
 
 We'll build a simple hierarchical model with the Columbus data. Our first model will not assume any spatial dependency between locations or model errors, but as this is a hierarchical model, we need to specify a group structure. As there are no natural groups for this, we simply create a dummy group variable, a vector of one's, to place all observations in the same group.
 
 ```{r}
+
 col$dummy <- rep(1, dim(col)[1])
+
 ```
 
 We can now go ahead and build the model. The function we will use is `lme()`, and the grouping structure of the model is specified using the `|` notation. The specific notation used here `~1 | dummy`, indicates that the intercepts should be treated as a random variable and that `dummy` should be used as a grouping factor:
 
 ```{r results='hide'}
+
 col.lme1 = lme(CRIME ~ lINC + lHOVAL, 
-              random = ~1 | dummy, data=col@data, method = "ML")
+              random = ~1 | dummy, data=col, method = "ML")
 summary(col.lme1)
+
 ```
 
 This first model does not add information to the original OLS model, but allows us to now test for and model the spatial autocorrelation. First, we'll do the usual Moran's $I$ test based on the residuals of this model:
 
 ```{r results='hide'}
+
 moran.test(residuals(col.lme1), col.listw)
+
 ```
 
-Which tells us, not too surprisingly, that the errors show some dependency. The **nlme** package then includes functions to plot the variogram of these errors, so we can see what their structure looks like:
-
-```{r fig.keep='none'}
-plot(Variogram(col.lme1, form = ~ Y + X, data = col))
-```
-
-The variogram at it's default settings suggest that there is some dependency over fairly short distances. Setting the argument `maxDist` improves the view of this:
+Which tells us, not too surprisingly, that the errors show some dependency. The **nlme** package then includes functions to plot the variogram of these errors, so we can see what their structure looks like. To do this we use the function `Variogram()`. Note that this is not the same as the function from **gstat**, but produces a similar figure. Here, you need to specify the model and the columns that contain the coordinates (`X` and `Y`).
 
 ```{r}
-plot(Variogram(col.lme1, form = ~ Y + X, data = col, maxDist = 10))
+
+plot(Variogram(col.lme1, form = ~ Y + X, data = col))
+
 ```
 
-This suggests that there is spatial covariance, over a distance of about 5 units, and with a small nugget effect (about 0.2). We can now create a new model with `lme()`, where we use the `corr` argument to specify that the errors are expected to spatially covary. The errors can be set using another function `corSpatial`, which will build a geostatistical covariance model. An example of this is given below:
+At the default settings, the variogram suggests that there is some dependency over fairly short distances. Setting the argument `maxDist` improves the view of this:
+
+```{r}
+
+plot(Variogram(col.lme1, form = ~ Y + X, data = col, maxDist = 10))
+
+```
+
+This suggests that there is spatial covariance, over a distance of about 5 units, and with a small nugget effect (about 0.2). We can now create a new model with `lme()`, where we use the `corr` argument to specify that the errors are expected to spatially covary. This argument requires information about the covariance of the errors, specifcally what function we want to use to model them. We can pass information about a spatial covariance function using `corSpatial()`. The following code defines a spherical model, with a range of 5, and a nugget at 20% of the total sill: 
 
 ```{r eval=FALSE}
 corSpatial(value = c(5, 0.2), form = ~ Y + X, type = 'spherical', nugget = TRUE)
@@ -330,40 +438,51 @@ This has the following arguments:
 - `nugget`: whether or not to include a nugget model
 
 Now, we'll add this into the `lme()` function to create our new model (we'll omit the nugget here):
-```{r results='hide'}
+
+```{r}
+
 col.lme2 <- lme(CRIME ~ lINC + lHOVAL, random = ~1 | dummy, 
-                data=col@data, method = "ML",
-                corr = corSpatial(c(5, 0.2), type="spherical",
+                data = col, method = "ML",
+                corr = corSpatial(c(5, 0.2), type = "spherical",
                                   form = ~ Y + X, nugget = TRUE))
 summary(col.lme2)
+
 ```
 
 About halfway through the summary output, you should be able to see the estimated value for the range and nugget. The nugget value is basically zero, so we can re-estimate the model excluding this:
 
-```{r results='hide'}
+```{r}
+
 col.lme2 <- lme(CRIME ~ lINC + lHOVAL, random = ~1 | dummy, 
-                data=col@data, method = "ML",
+                data=col, method = "ML",
                 corr = corSpatial(c(5), type="spherical",
                                   form = ~ Y + X, nugget = FALSE))
 summary(col.lme2)
+
 ```
 
 Now let's see how this new model compares. First calculate and compare the AIC scores:
 
 ```{r}
-AIC(col.lme1,col.lme2)
+
+AIC(col.lme1, col.lme2)
+
 ```
 
 Despite the additional complexity of the spatial effect (the new parameter is the estimated range), this provides a decent reduction in AIC. Let's redo the test for residual autocorrelation:
 
-```{r results='hide'}
+```{r}
+
 moran.test(residuals(col.lme2), col.listw)
+
 ```
 
 Which surprisingly says that the errors are still highly autocorrelated. The reason for this is that the `residuals()` function here generates the total error term (spatial + random). To get only the random errors, we ask for these to be normalized by the error covariance matrix:
 
-```{r results='hide'}
+```{r}
+
 moran.test(residuals(col.lme2, type="normalized"), col.listw)
+
 ```
 
 Which shows that the purely random errors are now no longer autocorrelated. 
@@ -373,13 +492,14 @@ Which shows that the purely random errors are now no longer autocorrelated.
 # Exercise
 
 1. The file *boston.shp* in the compressed file *boston.tr.zip* contains information on house pricing and various social and economic variables for tracts in Boston (the full set of variables is given below. We have explored the local spatial autocorrelation in this data set in a previous lab. Here, you have been asked to produce a statistical model of house prices in Boston, and to explore the various factors that may influence price. You should use the corrected median house values per tract, and log-transform these to remove the skew in the distribution. Unlike the previous questions, there is no single answer to this, instead, you will need to decide on your own modeling strategy among the spatial models we have looked at (including spatial lag and error models, spatial filtering and GWR). At a minimum your answer should include the following:
-    + A map of house prices
-    + A basic linear regression of house prices against several of the other variables that you consider to be important influences on house price
-    + A test of spatial autocorrelation in the residuals of this model
-    + A spatial regression model if the autocorrelation is significant, together with the reason that you chose that modeling approach
-    + Descriptions of goodness-of-fit of this model
-    + A statement describing which variables influence house prices, and the direction, strength and significance of that relationship
-    + A brief statement as to whether or not you believe this model is adequate, and what, if anything, might be missing
+
+- A map of house prices
+- A basic linear regression of house prices against several of the other variables that you consider to be important influences on house price
+- A test of spatial autocorrelation in the residuals of this model
+- A spatial regression model if the autocorrelation is significant, together with the reason that you chose that modeling approach
+- Descriptions of goodness-of-fit of this model
+-  A statement describing which variables influence house prices, and the direction, strength and significance of that relationship
+- A brief statement as to whether or not you believe this model is adequate, and what, if anything, might be missing
 
 **Boston housing dataset details:**
 
@@ -411,15 +531,3 @@ Which shows that the purely random errors are now no longer autocorrelated.
 \end{tabularx}
 Further details can be found here: Harrison, David, and Daniel L. Rubinfeld, Hedonic Housing Prices and the Demand for Clean Air, Journal of Environmental Economics and Management, Volume 5, (1978), 81-102
 
-
-# R code covered in lab
-\begin{tabularx}{\linewidth}{| l | X |}
-
-\hline
-R Command & Purpose \\
-\hline
-\texttt{SpatialFiltering} & Finds the set of Moran eigenvectors that represent spatial autocorrelation in a model\\
-\texttt{gwr.sel} & Selects an appropriate window size for GWR. Parameter `adapt=FALSE` selects a global bandwidth (window size). `adapt=TRUE` selects the optimum proportion of observations to include in each window\\
-\texttt{gwr} & Builds GWR model for a dataset using window characteristics selected by `gwr.sel()`\\
-\hline
-\end{tabularx}

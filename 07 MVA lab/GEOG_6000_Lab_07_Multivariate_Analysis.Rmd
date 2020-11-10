@@ -420,7 +420,7 @@ Note that this code requires the package **fields** to be installed and loaded. 
 ```{r echo=FALSE, message=FALSE}
 require(fields)
 wnaclim <- read.csv("../datafiles/wnaclim2.csv")
-wnaclim.pca <- prcomp(wnaclim[, seq(3:26)], scale = TRUE)
+wnaclim.pca <- prcomp(wnaclim[, 3:26], scale = TRUE)
 ```
 ```{r}
 wnaclim.pca.score <- wnaclim.pca$x[, 1]

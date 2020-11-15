@@ -50,8 +50,9 @@ install.packages(pkgs)
 
 ```
 
-```{r message=FALSE}
+```{r}
 
+library(RColorBrewer)
 library(sf)
 library(spdep)
 library(spatialreg)
@@ -67,19 +68,19 @@ library(tmap)
 
 We'll start by using **sf** to read in and plot the geometries of the Boston housing dataset and the New York dataset using **sf**. 
 
-```{r fig.keep='none'}
+```{r}
 
-boston <- st_read("../datafiles/boston.tr/boston.shp")
+boston <- st_read("../datafiles/boston.tr/boston.shp", quiet = TRUE)
 plot(st_geometry(boston))
 
-NY8 <- st_read("../datafiles/NY_data/NY8_utm18.shp")
+NY8 <- st_read("../datafiles/NY_data/NY8_utm18.shp", quiet = TRUE)
 plot(st_geometry(NY8))
 
 ```
 
 As a reminder, you can see the attribute table for the polygons by simply typing the name of the `sf` object, or by using the `$` notation to extract individual variables:
 
-```{r results='hide', fig.keep='none'}
+```{r}
 
 head(NY8)
 hist(NY8$TRACTCAS, 
@@ -87,13 +88,15 @@ hist(NY8$TRACTCAS,
 
 ```
 
-
 We can also make thematic maps by specifying the column we wish to plot:
+
 ```{r}
 
-library(RColorBrewer)
 my.pal <- brewer.pal(9, "YlOrRd") 
-plot(NY8["Cases"], main = "New York Leukemia Cases")
+
+plot(NY8["Cases"], 
+     main = "New York Leukemia Cases",
+     col = my.pal)
 
 ```
 
@@ -101,16 +104,21 @@ plot(NY8["Cases"], main = "New York Leukemia Cases")
 
 In order to test the different methods shown in class, we will extract the polygons for the Syracuse area from the `NY8` dataset. We then get their geometry using `st_geometry()`, and their centroids with the `st_centroid()` function. We'll use both of these to visualize the neighborhood structure. 
 
-```{r fig.keep='none'}
+```{r}
 
 Syracuse <- NY8[NY8$AREANAME == "Syracuse city", ]
 Syracuse.geom <- st_geometry(Syracuse)
 Syracuse.coords <- st_centroid(Syracuse.geom)
 
+```
+
+```{r}
+
 plot(Syracuse.geom, reset = FALSE)
 plot(Syracuse.coords, pch = 16, col = 2, add = TRUE)
 
 ```
+
 
 ## Neighborhood functions
 
@@ -122,15 +130,19 @@ The following section lists various methods for producing neighborhood structure
 
 Here two regions are considered neighbors if their boundaries or corners touch, and can be found using the `poly2nb()` function:
 
-```{r fig.keep='none'}
+```{r}
+
 Sy1_nb <- poly2nb(Syracuse)
+
 ```
 
 To visualize the resulting structure, plot the geometry of the original polygons, then add the structure - this requires the neighborhood, the centroids, and various color and line width options:
 
-```{r fig.keep='high'}
+```{r}
+
 plot(Syracuse.geom, reset = FALSE)
-plot(Sy1_nb, Syracuse.coords, add = TRUE, col = 2, lwd = 3)
+plot(Sy1_nb, Syracuse.coords, add = TRUE, col = 2, lwd = 1.5)
+
 ```
 
 Use this code to visualize the following structures as well.
@@ -151,21 +163,31 @@ Sy2_nb <- poly2nb(Syracuse, queen = FALSE)
 
 Here a triangulation is built between sets of three points. A set of three points is joined as long as no other points are found in a circle fit to the three points: 
 
-```{r message=FALSE}
+```{r}
+
 Sy3_nb <- tri2nb(Syracuse.coords)
+
 ```
 
 #### Sphere of influence
+
 The sphere-of-influence method restricts the links formed by Delauney triangulation to a certain length. 
+
 ```{r}
+
 Sy4_nb <- graph2nb(soi.graph(Sy3_nb, Syracuse.coords))
+
 ```
 
 #### $k$ nearest neighbors
+
 Here each region is linked to its $k$ nearest neighbors irrespective of the distance between them
+
 ```{r}
+
 Sy5_nb <- knn2nb(knearneigh(Syracuse.coords, k = 1))
 Sy6_nb <- knn2nb(knearneigh(Syracuse.coords, k = 2))
+
 ```
 
 #### Distance functions
@@ -174,8 +196,11 @@ Distance functions link together two regions if their centroids are within a cer
 
 ```{r}
 
-dists <- unlist(nbdists(Sy6_nb, Syracuse.coords))
+dists <- nbdists(Sy6_nb, Syracuse.coords)
+dists <- unlist(dists) #list to vector
+
 max_1nn <- max(dists)
+
 Sy7_nb = dnearneigh(Syracuse.coords, d1 = 0, d2 = 0.75 * max_1nn)
 
 ```
@@ -184,14 +209,18 @@ Sy7_nb = dnearneigh(Syracuse.coords, d1 = 0, d2 = 0.75 * max_1nn)
 
 While these function provide a quick way to establish a neighborhood structure, they will likely include some connections that are unrealistic or exclude some real connections. It is possible to edit the neighborhood structure directly - this is simply a list of $n$ vectors, where each vector contains the neighbors linked to a single polygon. To see the contents, simply type:
 
-```{r eval=FALSE}
+```{r, eval = FALSE}
+
 str(Sy1_nb)
+
 ```
 
 And to access the first polygons neighbors:
 
-```{r eval=FALSE}
+```{r}
+
 Sy1_nb[[1]]
+
 ```
 
 While editing by hand is possible, it is not easy. A simpler way is to use the `edit.nb()` function that allows interactive editing of a neighborhood structure. Instructions for using this are given in the appendix below.
@@ -201,17 +230,24 @@ While editing by hand is possible, it is not easy. A simpler way is to use the `
 The calculation of spatial weights from the neighborhood function can be done in several ways. In the following code, the first method does no standardization (binary weights) and the second does row standardization, so that for any given area, each neighbor is downweighted by the total number of neighbors. The function we use is `nb2listw()` which returns the sparse matrix giving the links between neighbors and the weight of this link. Non-neighbors get a weight of zero. 
 
 ```{r}
+
 Sy1_lw_B <- nb2listw(Sy1_nb, style = 'B')
 Sy1_lw_W <- nb2listw(Sy1_nb, style = 'W')
+
 ```
 
 A more sophisticated method would be to use some knowledge of the dataset. Weights could be assigned by an inverse distance method, where closer neighbors have higher weights. To do this, we need the list of distances along each join for the neighborhood structure that we will use. In this case, we use the first one generated, the Queen's case. First, we extract the distances from the neighborhood list (`nbdists()`), to obtain a list of distances. We then generate inverse distances by dividing by 1000 (to make these a little more manageable) and taking the reciprocal. This is a little complex as we obtain a list output from `nbdists()`. We create a new function, `invd()`, which calculates the inverse distance in kilometers (the coordinates are in meters). Then we apply this function to each item in the list using `lapply()`. This is the *list* version of the function `apply()` that we have used earlier. 
 
 ```{r}
-dsts = nbdists(Sy1_nb, Syracuse.coords)
-invd = function(x) {1/(x/1000)}
-idw = lapply(dsts, invd)
-Sy1_lw_idwB = nb2listw(Sy1_nb, glist = idw, style = "B")
+
+dists <- nbdists(Sy1_nb, Syracuse.coords)
+
+inverse_distance <- function(x) {1/(x/1000)}
+
+idw <- lapply(dists, inverse_distance)
+
+Sy1_lw_idwB <- nb2listw(Sy1_nb, glist = idw, style = "B")
+
 ```
 
 # Checking for autocorrrelation
@@ -219,33 +255,38 @@ Sy1_lw_idwB = nb2listw(Sy1_nb, glist = idw, style = "B")
 From here on, we will concentrate on analyzing the Boston housing price data set. The median house price values that we wish to model have a skewed distribution (look at a histogram to see this), so we will create a new variable, containing log house prices:
 
 ```{r}
+
 boston$logCMEDV <- log(boston$CMEDV)
 hist(boston$logCMEDV)
 plot(boston["logCMEDV"])
+
 ```
 
 We'll also plot the map of this variable using **tmap**:
 
 ```{r}
 
-tm_shape(boston) + tm_fill("logCMEDV") +
+tm_shape(boston) + 
+  tm_fill("logCMEDV") +
   tm_borders()
 
 ```
 
 We also make up a neighborhood structure, using the Queen's case contiguity method
 
-```{r fig.keep='high'}
+```{r}
 
 boston.nb <- poly2nb(boston, queen = TRUE)
-coords = st_centroid(st_geometry(boston))
+coords <- st_centroid(st_geometry(boston))
+
 plot(st_geometry(boston), reset = FALSE)
 plot(boston.nb, coords, add = TRUE, col = "gray")
 
 ```
 
 And finally convert this to a spatial weight matrix
-```{r fig.keep='none'}
+
+```{r}
 
 boston.listw = nb2listw(boston.nb)
 
@@ -255,31 +296,43 @@ boston.listw = nb2listw(boston.nb)
 
 We will start by looking for global autocorrelation in the housing price data. Use the `moran.test()` function for this. Note we set the randomization assumption to be true as we know nothing about the larger spatial trends in this dataset. The function requires the variable and a spatial weight matrix. Look for the value of Moran's $I$, and the $z$-score (standard deviate) and associated $p$-value:
 
-```{r results='markup'}
+```{r}
 
-moran.test(boston$logCMEDV, boston.listw, 
-           alternative = "two.sided", randomisation = TRUE)
+moran.test(boston$logCMEDV, 
+           listw = boston.listw, 
+           alternative = "two.sided", 
+           randomisation = TRUE)
 
 ```
 
 Purely for the sake of comparison, we'll also calculate Moran's $I$ under the normality assumption, stating that the pattern of house prices in Boston is a subset of a larger spatial trend. You should see a slight change in the variance calculated, but not enough to affect our conclusion that the data are strongly autocorrelated.
 
-```{r results='markup'}
-moran.test(boston$logCMEDV, boston.listw, 
-           alternative = "two.sided", randomisation = FALSE)
+```{r}
+
+moran.test(boston$logCMEDV, 
+           listw = boston.listw, 
+           alternative = "two.sided", 
+           randomisation = FALSE)
+
 ```
 
 We can also calculate the significance of the observed autocorrelation using a Monte Carlo method. Here, we randomly redistribute the values across the locations several hundred times, recalculating Moran's $I$ each time. Once done, we look at the *rank* of the observed version of Moran's $I$ against those obtained from random resampling. If we are either at the high or low end of all these random realizations, it is highly likely that the observed distribution is significantly autocorrelated. As we are using a rank, we cannot use a two-sided test, but must specify if we believe the autocorrelation to be positive ('greater') or negative ('less'). The number of simulations to run is given by the parameter `nsim`. Increasing this, will increase the precision of the $p$-value obtained (but take longer to run):
 
-```{r results='hide'}
-moran.mc(boston$logCMEDV, boston.listw, nsim = 999, 
+```{r}
+
+moran.mc(boston$logCMEDV, 
+         listw = boston.listw, 
+         nsim = 999, 
          alternative = 'greater')
+
 ```
 
 Now make the Moran scatterplot. This shows the relationship between the value of any given area and its neighbors. The slope of the fitted line is the value of Moran's $I$:
-```{r fig.keep='none'}
 
-moran.plot(boston$logCMEDV, boston.listw, 
+```{r}
+
+moran.plot(boston$logCMEDV, 
+           boston.listw, 
            labels = as.character(boston$ID), 
            xlab = "Log Median Value", 
            ylab = "Lagged Log Median Value")
@@ -289,10 +342,13 @@ moran.plot(boston$logCMEDV, boston.listw,
 ## Local Moran's $I$
 
 We will now calculate the local Moran's $I$ to examine the spatial pattern of autocorrelation. This returns a statistic (and $z$-score) for each area considered. 
-```{r results='hide'}
 
-lm1 = localmoran(boston$logCMEDV, listw = boston.listw, 
+```{r}
+
+lm1 = localmoran(boston$logCMEDV, 
+                 listw = boston.listw, 
                  alternative = "two.sided")
+
 head(lm1)
 
 ```
@@ -300,32 +356,42 @@ head(lm1)
 The results may be extracted and plotted. The $z$-scores are in the fourth column of the output, and the $p$-values in the fifth column:
 
 ```{r}
+
 boston$zscore <- lm1[,4]
 boston$pval <- lm1[,5]
+
 ```
 
 Now let's plot these results. First the $z$-scores:
 
-```{r fig.keep='none', warning=FALSE}
+```{r, fig.width = 10}
 
-tm_shape(boston) + tm_fill("zscore", palette = "Reds", style = "jenks", n = 6) +
+tm_shape(boston) + 
+  tm_fill("zscore", palette = "Reds", style = "jenks", n = 6) +
   tm_borders() +
-    tm_layout(main.title = "Local Moran's I (z-scores)",
-              legend.position = c("left", "bottom"))
+  tm_layout(main.title = "Local Moran's I (z-scores)",
+            legend.position = c("left", "bottom"))
+
 ```
 
 For the $p$-values, we'll convert these into a binary vector, with ones if the $p$-value is below 0.05, zeros otherwise. Plotting these shows clearly the areas with high autocorrelation, by the harbour and to the west of the city.
-```{r fig.keep='none', warning=FALSE}
-boston$pval.bin <- as.factor(ifelse(boston$pval < 0.05, 1, 0))
 
-tm_shape(boston) + tm_fill("pval.bin") +
+```{r, fig.width = 10}
+
+boston$pval.bin <- as.factor(ifelse(boston$pval < 0.05, "Significant", "Not-significant"))
+
+tm_shape(boston) + 
+  tm_fill("pval.bin") +
   tm_borders() +
-    tm_layout(main.title = "Local Moran's I (z-scores)",
-              main.title.size = 1,
-              legend.position = c("left", "bottom"))
+  tm_layout(main.title = "Local Moran's I (z-scores)",
+            main.title.size = 1,
+            legend.position = c("left", "bottom"))
+
+
 ```
 
 Finally, we will use the Getis-Ord $G^*$ statistic to look at local variation in values, but identifying regions with clusters of high or low values. The $G^*$ statistic includes the value of the location of interest as well as the neighbors. To account for this, we need first to make a new spatial weight matrix which includes a weight for the link of a location to itself (with the `include.self()` function). The statistic is calculated using the `localG()` function, which takes as input, the variable of interest and the spatial weight matrix. 
+
 ```{r}
 
 boston.listwGs <- nb2listw(include.self(boston.nb), style = "B")
@@ -334,45 +400,52 @@ boston$lG <- as.numeric(localG(boston$logCMEDV, boston.listwGs))
 ```
 
 The output is the $G^*$ statistic, converted to a $z$-score. Now we plot the results. 
-```{r fig.keep='none', warning=FALSE}
 
-tm_shape(boston) + tm_fill("lG", palette = "RdYlBu", style = "jenks", n = 6) +
+```{r, fig.width = 10}
+
+tm_shape(boston) + 
+  tm_fill("lG", palette = "RdYlBu", style = "jenks", n = 6) +
   tm_borders() +
-    tm_layout(main.title = "Local Getis-Ord G(*) hot/cold spots",
-              main.title.size = 1,
-              legend.position = c("left", "bottom"))
+  tm_layout(main.title = "Local Getis-Ord G(*) hot/cold spots",
+            main.title.size = 1,
+            legend.position = c("left", "bottom"))
 
 ```
 
 The results show a very clear structure with clusters of low prices in the center of Boston, but interrupted by a cluster of higher prices running along the river to the harbor. Other clusters, but of high values, are found in the suburbs to the west. 
 
-```{r fig.keep='none', warning=FALSE}
-boston$lG.sig <- ifelse(boston$lG < -1.96, -1,
-                       ifelse(boston$lG > 1.96, 1, 0))
-boston$lG.sig <- factor(boston$lG.sig, labels=c("Cold", "N.S.", "Hot"))
+```{r}
 
-tm_shape(boston) + tm_fill("lG.sig", palette = "-RdYlBu", style = "jenks", n = 6) +
-  tm_borders() +
-    tm_layout(main.title = "Local Getis-Ord G(*) hot/cold spots",
-              main.title.size = 1,
-              legend.position = c("left", "bottom"))
+boston$lG.sig <- ifelse(boston$lG < -1.96, 
+                        -1,
+                        ifelse(boston$lG > 1.96, 1, 0))
+
+boston$lG.sig <- factor(boston$lG.sig, labels=c("Cold", "Not-significant", "Hot"))
 
 ```
+
+```{r, fig.width = 10}
+
+tm_shape(boston) + 
+  tm_fill("lG.sig", palette = "-RdYlBu", style = "jenks", n = 6) +
+  tm_borders() +
+  tm_layout(main.title = "Local Getis-Ord G(*) hot/cold spots",
+            main.title.size = 1,
+            legend.position = c("left", "bottom"))
+
+
+```
+
 
 # Spatial regression models
 ## Reading and plotting the data
 
-The **spatialreg** package has functions for building spatial regression models, so let's load this now:
-
-```{r message=FALSE}
-
-library(spatialreg)
-
-```
-We will build several spatial regression models using the crime dataset from Columbus. The dataset is available as a shapefile in *columbus.zip* - download and extract this before starting. 
+The **spatialreg** package has functions for building spatial regression models. We will build several spatial regression models using the crime dataset from Columbus. The dataset is available as a shapefile in *columbus.zip* - download and extract this before starting. 
 
 ```{r}
-col <- st_read("../datafiles/columbus/columbus.shp")
+
+col <- st_read("../datafiles/columbus/columbus.shp", quiet = TRUE)
+
 ```
 
 Our goal here is to model the crime rate using information about household income (`INC`) and price (`HOVAL`). As both of these are right skewed, we'll log-transform them for the analysis:
@@ -389,17 +462,29 @@ col$lHOVAL <- log(col$HOVAL)
 ## Building the spatial weight matrix
 
 Now build the neighborhood structure and the associated spatial weight matrix. The example below uses the Queen's case definition of neighbors and binary weights, but these can be replaced by other options fairly easily. 
-```{r results='hide'}
+
+```{r}
+
 col.geom <- st_geometry(col)
 col.coords <- st_centroid(col.geom)
 col.nbq <- poly2nb(col)
-plot(col.geom, reset = FALSE)
-plot(col.nbq, col.coords, add = TRUE)
+
 ```
 
+```{r}
+
+plot(col.geom, reset = FALSE)
+plot(col.nbq, col.coords, add = TRUE)
+
+```
+
+
 Now convert this to a spatial weight matrix:
-```{r results='hide'}
+
+```{r}
+
 col.listw <- nb2listw(col.nbq)
+
 ```
 
 ## Checking for autocorrelation
@@ -412,18 +497,20 @@ Use the code given above to look for spatial autocorrelation in the `CRIME` vari
 
 Next, we make an OLS regression, excluding all spatial information:
 
-```{r results='hide'}
+```{r}
 
 col.fit1 <- lm(CRIME ~ lINC + lHOVAL, data = col)
 summary(col.fit1)
 
 ```
 
-The model appears to be a fairly good one, with an $F$-statistic that is significant. However, given the pattern in the crime data see on the map above, it is likely that the model may be impacted by autocorrelation, so we'll now test for autocorrelation in the residuals, using Moran's $I$: 
+The model appears to be a fairly good one, with an $F$-statistic that is significant. However, given the pattern in the crime data seen on the map above, it is likely that the model may be impacted by autocorrelation, so we'll now test for autocorrelation in the residuals, using Moran's $I$: 
 
-```{r results='hide'}
+```{r}
 
-moran.mc(residuals(col.fit1), col.listw, nsim=999)
+moran.mc(residuals(col.fit1), 
+         listw = col.listw, 
+         nsim = 999)
 
 ```
 
@@ -433,14 +520,22 @@ I've used the Monte Carlo version of Moran's $I$, but this could be replaced by 
 
 The Lagrange multiplier test is used to assess whether the autocorrelation is in the values of the dependent variable or in its errors, and helps in the choice of which spatial regression model to use. We first run this test, using the non-robust version. The tests are given by the parameter `test` - the full range can be found in the help page for the function. 
 
-```{r results='hide'}
-summary(lm.LMtests(col.fit1, col.listw, test = c("LMerr","LMlag")))
+```{r}
+
+lmt <- lm.LMtests(col.fit1, col.listw, test = c("LMerr","LMlag"))
+
+summary(lmt)
+
 ```
 
 Higher values of the statistic indicate a more likely source of correlation. Where both are significant, the robust test (`RLMerr` and `RLMlag`) should be used to decide. These robust tests account for autocorrelation in one term, then test for remaining autocorrelation in the other term. 
 
-```{r results='hide'}
-summary(lm.LMtests(col.fit1, col.listw, test = c("RLMerr","RLMlag")))
+```{r}
+
+lmt_robust <- lm.LMtests(col.fit1, col.listw, test = c("RLMerr","RLMlag"))
+
+summary(lmt_robust)
+
 ```
 
 Evidence for significant autocorrelation is shown in the `RLMlag` test, suggesting a spatial lag model.
@@ -449,10 +544,14 @@ Evidence for significant autocorrelation is shown in the `RLMlag` test, suggesti
 
 A spatial lag model can be fit to the data using the `lagsarlm()` function. The syntax follows that of most modeling functions in R, except that we need to give it a spatial weight matrix:
 
-```{r results='markup'}
-col.fit2 <- lagsarlm(CRIME ~ lINC + lHOVAL, data= col, 
-                    col.listw)
+```{r}
+
+col.fit2 <- lagsarlm(CRIME ~ lINC + lHOVAL, 
+                     data = col, 
+                     col.listw)
+
 summary(col.fit2)
+
 ```
 
 There are several things to note in the output:
@@ -463,16 +562,27 @@ There are several things to note in the output:
 - The AIC and log-likelihood giving an estimate of the goodness-of-fit of the model
 
 As with the previous model, we can test the residuals for any remaining autocorrelation:
+
 ```{r}
-moran.mc(residuals(col.fit2), listw=col.listw, nsim=999)
+
+moran.mc(residuals(col.fit2), 
+         listw = col.listw, 
+         nsim = 999)
+
 ```
 
 ## Spatial error model
+
 While the results of the Lagrange multiplier test indicated a spatial lag model as the most suitable method, we can also fit a spatial error model, using the `errorsarlm()` function:
-```{r results='hide'}
-col.fit3 = errorsarlm(CRIME ~ lINC + lHOVAL, data = col, 
+
+```{r}
+
+col.fit3 = errorsarlm(CRIME ~ lINC + lHOVAL, 
+                      data = col, 
                       col.listw)
+
 summary(col.fit3)
+
 ```
 
 In the output of the function, note the value of `lambda`, the autoregressive coefficient representing the strength of autocorrelation in the residuals of a linear model. Note the AIC and compare to the previous model. 
@@ -481,15 +591,18 @@ In the output of the function, note the value of `lambda`, the autoregressive co
 
 So far, we have only considered correlation between values of the dependent variable in any zone and it's neighbors. An alternative source of spatial dependency might arise between values of a dependent variable and neighboring values of an independent variable. To model this, we can use a spatial Durbin model, that includes lagged independent variables in the neighboring zones. This also uses the `lagsarlm()` function, but with the parameter `type` set to '`mixed`', to specify a Spatial Durbin lag model:
 
-```{r results='hide'}
-col.fit4 = lagsarlm(CRIME ~ lINC + lHOVAL, data = col, 
-                    col.listw, type = 'mixed')
+```{r}
+
+col.fit4 = lagsarlm(CRIME ~ lINC + lHOVAL, 
+                    data = col, 
+                    col.listw, 
+                    type = 'mixed')
+
 summary(col.fit4)
+
 ```
 
 The output gives the coefficients for all variables, including the lagged versions. Are any of these significant?
-
-\newpage
 
 # Exercise
 
@@ -505,24 +618,30 @@ The output gives the coefficients for all variables, including the lagged versio
     + Test for remaining autocorrelation in the residuals of the model using the `moran.test()` or `moran.mc()` function. Given the value you obtain, state whether you think that the model adequately accounts for autocorrelation? 
     + Is the coefficient relating tax and delivery to car price significant? If not, give one reason why this may not be the case
 
-# Appendix: editing neighborhood structures
+# Appendix: Editing A Neighborhood
 
 The **spdep** package includes a function for interactive editing of neighborhood structures. However, this does not currently work in RStudio due to issues with resizing the plotting window. Instead, you will need to run this from the base R application. As an example, open R (not RStudio!) from your application menu or start menu. Once open, use the 'Misc' menu and choose 'Change working directory' to browse to the lab files. Once there, load the NY data set, create the Syracuse subset and make a neighborhood structure:
 
 ```{r eval=FALSE}
+
 library(sf)
 library(spdep)
 library(sp)
+
 NY8 <- st_read("../datafiles/NY_data/NY8_utm18.shp")
 Syracuse <- NY8[NY8$AREANAME == "Syracuse city", ]
 Sy1_nb <- poly2nb(Syracuse)
+
 ```
 
 Note that when you make a plot in base R, it opens a separate window to display this. Now, let's edit this structure. This fucntion does not yet work with `sf` objects, so we'll need to first convert the Syracuse using the **sp** library. Run the following code:
+
 ```{r eval=FALSE}
+
 Syr2 <- as_Spatial(Syracuse)
 coords <- coordinates(Syr2)
 Sy2_nb <- edit.nb(Sy1_nb, coords, polys = Syr2)
+
 ```
 
 This will display the polygons, centroids and neighborhood structure, and the console will display "`Identifying contiguity for deletion`". You can now do two things:
@@ -533,12 +652,17 @@ This will display the polygons, centroids and neighborhood structure, and the co
 Each time you add or delete a link, the function will ask if you want to refresh, continue or quit. Continuing simply waits for you to select two more centroids. If you refresh, it will redraw the neighborhood structure highlighting which links have been deleted (dashed line) or added (yellow line). If you quit, then the interactive session will terminate and the new neighborhood structure will be written out. In the code above, we assign the output of the function to `Sy2_nb`. If you now plot this and the previous one, you should see the edits you have made. This new neighborhood structure can then be used in all the subsequent functions (Moran's $I$, spatial regression, etc.). In order to keep and re-use this structure in RStudio, make sure to save it. As the neighborhood object is somewhat complicated, the easiest way to do this is to write it to an R binary file (this saves both neighborhood structures to a single file):
 
 ```{r eval=FALSE}
+
 save(Sy1_nb, Sy2_nb, file="Sy_nb.RData")
+
 ```
 
 You can then load this in a new R or RStudio session, which will recreate these objects
+
 ```{r eval=FALSE}
+
 load(file="Sy_nb.RData")
+
 ```
 
 

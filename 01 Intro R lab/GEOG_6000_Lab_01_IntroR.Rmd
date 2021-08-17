@@ -222,7 +222,7 @@ penguin$bill_length_mm[(penguin$species == 'Adelie')] 	# All "Adelie" penguins
 penguin[(penguin$species == 'Adelie'), ] 	# All columns for "Adelie" penguins
 ```
 
-These operators can be combined, so to get all instances of "setosa" species with sepal lengths greater than 5:
+These operators can be combined, so to get all instances of "Adelie" species with sepal lengths greater than 5:
 
 ```{r results='hide'}
 penguin[(penguin$species == 'Adelie') & (penguin$bill_length_mm > 40), ]
@@ -250,7 +250,7 @@ If we now check the first 10 values, you will see some additional information sh
 penguin$species[1:10]
 ```
 
-R automatically sets the levels in alphabetical order, irrespective of the order in the vector. The first level is considered to be the reference level, which has some uses in regression model as we will see later. You can change the order of the levels using the `factor()` function. The following sets the species `virginica` as the reference:
+R automatically sets the levels in alphabetical order, irrespective of the order in the vector. The first level is considered to be the reference level, which has some uses in regression model as we will see later. You can change the order of the levels using the `factor()` function. The following sets the species `Gentoo` as the reference:
 
 ```{r eval=FALSE}
 factor(penguin$species, levels = c("Gentoo", "Chinstrap", "Adelie"))

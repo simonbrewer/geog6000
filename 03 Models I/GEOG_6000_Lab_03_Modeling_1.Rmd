@@ -289,16 +289,19 @@ ex1.res = residuals(ex1.lm)
 ```
 
 Start by making a histogram. This should be approximately symmetrical and resemble a normal distribution. 
+
 ```{r fig.keep='none'}
 hist(ex1.res)
 ```
 
 Plot out the residuals to look for biases in the model fit. Here, we use the `plot()` function with the model object created earlier. This has a parameter `which` that chooses the type of plot to make. The first option is a plot with the fitted values on the x-axis and the residuals on the y-axis (`which = 1`). This also fits a trend line (red), which should be roughly horizontal in unbiased residuals. Do the residuals show any trends or biases?
+
 ```{r fig.keep='none'}
 plot(ex1.lm, which = 1)
 ```
 
 Next, we'll make a QQ-plot of the residual, and add the QQ-line (`which = 2`). This plots each residual as its quantile position in the dataset (y-axis) against the expected position of that value from a theoretical normal distribution with the same mean and s.d. A straight line is added which is the expected match if the data are normally distributed. If the points fall more or less on this line, the residual are likely normally distributed. 
+
 ```{r fig.keep='none'}
 plot(ex1.lm, which = 2)
 ```
@@ -337,19 +340,6 @@ lines(newx$x, pred.int[,3], lty = 2, col = 2)
 ```
 
 - Try plotting 99% confidence intervals by changing the `level` parameter in the `predict()` function
-
-# Exercises
-
-1. The file *statedata.csv* contains state data for the U.S., published by the U.S. Department of Commerce in 1977.
-
-- Make a scatterplot of murder rate (explanatory) and life expectancy (response) 
-- Build a linear model between these two variables, using the `lm()` function. Give the code you used in this model and the null and alternate hypotheses that the model is testing
-- Use the `summary()` function to report the coefficients of the fit and their significance as $p$-values 
-- Use the `anova()` function to examine the goodness-of-fit of the mode, report the $F$-statistic and it's significance
-- Add the model fit line to the scatterplot
-- Produce a plot of residuals against fitted values and comment on any bias you see
-- Use the `predict()` function and this model to estimate the life expectancy if the murder rate dropped to zero. Use the parameter `int = 'pred'` to obtain 95\% confidence intervals about this prediction
-- Do you think that murder has a direct effect on general life expectancy? (Not just on that of the victims...) 
 
 \newpage
 

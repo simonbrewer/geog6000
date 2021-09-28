@@ -115,6 +115,7 @@ irished$flvcert <- factor(irished$lvcert,
 The function `factor` has an additional parameter `ordered`. This can be used to define factors where the `order` is important (e.g. small, medium, large), as opposed to unordered groups (e.g. makes of cars). By default, this is set to unordered. 
 
 ## Indexing by value
+
 A more useful approach to indexing is to select observations according to some criteria, for example all observations over 50, or all female students, allowing the creation of subsets for comparative studies. There are a couple of different ways to do this, but one of the most straightforward uses the `which()` function. This uses a conditional statement to return a list indexes for values of a variable that correspond to a criteria. So if we wanted to obtain the index of all students with a DVRT score over 100:
 
 ```{r results='hide'}

@@ -140,11 +140,11 @@ VarCorr(math.lme1)
 
 ```
 
-The first column gives the variance partitioned across the random effects:
+The first column gives the variance partitioned across the random effects. The total variance in the model is the sum of the first column ($2.38 + 0.01 + 36.72 \approx 39.11$). Knowing this, we can calculate the ICC or variance explained by each of the random effects:
 
-- The first line gives the amount explained by variation in intercepts among schools ($2.379 \approx 6\%$)
-- The second line the amount due to variation in slope ($0.101 \approx 0.25\%$)
-- The last gives the residual amount ($36.72 \approx 93.7\%$)
+- The first line gives the amount explained by variation in intercepts among schools ($2.379  / 39.11 \approx 6.1\%$)
+- The second line the amount due to variation in slope ($0.101  / 39.11 \approx 0.26\%$)
+- The last gives the residual amount ($36.72  / 39.11 \approx 93.7\%$)
 
 In general, this can be used to assess the relative contribution of each random effect. If the variance is relatively large (in general $>5\%$), then the variation of that coefficient between the different groups is important, and worth retaining in the model. 
 
@@ -160,7 +160,7 @@ anova(math.lme1, math.lme2)
 
 ```
 
-The anova results show no significant change in the model when this effect is excluded, suggesting that the variation of slopes among schools is not a significant effect to keep in a final model. This fits what we saw in the amount of variance explained: only a tiny amount ($\sim0.25\%$) was explained setting the slope to a random effect. 
+The anova results show no significant change in the model when this effect is excluded, suggesting that the variation of slopes among schools is not a significant effect to keep in a final model. This fits what we saw in the amount of variance explained: only a tiny amount ($\sim 0.26\%$) was explained setting the slope to a random effect. 
 
 Now do the same, but exclude the random effect of intercepts between schools. As intercepts are included by default, we need to use the following specification ($-1$) to remove them:
 
@@ -346,6 +346,31 @@ predict(ozone.gam, newdata = newclim, se.fit = TRUE)
 
 - Redo the prediction with an increase of wind speed to 15 m/s
 
+# Exercises
+
+1. The file *gapminderData5.csv* contains a subset of the GapMinder dataset for 142 countries over 12 time steps (every 5 years between 1952 and 2007). 
+
+- Read the data in amd use the `tapply()` function to estimate the mean life expectancy by country (`tapply(gap$lifeExp, gap$country, mean)`)
+- Make a scatter plot of `lifeExp` vs. `year` for all countries
+- Here's some example code to make a line plot of `lifeExp` vs. `year` for the United States. Use this to make plots for two countries (not the United States!): 
+
+```{r eval = FALSE}
+gap_sub <- subset(gap, country == 'United States')
+plot(gap_sub$year2, gap_sub$lifeExp, 
+     xlab = "Year", ylab = "Life expectancy (yr)",
+     type ='l')
+```
+
+- Use these data to build a simple linear model (`lm()`) of `lifeExp` as a function of `year`. Before making the model, center the `year` variable by subtracting 1952 from all values (0 now represents the year 1952)
+    - Report the coefficients, their significance and a brief explanation of what each one means
+    - Give the $F$-statistic and associated $p$-value
+- Now build a random intercept model using the `lme()` function, using `country` as the grouping variable for the random effect (the random effect will look something like `random = ~ 1 | country`). Report:
+    - The fixed effect coefficients and associated $p$-values (see under `Fixed effects` in the `summary()` output)
+    - The reported standard deviation for the two random effects (`(Intercept)` and `Residual`)
+- Calculate the ICC for the random intercept in this model. You will need to use `VarCorr()` to find the variance of the intercept and residual term (quick reminder, the intercept ICC is the variance of the intercept, divided by the sum of variances). Given the value you obtain, does this support the use of a random intercept model?
+- Now build a third model with a random intercept **and** slope. The random effect will look something like `random = ~ year2 | country`. Show the output of `summary()` for this model. 
+- Finally, use the `AIC()` function to get the AIC for the three models (linear, random intercept and random intercept and slope). As a reminder: the AIC is a good criterion of the quality of the model, as it penalizes when extra predictors (overfitting). The models with the lowest AIC values are best. Which of your models is best?
+
 \newpage
 
 # Where to get help
@@ -380,3 +405,12 @@ predict(ozone.gam, newdata = newclim, se.fit = TRUE)
 | wind | Wind speed (m.s-1) | 
 | ozone | Ozone concentrations (ppb) |
 
+## GapMinder data set: *gapminderData5.csv*
+| Column header | Variable |
+| --- | --- |
+| country | Country name |
+| year | Year | 
+| pop | Population size | 
+| continent | Continent |
+| lifeExp | Life expectancy |
+| gdpPercap | Per capita GDP (USD) |

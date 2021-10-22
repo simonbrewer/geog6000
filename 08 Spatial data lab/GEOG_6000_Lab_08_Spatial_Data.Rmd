@@ -1,7 +1,7 @@
 ---
 title: "GEOG 6000 Lab 08 Spatial Data in R"
 author: "Simon Brewer and Blake Vernon"
-date: "9/2/2020"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
 output:
   html_document:
     toc: true

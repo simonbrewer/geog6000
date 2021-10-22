@@ -1,7 +1,7 @@
 ---
 title: "GEOG 6000 Writing reports with R"
 author: "Simon Brewer"
-date: "September 22, 2015"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
 output:
   html_document:
     toc: true

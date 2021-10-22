@@ -4,7 +4,7 @@ author: |
   | Simon Brewer
   | Geography Department
   | University of Utah
-date: "August 11, 2020"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
 output:
   html_document:
     toc: true
@@ -215,6 +215,7 @@ penguin$bill_length_mm[1:10]   # First 10 elements
 ```
 
 Logical operators $<, <=, >, >=, ==, !=$ can be used to select parts of the data set by value. This is very useful if you only want to analyze part of your dataset
+
 ```{r results='hide'}
 penguin$bill_length_mm[penguin$bill_length_mm > 40]	# All over 40 mm
 penguin[penguin$bill_length_mm > 40, ]	# All columns with sepal length over 5 

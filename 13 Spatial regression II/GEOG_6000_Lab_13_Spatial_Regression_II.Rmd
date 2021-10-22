@@ -1,7 +1,7 @@
 ---
 title: "GEOG 6000 Lab 13 Spatial Regression II"
 author: "Simon Brewer"
-date: "November 10, 2020"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
 output:
   html_document:
     toc: true

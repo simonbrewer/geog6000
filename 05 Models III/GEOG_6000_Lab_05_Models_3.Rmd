@@ -1,7 +1,7 @@
 ---
 title: "GEOG 6000 Lab 05 Modeling III"
 author: "Simon Brewer"
-date: "August 31, 2020"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
 output:
   html_document:
     toc: true

@@ -1,7 +1,7 @@
 ---
 title: "ggplot2 and plotly"
 author: "Simon Brewer"
-date: "9/16/2018"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
 output: html_document
 ---
 

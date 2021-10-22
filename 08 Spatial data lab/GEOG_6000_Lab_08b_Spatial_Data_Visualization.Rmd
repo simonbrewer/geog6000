@@ -96,7 +96,7 @@ The color scale can be changed by setting the `palette` argument in `tm_fill()`.
 
 tm_shape(Syracuse) + 
   tm_borders() + 
-  tm_fill("POP8", palette = "Greens", style = "quantile")
+  tm_fill("POP8", palette = "viridis", style = "quantile")
 
 ```
 
@@ -158,15 +158,104 @@ tm_shape(wna_climate) +
 
 ```
 
-We can also use this 
+Note that here we've plotted the symbols first to set the plotting window. Unfortunately, this means that the country lines are added on top of the symbols. If we add the country outlines first, then the window is set to the globe. 
+
+```{r eval=FALSE}
+
+tm_shape(countries) + 
+  tm_borders(col = "gray") +
+  tm_shape(wna_climate) + 
+  tm_symbols(col = "Jan_Tmp", alpha = 0.75, palette = "-RdBu")
+
+```
+
+To get around this, we can set the bounding box for the `countries` object using the bounding box of the point data. We'll also move the legend to a better position in the map, and add a title
 
 ```{r}
 
-tm_shape(wna_climate) + 
-  tm_symbols(col = "Jan_Tmp", alpha = 0.75, palette = "-RdBu") + 
-  tm_shape(countries) + 
-  tm_borders(col = "gray") + 
+tm_shape(countries, bbox = st_bbox(wna_climate)) + 
+  tm_borders(col = "gray") +
+  tm_shape(wna_climate) + 
+  tm_symbols(col = "Jan_Tmp", alpha = 0.75, palette = "-RdBu") +
+  tm_layout(main.title = "W. North America Climate", 
+            legend.position = c("left", "bottom"))
+
+```
+
+We can also use one of **tmap**'s preset themes with `tm_style()`:  
+
+```{r}
+
+tm_shape(countries, bbox = st_bbox(wna_climate)) + 
+  tm_style("cobalt") + 
+  tm_borders(col = "gray") +
+  tm_shape(wna_climate) + 
+  tm_symbols(col = "Jan_Tmp", alpha = 0.75, palette = "-RdBu") +
+  tm_layout(main.title = "W. North America Climate", 
+            main.title.size = 1, 
+            legend.position = c("left", "bottom")) 
+
+```
+
+Finally, we can write this map to a file using `tmap_save()`. To do this, assign the output of all the **tmap** functions to an R object. Then specify this object and a file name. I've used pdf output here, but you can also use `png`, `tif` or most other common format extensions.
+
+```{r eval=FALSE}
+
+map1 <- tm_shape(countries, bbox = st_bbox(wna_climate)) + 
+  tm_borders(col = "gray") +
+  tm_shape(wna_climate) + 
+  tm_symbols(col = "Jan_Tmp", alpha = 0.75, palette = "-RdBu") +
+  tm_layout(main.title = "W. North America Climate", 
+            legend.position = c("left", "bottom")) + 
   tm_style("cobalt")
+
+tmap_save(wna_map, "wna_jan_tmp.pdf")
+
+```
+
+## Facetted maps
+
+**tmap** includes a similar facetting function to **ggplot2**. This allows you to make several different versions of the same map split by some grouping factor. A good example of this is where you have repeated measures over time for a set of locations, and you would like to display each time periods separately. You can make all the individual maps, and then add them together with `tmap_arrange()`, or use `tm_facets()`. To illustrate this, we'll load a built in dataset (`metro`) that has population sizes for major metropolitan centers
+
+```{r}
+data(metro)
+head(metro)
+```
+
+This is an `sf` object, with a set of columns with population size for each decade between 1950 and 2030. To plot this as a facetted map, we first need to convert this to long format with one column for area, one for population size and one for year. We'll do this imply by concatenating the different populations sizes, and repeating the location names and year, then put it all into a temporary data frame:
+
+```{r}
+
+pop <- c(metro$pop1950, metro$pop1960, metro$pop1970,
+         metro$pop1980, metro$pop1990, metro$pop2000)
+
+name <- rep(metro$name, 6)
+year <- rep(seq(1950, 2000, by = 10), each = nrow(metro))
+
+tmp <- data.frame(pop, name, year)
+
+```
+
+Now we'll merge this with the original `sf` object using the location names:
+
+```{r}
+
+metro_long <- merge(metro, tmp, by = "name")
+
+```
+
+The `merge()` function acts in a similar way to SQL's JOIN function. The `name=` argument allows you to specify which columns are to be used to merge. 
+
+Now we can go ahead and plot this. We'll use symbol size to represent the population size and facet by year:
+
+```{r}
+
+tm_shape(metro_long) +
+  tm_facets(by = "year") +
+  tm_symbols("pop", col = "darkred") +
+  tm_shape(countries) +
+  tm_borders() +
+  tm_layout(main.title = "Metropolitan center population")
 
 ```
 
@@ -343,8 +432,4 @@ add_miniMap(imap)
 ```
 
 <br>
-
-
-
-
 

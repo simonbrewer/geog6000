@@ -30,6 +30,7 @@ In this lab, we will cover some of the more advanced methods for modeling spatia
 
 - Crime rates in Columbus, Ohio (*columbus.zip*)
 - Boston housing prices (*boston.tr.zip*)
+- Poverty data from counties in the southeastern United States
 
 Download these files from Canvas, and move them from your `Downloads` folder to the `datafiles` folder that you made previously. Make sure to unzip the zip files so that R can access the content. Note that on Windows, you will need to right-click on the file and select 'Extract files'. 
 
@@ -562,4 +563,87 @@ Which shows that the purely random errors are now no longer autocorrelated.
 - A brief statement as to whether or not you believe this model is adequate, and what, if anything, might be missing
 
 Further details about the Boston housing dataset can be found here: Harrison, David, and Daniel L. Rubinfeld, Hedonic Housing Prices and the Demand for Clean Air, Journal of Environmental Economics and Management, Volume 5, (1978), 81-102
+
+# Files used in lab
+
+## Boston housing dataset: *boston6k.shp*
+
+| Column header | Variable |
+| --- | --- |
+| ID | Sequential ID |
+| TOWN | Town names |
+| TOWNNO | Town ID |
+| TRACT | Tract ID numbers |
+| LON | Longitude in decimal degrees |
+| LAT | Latitude in decimal degrees |
+| MEDV | Median values of owner-occupied |
+|  | housing (USD 1000) |
+| CMEDV | Corrected median values of owner-occupied |
+|  | housing (USD 1000) |
+| CRIM | Per capita crime |
+| ZN | Proportion of residential land zoned |
+| | for lots over 25000 sq. ft |
+| INDUS | Proportions of non-retail business acres per town |
+| CHAS | 1 if tract borders Charles River; 0 otherwise |
+| NOX | Nitric oxides concentration (parts per 10 million) |
+| RM | Average numbers of rooms per dwelling |
+| AGE | Proportions of owner-occupied units built prior to 1940 |
+| DIS | Weighted distances to five Boston employment centers |
+| RAD | Index of accessibility to radial highways per town |
+| TAX | Property-tax rate per USD 10,000 per town |
+| PTRATIO | Pupil-teacher ratios per town |
+| B | Proportion African-American |
+| LSTAT | Percent lower status population |
+| geometry | Polygon geometry |
+
+## Columbus OH crime rate dataset: *columbus.shp*
+
+| Column header | Variable |
+| --- | --- |
+| AREA | Polygon area |
+| PERIMETER | Polygon perimater length |
+| COLUMBUS_ | Internal polygon ID |
+| COLUMBUS_I | Internal polygon ID |
+| POLYID | Yet another internal polygon ID |
+| NEIG | Neighborhood ID |
+| HOVAL | housing value (in \$1,000) |
+| INC | household income (in \$1,000) |
+| CRIM | residential burglaries and vehicle thefts per 
+|   | thousand households in the neighborhood |
+| CRIME | Corrected median values of owner-occupied |
+| OPEN | open space in neighborhood |
+| PLUMB | percentage housing units without plumbing |
+| DISCBD | distance to CBD |
+| X | Centroid x coordinate |
+| Y | Centroid y coordinate |
+| NSA | North-south dummy (north = 1) |
+| NSB | North-south dummy (north = 1) |
+| EW | East-west dummy (east = 1) |
+| CP | Core-periphery dummy (core = 1) |
+| THOUS | constant |
+| geometry | Polygon geometry |
+
+## S.E. US poverty dataset: *south.shp*
+
+| Column header | Variable |
+| --- | --- |
+| CNTY_ST | County name |
+| STUSAB | State abbreviation |
+| FIPS | FIPS code |
+| YCOORD | County centroid (northing) |
+| XCOORD | County centroid (easthing) |
+| PPOV | Percent children in poverty |
+| PHSP | Percent Hispanic |
+| PFHH | Percent female head of household |
+| PUNEM | Percent unemployed |
+| PEXTR | Percent in extractive industries |
+| PBLK | Percent African American/black |
+| P65UP | Percent over 65 |
+| METRO | Metropolitan area (0/1) |
+| SQRTPPOV |  |
+| SQRTPFHH |  |
+| PHSPLUS | Percent high school |
+| ID | Integer index |
+| Rand | Random code |
+| geometry | Polygon geometry |
 

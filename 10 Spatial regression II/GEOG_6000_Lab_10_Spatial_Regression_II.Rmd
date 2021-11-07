@@ -566,11 +566,11 @@ Further details about the Boston housing dataset can be found here: Harrison, Da
 
 # Files used in lab
 
-## Boston housing dataset: *boston6k.shp*
+## Boston housing dataset: *boston.shp*
 
 | Column header | Variable |
 | --- | --- |
-| ID | Sequential ID |
+| poltract | Sequential ID |
 | TOWN | Town names |
 | TOWNNO | Town ID |
 | TRACT | Tract ID numbers |

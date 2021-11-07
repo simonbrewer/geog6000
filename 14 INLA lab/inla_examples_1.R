@@ -25,13 +25,13 @@ png("inla.plots/lm-1.png")
 plot(inla_lm, plot.fixed.effects = TRUE,
      plot.random.effects = FALSE,
      plot.hyperparameters = FALSE,
-     plot.predictor = FALSE)
+     plot.predictor = FALSE, cex = 1.25)
 dev.off()
 png("inla.plots/lm-2.png")
 plot(inla_lm, plot.fixed.effects = FALSE,
      plot.random.effects = FALSE,
      plot.hyperparameters = TRUE,
-     plot.predictor = FALSE)
+     plot.predictor = FALSE, cex = 1.25)
 dev.off()
 
 plot(gap$lifeExp, inla_lm$summary.linear.predictor$mean)
@@ -58,7 +58,7 @@ png("inla.plots/glm-1.png")
 plot(inla_glm, plot.fixed.effects = TRUE,
      plot.random.effects = FALSE,
      plot.hyperparameters = FALSE,
-     plot.predictor = FALSE)
+     plot.predictor = FALSE, cex = 1.25)
 dev.off()
 
 ## Mixed effects
@@ -70,19 +70,25 @@ inla_lmer <- inla(lifeExp ~ year2 + f(country, model = "iid"),
                   data = gap)
 summary(inla_lmer)
 
+png("inla.plots/lmer-1.png")
 plot(inla_lmer, plot.fixed.effects = TRUE,
      plot.random.effects = FALSE,
      plot.hyperparameters = FALSE,
      plot.predictor = FALSE)
+dev.off()
+png("inla.plots/lmer-2.png")
 plot(inla_lmer, plot.fixed.effects = FALSE,
      plot.random.effects = TRUE,
      plot.hyperparameters = FALSE,
      plot.predictor = FALSE, cex = 1)
+dev.off()
+png("inla.plots/lmer-3.png")
 plot(inla_lmer, plot.fixed.effects = FALSE,
      plot.random.effects = FALSE,
      plot.hyperparameters = TRUE,
      plot.predictor = FALSE, 
      plot.prior = TRUE)
+dev.off()
 
 save(fit_lm, fit_glm, fit_lmer, inla_lm, inla_glm, inla_lmer, 
      file = "inla_models.RData")

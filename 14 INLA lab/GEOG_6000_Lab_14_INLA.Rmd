@@ -1,0 +1,223 @@
+---
+title: "GEOG 6000 Lab 14 Spatial modeling with INLA"
+author: "Simon Brewer"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    fig_caption: true
+    css: "../style.css"
+---
+
+```{r setup, include=FALSE}
+
+knitr::opts_chunk$set(echo = TRUE,
+                      error = FALSE,
+                      message = FALSE,
+                      warning = FALSE,
+                      fig.align = "center")
+
+```
+
+```{r echo=FALSE}
+set.seed(1234)
+library(png)
+library(grid)
+```
+
+This lab provides a fairly brief introduction to using R for Bayesian analysis. The first section will cover converting some of the models we have looked at in previous labs to Bayesian models using rstan (an interface to the [stan][3] language) and [INLA][1]. We'll then go on to look at using INLA for spatial regression models. 
+
+R has a large number of add-on packages for Bayesian analysis listed [here][2]. Some notable ones are:
+
+- **coda**: provides routines for post-processing results
+- **mcmcplots**: provides prettier visualizations of MCMC results
+- **MCMCpack**: provides mainly standard statistical models in a simpler format
+
+
+# Installing INLA
+
+The INLA package is not available through the usual CRAN repositories. Instead, you'll need to install this manually. The following code will install the current stable version of INLA:
+
+```{r eval=FALSE}
+install.packages("INLA",repos=c(getOption("repos"),INLA="https://inla.r-inla-download.org/R/stable"), dep=TRUE)
+```
+
+Now load the libraries we'll need for the lab:
+
+```{r message=FALSE}
+library(dplyr)
+library(ggplot2)
+library(lme4)
+library(sf)
+library(INLA)
+library(spdep)
+library(tmap)
+```
+
+```{r echo=FALSE, message=FALSE}
+load("inla_models.RData")
+```
+
+# Linear regression
+
+```{r}
+gap <- read.csv("../datafiles/gapminderData5.csv")
+gap$year2 <- gap$year - 1952
+gap$gdpPercap2 <- log(gap$gdpPercap)
+```
+
+```{r}
+fit_lm <- lm(lifeExp ~ gdpPercap2, gap)
+summary(fit_lm)
+```
+
+## Basic INLA model
+
+```{r eval = FALSE}
+inla_lm <- inla(lifeExp ~ gdpPercap2, 
+                data = gap)
+```
+
+```{r eval = FALSE}
+inla_lm <- inla(lifeExp ~ gdpPercap2, 
+                data = gap,
+                control.compute = list(dic = TRUE, waic = TRUE),
+                control.predictor = list(compute = TRUE))
+```
+
+```{r}
+summary(inla_lm)
+```
+
+```{r eval = FALSE}
+plot(inla_lm, plot.fixed.effects = TRUE,
+     plot.random.effects = FALSE,
+     plot.hyperparameters = FALSE,
+     plot.predictor = FALSE)
+```
+
+```{r fig.width=6.5, fig.height=4., echo=FALSE}
+img <- readPNG("inla.plots/lm-1.png")
+grid.raster(img)
+```
+
+```{r eval=FALSE}
+plot(inla_lm, plot.fixed.effects = FALSE,
+     plot.random.effects = FALSE,
+     plot.hyperparameters = TRUE,
+     plot.predictor = FALSE)
+```
+
+```{r fig.width=6.5, fig.height=4., echo=FALSE}
+img <- readPNG("inla.plots/lm-2.png")
+grid.raster(img)
+```
+
+```{r}
+plot(gap$lifeExp, inla_lm$summary.linear.predictor$mean)
+abline(0,1)
+```
+
+# Generalized models
+
+```{r}
+## Binomial regression
+irished <- read.csv("../datafiles/irished.csv")
+irished$DVRT.cen <- irished$DVRT - mean(irished$DVRT)
+```
+
+```{r}
+fit_glm <- glm(lvcert ~ DVRT.cen, 
+               data = irished, 
+               family = binomial(link = 'logit'))
+
+summary(fit_glm)
+```
+
+## Basic INLA model
+
+```{r eval=FALSE}
+inla_glm <- inla(lvcert ~ DVRT.cen, 
+                 data = irished, 
+                 family = "binomial",
+                 control.compute = list(dic = TRUE, waic = TRUE),
+                 control.predictor = list(compute = TRUE))
+summary(inla_glm)
+```
+
+```{r echo=FALSE}
+summary(inla_glm)
+```
+
+```{r}
+plot(inla_glm, plot.fixed.effects = TRUE,
+     plot.random.effects = FALSE,
+     plot.hyperparameters = FALSE,
+     plot.predictor = FALSE)
+```
+
+# Mixed-effects models
+
+```{r}
+fit_lmer <- lmer(lifeExp ~ year2 + (1 | country), gap)
+summary(fit_lmer)
+```
+
+```{r eval=FALSE}
+inla_lmer <- inla(lifeExp ~ year2 + f(country, model = "iid"), 
+                  data = gap)
+```
+
+```{r}
+summary(inla_lmer)
+```
+
+```{r eval=FALSE}
+plot(inla_lmer, plot.fixed.effects = TRUE,
+     plot.random.effects = FALSE,
+     plot.hyperparameters = FALSE,
+     plot.predictor = FALSE)
+```
+
+```{r fig.width=6.5, fig.height=4., echo=FALSE}
+img <- readPNG("inla.plots/lmer-1.png")
+grid.raster(img)
+```
+
+```{r eval=FALSE}
+plot(inla_lmer, plot.fixed.effects = FALSE,
+     plot.random.effects = TRUE,
+     plot.hyperparameters = FALSE,
+     plot.predictor = FALSE, cex = 1)
+```
+
+```{r fig.width=6.5, fig.height=4., echo=FALSE}
+img <- readPNG("inla.plots/lmer-2.png")
+grid.raster(img)
+```
+
+```{r eval=FALSE}
+plot(inla_lmer, plot.fixed.effects = FALSE,
+     plot.random.effects = FALSE,
+     plot.hyperparameters = TRUE,
+     plot.predictor = FALSE, 
+     plot.prior = TRUE)
+```
+
+```{r fig.width=6.5, fig.height=4., echo=FALSE}
+img <- readPNG("inla.plots/lmer-3.png")
+grid.raster(img)
+```
+
+# Spatial models
+
+## Linear
+
+## Generalized
+
+
+
+[1]: https://www.r-inla.org
+[2]: https://cran.r-project.org/web/views/Bayesian.html
+[3]: http://mc-stan.org

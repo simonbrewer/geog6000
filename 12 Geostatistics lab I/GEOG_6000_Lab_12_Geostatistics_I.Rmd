@@ -1,5 +1,5 @@
 ---
-title: "GEOG 6000 Lab 10 Geostatistics I"
+title: "GEOG 6000 Lab 12 Geostatistics I"
 author: "Simon Brewer"
 date: "`r format(Sys.time(), '%d %B, %Y')`"
 output:

@@ -243,13 +243,13 @@ div.tocify {
 
 <h1 class="title toc-ignore">GEOG 6000 Lab 12 Geostatistics I</h1>
 <h4 class="author">Simon Brewer</h4>
-<h4 class="date">07 November, 2021</h4>
+<h4 class="date">08 November, 2021</h4>
 
 </div>
 
 
 <p>In this lab, we will go through the steps of a geostatistical analysis, using a set of precipitation data for Switzerland, and the data set of soil samples from a floodplain near the Meuse river in the Netherlands.</p>
-<p>Before starting the lab, you will need to set up a new folder for your working directory. Go to your <code>geog6000</code> folder now and create a new folder for today’s class called <code>lab10</code>. The following files will be used in this lab, all available on Canvas:</p>
+<p>Before starting the lab, you will need to set up a new folder for your working directory. Go to your <code>geog6000</code> folder now and create a new folder for today’s class called <code>lab12</code>. The following files will be used in this lab, all available on Canvas:</p>
 <ul>
 <li><em>swiss_ppt.zip</em>. This contains a set of point observations of rainfall in Switzerland</li>
 <li><em>meuse.zip</em>. This contains the shapefiles for the Meuse soil sample data set as well as the river borders</li>
@@ -257,7 +257,7 @@ div.tocify {
 <li><em>oregon.zip</em>: Oregon temperature dataset:</li>
 </ul>
 <p>You will need to download these files from Canvas, and move them from your <code>Downloads</code> folder to the <code>datafiles</code> folder that you made previously. Make sure to unzip the zip files so that R can access the content. Note that on Windows, you will need to right-click on the file and select ‘Extract files’.</p>
-<p>Now start RStudio and change the working directory to <code>lab10</code>. As a reminder, you can do this by going to the [Session] menu in RStudio, then [Change working directory]. This will open a file browser that you can use to browse through your computer and find the folder.</p>
+<p>Now start RStudio and change the working directory to <code>lab12</code>. As a reminder, you can do this by going to the [Session] menu in RStudio, then [Change working directory]. This will open a file browser that you can use to browse through your computer and find the folder.</p>
 <p>You will need three packages to carry out all the steps listed here: <strong>sf</strong>, <strong>stars</strong> and <strong>gstat</strong>, so make sure these are installed these before starting.</p>
 <pre class="r"><code>pkgs &lt;- c(&quot;ggplot2&quot;,
           &quot;gstat&quot;,

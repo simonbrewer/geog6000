@@ -603,7 +603,7 @@ These look a little better (or at least more consistent). From the results we ca
 ufos_2014$u <- ufo_inla_bym2$summary.random$idarea$mean[1:49]
 tm_shape(ufos_2014) + tm_fill("u", style = "jenks") +
   tm_borders() +
-  tm_layout(main.title = "State population 2014")
+  tm_layout(main.title = "UFO model spatial random effect")
 
 ```
 
@@ -642,64 +642,24 @@ log(\theta_i) = \beta X_i + \epsilon
 To model this with INLA, we first need to estimate the expected value ($E_i$), the number of sightings in each state if all states have the same rate. We'll do this in a two step process. First, calculate the rate ($r_s$) in the standard population. This is given by the total number of sightings in the data, divided by the total population:
 
 ```{r}
+
 rs <- sum(ufos_2014$count) / sum(ufos_2014$population)
 rs
+
 ```
 
-This gives the per captia rate of UFO sightings for the US
-
-Now to get $E_i$ for each state, multiply the 
-```{r}
-ufos_2014$Ei <- (sum(ufos_2014$count) / sum(ufos_2014$population)) * ufos_2014$population
-ufos_2014$SIR <- ufos_2014$count / ufos_2014$Ei
-tm_shape(ufos_2014) + tm_fill("SIR") + 
-  tm_borders() + tm_layout(main.title = "UFO SIR 2014")
-```
-
-
-```{r eval=FALSE}
-ufo_inla_rr <- inla(count ~ 1 + f(idarea, model = "bym2", 
-                           graph = ufos_W,
-                           hyper = prior_bym2), 
-             data = ufos_2014, family = "poisson", E = Ei, 
-             control.compute = list(dic = TRUE, waic = TRUE),
-             control.predictor = list(compute = TRUE),
-             control.inla = list(strategy = "adaptive",int.strategy = "eb")
-)
-```
+This gives the per capita rate of UFO sightings for the US (about 1 in 400). Now to get $E_i$ for each state, multiply the state population by this number:
 
 ```{r}
-summary(ufo_inla_rr)
+
+ufos_2014$Ei <- ufos_2014$population * rs
+
 ```
 
+We'll also redefine the priors for the spatial model:
 
 ```{r}
-ufos_2014$RR <- ufo_inla_rr$summary.fitted.values[, "mean"]
 
-tm_shape(ufos_2014) + tm_fill("RR", palette = "-inferno") +
-  tm_borders() +
-  tm_layout(main.title = "RR")
-```
-
-```{r}
-ufos_2014$exc <- sapply(ufo_inla_rr$marginals.fitted.values,
-                        function(marg){1 - inla.pmarginal(q = 2, marginal = marg)})
-
-tm_shape(ufos_2014) + tm_fill("exc", palette = "Blues") +
-  tm_borders() +
-  tm_layout(main.title = "Excedence probability (RR > 2)")
-```
-
-```{r}
-airports <- read.csv("../datafiles/nuforc/airports.csv")
-airports$lairports <- log(airports$airports)
-ufos_2014 <- merge( ufos_2014, airports, by.x = "postal", by.y = "state")
-ggplot(ufos_2014, aes(x = airports, y = count)) +
-  scale_x_log10("Airports") + scale_y_log10("Sightings") +
-  geom_point()
-```
-
-```{r}
 prior_bym2 <- list(
   prec = list(
     prior = "pc.prec",
@@ -708,9 +668,100 @@ prior_bym2 <- list(
     prior = "pc",
     param = c(0.005, 1 / 10))
 )
+
+```
+
+With this information, we can now build our model. We'll start by simply modeling the counts with an intercept term. We specify the family as `poisson` and add the argument `E` to define the expected counts. We again include the `bym2` model for the spatial effects. The final argument (`control.inla`) speeds up the calculation of the hyperparameters at the cost of some accuracy. You can ignore this. 
+
+```{r eval=FALSE}
+
+ufo_inla_rr <- inla(count ~ 1 + f(idarea, model = "bym2", 
+                           graph = ufos_W,
+                           hyper = prior_bym2), 
+             data = ufos_2014, family = "poisson", E = Ei, 
+             control.compute = list(dic = TRUE, waic = TRUE),
+             control.predictor = list(compute = TRUE),
+             control.inla = list(strategy = "adaptive",int.strategy = "eb")
+)
+
+```
+
+```{r}
+
+summary(ufo_inla_rr)
+
+```
+
+As before, we can extract and plot the spatial random field
+
+```{r}
+
+ufos_2014$u <- ufo_inla_rr$summary.random$idarea$mean[1:49]
+tm_shape(ufos_2014) + tm_fill("u", style = "jenks") +
+  tm_borders() +
+  tm_layout(main.title = "UFO model spatial random effect (RR model)")
+
+```
+
+In addition, we can plot the estimated relative rates for each state from the summary of the fitted values:
+
+```{r}
+
+ufos_2014$RR <- ufo_inla_rr$summary.fitted.values[, "mean"]
+tm_shape(ufos_2014) + tm_fill("RR", palette = "-inferno") +
+  tm_borders() +
+  tm_layout(main.title = "UFO sightings (relative rates)")
+
+```
+
+Lastly, we can estimate excedence probabilities. This is the probability that a given location has a relative rate that exceeds a given threshold. To estimate this, we need the marginal posterior distribution of relative rates for each state. To illustrate how this works, we'll first extract the posterior distribution for Oregon.
+
+```{r}
+
+rowid <- which(ufos_2014$name == "Oregon")
+mpd <- ufo_inla_rr$marginals.fitted.values[[rowid]]
+plot(mpd, type = 'l', xlab = "RR", ylab = "p")
+abline(v = 2, lty = 2)
+
+```
+To get the probability of exceeding a relative rate of 2, we need to calculate the integral to the right hand side of the vertical line in the figure above. INLA comes with a function (`inla.pmarginal()`) that will do this for us. As this calculates the integral to the left hand side, we subtract the result from 1 to get the excedence probability
+
+```{r}
+1 - inla.pmarginal(q = 2, marginal = mpd)
+```
+
+Giving a `r round(1 - inla.pmarginal(q = 2, marginal = mpd), 2)` probability that sightings in Oregon exceed 2x the national average. Note that this function can also be used to estimate the credibility of coefficients being higher or lower than some threshold. We'll now use R's `sapply()` function to calculate this for all states, and map the results:
+
+```{r}
+
+ufos_2014$exc <- sapply(ufo_inla_rr$marginals.fitted.values,
+                        function(marg){1 - inla.pmarginal(q = 2, marginal = marg)})
+
+tm_shape(ufos_2014) + tm_fill("exc", palette = "Blues") +
+  tm_borders() +
+  tm_layout(main.title = "Excedence probability (RR > 2)")
+
+```
+For a final model, we'll add a covariate to our relative rate model, to see if there is a credible link to the rates of sightings. Here, we'll load a data set with the number of airports per state, to test if the number of sightings is linked to this (and by extension the number of flights). Load this and log transform the number of airports. 
+
+```{r}
+airports <- read.csv("../datafiles/nuforc/airports.csv")
+airports$lairports <- log(airports$airports)
+```
+
+Now, we'll merge this with the 2014 UFO dataframe:
+
+```{r}
+
+ufos_2014 <- merge( ufos_2014, airports, by.x = "postal", by.y = "state")
+ggplot(ufos_2014, aes(x = airports, y = count)) +
+  scale_x_log10("Airports") + scale_y_log10("Sightings") +
+  geom_point()
+
 ```
 
 ```{r eval=FALSE}
+
 ufo_inla_rr2 <- inla(count ~ lairports + 
                f(idarea, model = "bym2", 
                  graph = ufos_W,
@@ -720,12 +771,27 @@ ufo_inla_rr2 <- inla(count ~ lairports +
              control.predictor = list(compute = TRUE),
              control.inla = list(strategy = "adaptive",int.strategy = "eb")
 )
+
 ```
 
 ```{r}
+
 summary(ufo_inla_rr2)
+
 ```
 
+And we'll finish by plotting the posterior distribution of the coefficient for the log number of airports:
+
+```{r}
+plot_df <- as.data.frame(ufo_inla_rr2$marginals.fixed$lairports)
+
+ggplot(plot_df, aes(x = x, y = y))  +
+  geom_line(size = 2) +
+  scale_x_continuous("log(Airports)") +
+  scale_y_continuous("p") +
+  theme_bw()
+
+```
 # Files used in lab
 
 ## Irish Education data set: *irished.csv*

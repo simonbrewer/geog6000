@@ -243,19 +243,19 @@ div.tocify {
 
 <h1 class="title toc-ignore">GEOG 6000 Lab 10 Spatial Regression II</h1>
 <h4 class="author">Simon Brewer</h4>
-<h4 class="date">04 November, 2021</h4>
+<h4 class="date">08 November, 2021</h4>
 
 </div>
 
 
-<p>In this lab, we will cover some of the more advanced methods for modeling spatial areal data. While you will be working with continuous normal data in the lab, these methods can be used in a generalized form with other data types. Before starting the lab, you will need to set up a new folder for your working directory. Go to your <code>geog6000</code> folder now and create a new folder for today’s class called <code>lab12</code>. The following files will be used in this lab, all available on Canvas:</p>
+<p>In this lab, we will cover some of the more advanced methods for modeling spatial areal data. While you will be working with continuous normal data in the lab, these methods can be used in a generalized form with other data types. Before starting the lab, you will need to set up a new folder for your working directory. Go to your <code>geog6000</code> folder now and create a new folder for today’s class called <code>lab10</code>. The following files will be used in this lab, all available on Canvas:</p>
 <ul>
 <li>Crime rates in Columbus, Ohio (<em>columbus.zip</em>)</li>
 <li>Boston housing prices (<em>boston.tr.zip</em>)</li>
 <li>Poverty data from counties in the southeastern United States</li>
 </ul>
 <p>Download these files from Canvas, and move them from your <code>Downloads</code> folder to the <code>datafiles</code> folder that you made previously. Make sure to unzip the zip files so that R can access the content. Note that on Windows, you will need to right-click on the file and select ‘Extract files’.</p>
-<p>Now start RStudio and change the working directory to <code>lab11</code>. As a reminder, you can do this by going to the [Session] menu in RStudio, then [Change working directory]. This will open a file browser that you can use to browse through your computer and find the folder.</p>
+<p>Now start RStudio and change the working directory to <code>lab10</code>. As a reminder, you can do this by going to the [Session] menu in RStudio, then [Change working directory]. This will open a file browser that you can use to browse through your computer and find the folder.</p>
 <p>You will also need several packages to carry out all the steps listed here: <strong>sf</strong>, <strong>spdep</strong>, <strong>spatialreg</strong> and <strong>spgwr</strong>. Make sure these are installed (if you haven’t already) before starting. I’m going to use <strong>tmap</strong> to map out some of the results, but you are welcome to use <strong>ggplot2</strong> or the basic <code>plot()</code> command.</p>
 <pre class="r"><code>pkgs &lt;- c(&quot;sf&quot;,
           &quot;spdep&quot;,

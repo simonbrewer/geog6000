@@ -26,7 +26,7 @@ set.seed(1234)
 
 ```
 
-In this lab, we will cover some of the more advanced methods for modeling spatial areal data. While you will be working with continuous normal data in the lab, these methods can be used in a generalized form with other data types. Before starting the lab, you will need to set up a new folder for your working directory. Go to your `geog6000` folder now and create a new folder for today's class called `lab12`. The following files will be used in this lab, all available on Canvas:  
+In this lab, we will cover some of the more advanced methods for modeling spatial areal data. While you will be working with continuous normal data in the lab, these methods can be used in a generalized form with other data types. Before starting the lab, you will need to set up a new folder for your working directory. Go to your `geog6000` folder now and create a new folder for today's class called `lab10`. The following files will be used in this lab, all available on Canvas:  
 
 - Crime rates in Columbus, Ohio (*columbus.zip*)
 - Boston housing prices (*boston.tr.zip*)
@@ -34,7 +34,7 @@ In this lab, we will cover some of the more advanced methods for modeling spatia
 
 Download these files from Canvas, and move them from your `Downloads` folder to the `datafiles` folder that you made previously. Make sure to unzip the zip files so that R can access the content. Note that on Windows, you will need to right-click on the file and select 'Extract files'. 
 
-Now start RStudio and change the working directory to `lab11`. As a reminder, you can do this by going to the [Session] menu in RStudio, then [Change working directory]. This will open a file browser that you can use to browse through your computer and find the folder. 
+Now start RStudio and change the working directory to `lab10`. As a reminder, you can do this by going to the [Session] menu in RStudio, then [Change working directory]. This will open a file browser that you can use to browse through your computer and find the folder. 
 
 You will also need several packages to carry out all the steps listed here: **sf**, **spdep**, **spatialreg** and **spgwr**. Make sure these are installed (if you haven't already) before starting. I'm going to use **tmap** to map out some of the results, but you are welcome to use **ggplot2** or the basic `plot()` command. 
 

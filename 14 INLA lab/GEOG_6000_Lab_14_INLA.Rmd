@@ -72,32 +72,50 @@ load("inla_models.RData")
 ## Linear regression
 
 ```{r}
+
 gap <- read.csv("../datafiles/gapminderData5.csv")
 gap$year2 <- gap$year - 1952
 gap$gdpPercap2 <- log(gap$gdpPercap)
+
 ```
 
 ```{r}
+
 fit_lm <- lm(lifeExp ~ gdpPercap2, gap)
 summary(fit_lm)
+
 ```
 
 ### Basic INLA model
 
 ```{r eval = FALSE}
+
 inla_lm <- inla(lifeExp ~ gdpPercap2, 
                 data = gap)
+
 ```
 
 ```{r eval = FALSE}
+
 inla_lm <- inla(lifeExp ~ gdpPercap2, 
                 data = gap,
                 control.compute = list(dic = TRUE, waic = TRUE),
                 control.predictor = list(compute = TRUE))
+
 ```
 
 ```{r}
+
 summary(inla_lm)
+
+```
+
+In the linear model, we got an estimate of the residual standard deviation of around 7.6. This is a measure of the size of the errors from the model. In the INLA output, we get an estimate of the residual precision instead, which is the inverse of the variance. To compare, we can invert this and take the squre root to convert back to standard deviation units, and to check that the models are estimating the same value:
+
+```{r}
+
+sqrt(1 / 0.017)
+
 ```
 
 ```{r eval = FALSE}

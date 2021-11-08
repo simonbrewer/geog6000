@@ -101,7 +101,7 @@ summary(fit_lm)
 
 ```
 
-Now let's set up our INLA model. For this simple model, it's pretty straightforward as we will just the default priors. 
+Now let's set up our INLA model. For this simple model, it's pretty straightforward if we just use the default priors:
 
 ```{r eval = FALSE}
 
@@ -276,7 +276,9 @@ inla_lmer <- inla(lifeExp ~ year2 + f(country, model = "iid"),
 ```
 
 ```{r}
+
 summary(inla_lmer)
+
 ```
 
 Check that the fixed effects are similar to those from `lmer()`. Agai, you can plot these:
@@ -387,36 +389,54 @@ tmap_arrange(p1, p2)
 
 ```
 
-## Basic linear regression
+We'll start with a simple model of the count of sightings as a function of population size. We'll use this as a demonstration, even though the outcome are counts, and a Poisson model would be a better approach (we'll get to this shortly). 
 
 ```{r}
+
 ufo_lm <- lm(count ~ population, ufos_2014)
 summary(ufo_lm)
+
 ```
 
+And now we'll build the same using INLA:
+
 ```{r eval=FALSE}
+
 ufo_inla_lm <- inla(count ~ population,
                     data = ufos_2014,
                     control.compute = list(dic = TRUE, waic = TRUE, cpo = TRUE),
                     control.predictor = list(compute = TRUE))
+
 ```
 
+Let's check the coefficients against the OLS model:
 
 ```{r}
-summary(ufo_inla_lm)
+
 ufo_inla_lm$summary.fixed
+
 ```
 
-Posterior distribution
+We'll now plot the posterior distribution of the coefficents and the estimate of the residual variance. Rather than using INLA's `plot()` function, we'll get the values directly from the model output and plot them. The posterior distribution of the fixed effects can be obtained from:
 
 ```{r results='hide'}
+
 ufo_inla_lm$marginals.fixed
-ufo_inla_lm$marginals.hyperpar
+
 ```
 
-Plot posterior distribution of intercept
+And the residual variance from:
+
+```{r results='hide'}
+
+ufo_inla_lm$marginals.hyperpar
+
+```
+
+- Plot posterior distribution of intercept
 
 ```{r}
+
 plot_df <- as.data.frame(inla.tmarginal(function(x) x, 
                                         ufo_inla_lm$marginals.fixed$`(Intercept)`))
 ggplot(plot_df, aes(x = x, y = y)) +
@@ -424,10 +444,13 @@ ggplot(plot_df, aes(x = x, y = y)) +
   scale_x_continuous("Intercept") +
   scale_y_continuous("P") +
   theme_bw()
+
 ```
 
-Plot posterior distribution of population coefficient
+- Plot posterior distribution of population coefficient
+
 ```{r}
+
 plot_df <- as.data.frame(inla.tmarginal(function(x) x, 
                                         ufo_inla_lm$marginals.fixed$population))
 ggplot(plot_df, aes(x = x, y = y)) +
@@ -435,11 +458,13 @@ ggplot(plot_df, aes(x = x, y = y)) +
   scale_x_continuous("Population") +
   scale_y_continuous("P") +
   theme_bw()
+
 ```
 
-Plot posterior distribution of residual variance
+- Plot posterior distribution of residual variance
 
 ```{r}
+
 plot_df <- as.data.frame(inla.tmarginal(function(x) 1/x, 
                                         ufo_inla_lm$marginals.hyperpar$`Precision for the Gaussian observations`))
 ggplot(plot_df, aes(x = x, y = y)) +
@@ -447,53 +472,97 @@ ggplot(plot_df, aes(x = x, y = y)) +
   scale_x_continuous("Residual variance") +
   scale_y_continuous("P") +
   theme_bw()
+
 ```
 
-Add an informed prior on slope
+Just as an example, the following code adds informed priors on the slope and intercept coefficient, by increasing the precision of the prior (effectively reducing the variance or range of values). The mean of the priors is left at zero. Try running this and compare the estimates of coefficients and the WAIC/DIC goodness of fit values.
 
 ```{r eval = FALSE}
+
 ufo_inla_lm2 <- inla(count ~ population,
                      data = ufos_2014,
                      control.fixed = list(mean = 0, prec = 0.2, 
                                           mean.intercept = 0, prec.intercept = 0.2),
-                     control.family=list(hyper=list(prec=list(prior='loggamma', 
-                                                              param=c(0.1,0.1)))),
+                     control.family=list(hyper=list(prec = list(prior = 'loggamma', 
+                                                              param = c(0.1, 0.1)))),
                      control.compute = list(dic = TRUE, waic = TRUE),
                      control.predictor = list(compute = TRUE))
+
 ```
 
 ```{r}
+
 summary(ufo_inla_lm2)
+
 ```
 
 ## Spatial neighborhood and weight matrix
 
-```{r}
-ufos_2014$idarea <- 1:nrow(ufos_2014)
-ufos_nb <- poly2nb(ufos_2014)
-ufos_W <- nb2mat(ufos_nb)
-```
+We'll use a conditional autoregressive (CAR) model to account for spatia dependency in the UFO data. This is a very similar approach to the spatial error model we looked at in a previous lab. In INLA, this means adding a new random effect to the model using the `f()` function. There's a few things we need to do to set this up:
+
+- Create an index in the dataset (this will be linked to the spatial weight matrix)
 
 ```{r}
+
+ufos_2014$idarea <- 1:nrow(ufos_2014)
+
+```
+
+- Create a neighborhood structure (here we use the `poly2nb()` function from **spdep**)
+
+```{r}
+
+ufos_nb <- poly2nb(ufos_2014)
+
+```
+
+- Convert the enighborhood structure to a spatial weight matrix
+
+```{r}
+
+ufos_W <- nb2mat(ufos_nb)
+
+```
+
+Quick plot of the spatial adjacencies:
+
+```{r}
+
 plot(st_geometry(ufos_2014), reset = FALSE)
 plot(ufos_nb, st_coordinates(st_centroid(ufos_2014)), add = TRUE, col = 2, lwd = 2)
+
 ```
 
+With all that in place, we can build a spatial model. We'll use the newer `bym2` formulation of the CAR model. Note that the format is similar to specifying a random effect above: we need the index (`idarea`), the model (`bym2`) and the spatial weight matrix:
+
 ```{r eval=FALSE}
+
 ufo_inla_bym <- inla(count ~ population + f(idarea, model = "bym2", graph = ufos_W), 
                      data = ufos_2014,
                      control.compute = list(dic = TRUE, waic = TRUE),
                      control.predictor = list(compute = TRUE)
 )
+
 ```
 
+Now let's look at the output:
+
 ```{r}
+
 summary(ufo_inla_bym)
+
 ```
 
-Add a prior on the spatial term. 
+The main change to the output is that we now have three hyperparameter values:
+
+- `Precision for the Gaussian observations`: this is the precision on the non-spatial residuals
+- `Precision for idarea`: this is the precision on the spatial field
+- `Phi for idarea`: this is the mixing parameter, which decomposes the precision for `idarea` into a spatial and non-spatial effect. 
+
+Note that the precision for the Gaussian term is very high (the variance is low). This is likely not very well constrained, so we'll try to add a prior on the spatial random effect to improve this. Here we specify a penalized complexity prior - note that we need one for the precision term and one for `phi`. The format for these priors is given by $(U, \alpha)$, where $\alpha$ is the probability of the hyperparameter $\xi$ exceeding $U$: ($P(T(\xi) > U) = \alpha$)
 
 ```{r}
+
 prior_bym2 <- list(
   prec = list(
     prior = "pc.prec",
@@ -502,9 +571,13 @@ prior_bym2 <- list(
     prior = "pc",
     param = c(0.5, 2 / 3))
 )
+
 ```
 
+And let's rebuild the model:
+
 ```{r eval = FALSE}
+
 ufo_inla_bym2 <- inla(count ~ population + f(idarea, model = "bym2", 
                                             graph = ufos_W,
                                             hyper = prior_bym2), 
@@ -513,32 +586,69 @@ ufo_inla_bym2 <- inla(count ~ population + f(idarea, model = "bym2",
                      control.predictor = list(compute = TRUE),
                      control.inla = list(strategy = "adaptive",int.strategy = "eb")
 )
+
 ```
 
 ```{r}
-summary(ufo_inla_bym2)
+
+ufo_inla_bym2$summary.hyperpar
+
 ```
 
-Plot spatial effect
+These look a little better (or at least more consistent). From the results we can map out the spatial effect. This is the random effect in space as modeled by the `bym2` model. Summary values are held in `ufo_inla_bym2$summary.random$idarea`. Note that only the first 49 values here represent the spatial random field:
+
 
 ```{r}
+
 ufos_2014$u <- ufo_inla_bym2$summary.random$idarea$mean[1:49]
 tm_shape(ufos_2014) + tm_fill("u", style = "jenks") +
   tm_borders() +
   tm_layout(main.title = "State population 2014")
+
 ```
 
-Plot Bayesian estimates of sightings
+We can also extract the Bayesian estimates of the number of sightings from `summary.linear.predictor`:
 
 ```{r}
-ufos_2014$yhat <- ufo_inla_bym2$summary.linear.predictor$`0.025quant`
+
+ufos_2014$yhat <- ufo_inla_bym2$summary.linear.predictor$mean
 tm_shape(ufos_2014) + tm_fill("yhat", style = "jenks") +
   tm_borders() +
   tm_layout(main.title = "State population 2014")
+
 ```
 
 ## Rate model
 
+We noted above that as our outcome variable is the count of sightings, a Poisson model would be a better choice. We can convert out model to use a Poisson distribution by adding the argument `family = "poisson"` (similar the the binomial model we looked at earlier). However, for these data, we may want to model them as rates, rather than as counts. A reasonable expectation for the count of something is that it will depend on the size of the underlying population. In this example, the number of sightings is strongly correlated with the population size of the each state (this is basically what we modeled in the previous section). Modeling rates means that we can investigate if the *rate* of sightings on a per capita basis is relatively higher or lower than the expected number of counts, if all states were equal. This gives us a model of *relative rates*. In a classic Poisson model, we model the log of counts ($Y_i$) as a function of covariates:
+
+\[
+log(Y_i) \sim \beta X_i + \epsilon
+\]
+
+In a relative rate model, the observed count ($Y_i$) for location $i$ is defined as the expected 
+count for $i$ multiplied by the relative rate ($\theta_i$):
+
+\[
+Y_i \sim Pois(E_i \theta_i) 
+\]
+
+And then we model the log of the rate term:
+
+\[
+log(\theta_i) = \beta X_i + \epsilon
+\]
+
+To model this with INLA, we first need to estimate the expected value ($E_i$), the number of sightings in each state if all states have the same rate. We'll do this in a two step process. First, calculate the rate ($r_s$) in the standard population. This is given by the total number of sightings in the data, divided by the total population:
+
+```{r}
+rs <- sum(ufos_2014$count) / sum(ufos_2014$population)
+rs
+```
+
+This gives the per captia rate of UFO sightings for the US
+
+Now to get $E_i$ for each state, multiply the 
 ```{r}
 ufos_2014$Ei <- (sum(ufos_2014$count) / sum(ufos_2014$population)) * ufos_2014$population
 ufos_2014$SIR <- ufos_2014$count / ufos_2014$Ei

@@ -1,5 +1,5 @@
 ---
-title: "GEOG 6000 Lab 09 Spatial point patterns"
+title: "GEOG 6000 Lab 14 Spatial point patterns"
 author: "Simon Brewer"
 date: "`r format(Sys.time(), '%d %B, %Y')`"
 output:

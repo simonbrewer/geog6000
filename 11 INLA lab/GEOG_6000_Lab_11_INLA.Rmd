@@ -82,7 +82,7 @@ load("inla_models.RData")
 
 ## Linear regression
 
-We'll start by using INLA to build a simple linear regression model of life expectancy (`lifeExp`) as a function of per capita GDP (`gpdPercap`) from the GapMinder data. Start by a) loading the data; b) centetring the years on 1952; and c) log transforming GDP (to check why we do this last step, try making a histogram of the untransformed and transformed GDP values). 
+We'll start by using INLA to build a simple linear regression model of life expectancy (`lifeExp`) as a function of per capita GDP (`gpdPercap`) from the GapMinder data. Start by a) loading the data; b) centering the years on 1952; and c) log transforming GDP (to check why we do this last step, try making a histogram of the untransformed and transformed GDP values). 
 
 ```{r}
 
@@ -161,7 +161,7 @@ inla_lm$summary.hyperpar
 
 ```
 
-To compare, we can invert this and take the squre root to convert back to standard deviation units, and to check that the models are estimating the same value:
+To compare, we can invert this and take the square root to convert back to standard deviation units, and to check that the models are estimating the same value:
 
 ```{r}
 
@@ -185,7 +185,7 @@ img <- readPNG("inla.plots/lm-2.png")
 grid.raster(img)
 ```
 
-As INLA calculated the Bayesian posterior estimates for each observation, we can compare these to the observed life expectancies. The posterior estimates are in:
+As INLA calculated the Bayesian posterior estimates for each observation, we can compare these to the observed life expectancy. The posterior estimates are in:
 
 ```{r results='hide'}
 
@@ -281,7 +281,7 @@ summary(inla_lmer)
 
 ```
 
-Check that the fixed effects are similar to those from `lmer()`. Agai, you can plot these:
+Check that the fixed effects are similar to those from `lmer()`. Again, you can plot these:
 
 ```{r eval=FALSE}
 
@@ -417,7 +417,7 @@ ufo_inla_lm$summary.fixed
 
 ```
 
-We'll now plot the posterior distribution of the coefficents and the estimate of the residual variance. Rather than using INLA's `plot()` function, we'll get the values directly from the model output and plot them. The posterior distribution of the fixed effects can be obtained from:
+We'll now plot the posterior distribution of the coefficients and the estimate of the residual variance. Rather than using INLA's `plot()` function, we'll get the values directly from the model output and plot them. The posterior distribution of the fixed effects can be obtained from:
 
 ```{r results='hide'}
 
@@ -498,7 +498,7 @@ summary(ufo_inla_lm2)
 
 ## Spatial neighborhood and weight matrix
 
-We'll use a conditional autoregressive (CAR) model to account for spatia dependency in the UFO data. This is a very similar approach to the spatial error model we looked at in a previous lab. In INLA, this means adding a new random effect to the model using the `f()` function. There's a few things we need to do to set this up:
+We'll use a conditional autoregressive (CAR) model to account for spatial dependency in the UFO data. This is a very similar approach to the spatial error model we looked at in a previous lab. In INLA, this means adding a new random effect to the model using the `f()` function. There's a few things we need to do to set this up:
 
 - Create an index in the dataset (this will be linked to the spatial weight matrix)
 
@@ -516,7 +516,7 @@ ufos_nb <- poly2nb(ufos_2014)
 
 ```
 
-- Convert the enighborhood structure to a spatial weight matrix
+- Convert the neighborhood structure to a spatial weight matrix
 
 ```{r}
 

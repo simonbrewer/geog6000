@@ -1,5 +1,5 @@
 ---
-title: "GEOG 6000 Lab 14 Spatial modeling with INLA"
+title: "GEOG 6000 Lab 11 Spatial modeling with INLA"
 author: "Simon Brewer"
 date: "`r format(Sys.time(), '%d %B, %Y')`"
 output:
@@ -28,14 +28,25 @@ library(png)
 library(grid)
 ```
 
-This lab provides a fairly brief introduction to using R for Bayesian analysis. The first section will cover converting some of the models we have looked at in previous labs to Bayesian models using rstan (an interface to the [stan][3] language) and [INLA][1]. We'll then go on to look at using INLA for spatial regression models. 
-
-R has a large number of add-on packages for Bayesian analysis listed [here][2]. Some notable ones are:
+This lab provides a fairly brief introduction to using [INLA][1] for Bayesian analysis in R. The first section will cover using INLA for non-spatial models (LMs, GLMS and mixed-effects models),. We'll then go on to look at using INLA for spatial regression models. In addition to INLA, R has a large number of add-on packages for Bayesian analysis listed [here][2]. Some notable ones are:
 
 - **coda**: provides routines for post-processing results
 - **mcmcplots**: provides prettier visualizations of MCMC results
 - **MCMCpack**: provides mainly standard statistical models in a simpler format
+- **rstan**: interface to the Stan modeling language
+- **brms**: simplified interface to Stan
 
+Before starting the lab, you will need to set up a new folder for your working directory. Go to your `geog6000` folder now and create a new folder for today's class called `lab11`. 
+
+You'll need the following files:
+
+- The GapMinder dataset: *gapminderData5.csv*
+- A dataset from a study of Irish schoolchildren *irished.csv*
+- A dataset of UFO sightings for US States *nuforc.zip*
+
+You will need to download these files from Canvas, and move them from your `Downloads` folder to the `datafiles` folder that you made previously. 
+
+Now start RStudio and change the working directory to `lab11`. As a reminder, you can do this by going to the [Session] menu in RStudio, then [Change working directory]. This will open a file browser that you can use to browse through your computer and find the folder. 
 
 ## Installing INLA
 
@@ -71,6 +82,8 @@ load("inla_models.RData")
 
 ## Linear regression
 
+We'll start by using INLA to build a simple linear regression model of life expectancy (`lifeExp`) as a function of per capita GDP (`gpdPercap`) from the GapMinder data. Start by a) loading the data; b) centetring the years on 1952; and c) log transforming GDP (to check why we do this last step, try making a histogram of the untransformed and transformed GDP values). 
+
 ```{r}
 
 gap <- read.csv("../datafiles/gapminderData5.csv")
@@ -79,6 +92,8 @@ gap$gdpPercap2 <- log(gap$gdpPercap)
 
 ```
 
+Next, make an OLS regression model using `lm()` as a comparison. With the increasing complexity of Bayesian models, it is quite useful to make a traditional model as a verification that your results are correct. In the `summary()`, take note of the coefficients, and the residual standard error (this is an estimate of how much residual variance you have)
+
 ```{r}
 
 fit_lm <- lm(lifeExp ~ gdpPercap2, gap)
@@ -86,7 +101,7 @@ summary(fit_lm)
 
 ```
 
-### Basic INLA model
+Now let's set up our INLA model. For this simple model, it's pretty straightforward as we will just the default priors. 
 
 ```{r eval = FALSE}
 
@@ -94,6 +109,8 @@ inla_lm <- inla(lifeExp ~ gdpPercap2,
                 data = gap)
 
 ```
+
+By default, the INLA model will not calculate any model diagnostics (to make it as efficient as possible), so we can add the following arguments to get a) WAIC and DIC scores and b) model estimates of life expectancy for each observation:
 
 ```{r eval = FALSE}
 
@@ -104,25 +121,31 @@ inla_lm <- inla(lifeExp ~ gdpPercap2,
 
 ```
 
+If you want to see some of the detail of INLA working, add `verbose=TRUE` to the `inla()` function. Now let's look at the output
+
 ```{r}
 
 summary(inla_lm)
 
 ```
 
-In the linear model, we got an estimate of the residual standard deviation of around 7.6. This is a measure of the size of the errors from the model. In the INLA output, we get an estimate of the residual precision instead, which is the inverse of the variance. To compare, we can invert this and take the squre root to convert back to standard deviation units, and to check that the models are estimating the same value:
+And there's quite a lot. Note there is a table of fixed effects with the intercept and slope estimates, the WAIC and DIC, and the precision value. To show only the fixed effects, 
 
 ```{r}
 
-sqrt(1 / 0.017)
+inla_lm$summary.fixed
 
 ```
 
+Note that as this is a Bayesian model, we don't get a standard error and $p$-value, instead we get a description of the posterior distribution of each coefficient, so the summary gives the mean, median, mode, s.d. and the 2.5 and 97.5 percentiles (`0.025quant` and `0.975quant`). As a quick rule of thumb, if these percentiles have the same sign, we can assume that there is a *credible* effect (note the difference in language here). You can get a quick plot of these posterior distributions with INLA's `plot()` function. By default, this will try to plot everything from the model, so it is easier to only select the fixed effects for now:
+
 ```{r eval = FALSE}
+
 plot(inla_lm, plot.fixed.effects = TRUE,
      plot.random.effects = FALSE,
      plot.hyperparameters = FALSE,
      plot.predictor = FALSE)
+
 ```
 
 ```{r fig.width=6.5, fig.height=4., echo=FALSE}
@@ -130,11 +153,31 @@ img <- readPNG("inla.plots/lm-1.png")
 grid.raster(img)
 ```
 
+In the linear model, we got an estimate of the residual standard deviation of around 7.6. This is a measure of the size of the errors from the model. In the INLA output, we get an estimate of the residual precision instead, which is the inverse of the variance. You can extract this with:
+
+```{r}
+
+inla_lm$summary.hyperpar
+
+```
+
+To compare, we can invert this and take the squre root to convert back to standard deviation units, and to check that the models are estimating the same value:
+
+```{r}
+
+sqrt(1 / 0.0172)
+
+```
+
+Which matches the estimate from the `lm()` function. And we can plot the posterior distribution:
+
 ```{r eval=FALSE}
+
 plot(inla_lm, plot.fixed.effects = FALSE,
      plot.random.effects = FALSE,
      plot.hyperparameters = TRUE,
      plot.predictor = FALSE)
+
 ```
 
 ```{r fig.width=6.5, fig.height=4., echo=FALSE}
@@ -142,28 +185,47 @@ img <- readPNG("inla.plots/lm-2.png")
 grid.raster(img)
 ```
 
+As INLA calculated the Bayesian posterior estimates for each observation, we can compare these to the observed life expectancies. The posterior estimates are in:
+
+```{r results='hide'}
+
+inla_lm$summary.linear.predictor
+
+```
+
+We'll just plot the mean of these predictions against the observations:
+
 ```{r}
+
 plot(gap$lifeExp, inla_lm$summary.linear.predictor$mean)
 abline(0,1)
+
 ```
 
 ## Generalized models
 
-```{r}
-## Binomial regression
-irished <- read.csv("../datafiles/irished.csv")
-irished$DVRT.cen <- irished$DVRT - mean(irished$DVRT)
-```
+In the next example, we'll build a generalized linear model (GLM) using the Irish education dataset. In this dataset, we are interested in modeling the probability of a student taking the leaving certificate (`lvcert`) using a verbal reasoning score (`DVRT`). Load the data and center the DVRT scores:
 
 ```{r}
+
+irished <- read.csv("../datafiles/irished.csv")
+irished$DVRT.cen <- irished$DVRT - mean(irished$DVRT)
+
+```
+
+Build a standard `glm` for comparison:
+
+```{r}
+
 fit_glm <- glm(lvcert ~ DVRT.cen, 
                data = irished, 
                family = binomial(link = 'logit'))
 
 summary(fit_glm)
+
 ```
 
-### Basic INLA model
+Again, note the coefficient estimates. Now let's build the same model with INLA. Here, we simply specify the `family` argument (the default is `gaussian`), and use the same arguments as before to estimate model diagnostics:
 
 ```{r eval=FALSE}
 inla_glm <- inla(lvcert ~ DVRT.cen, 
@@ -178,34 +240,54 @@ summary(inla_glm)
 summary(inla_glm)
 ```
 
+As before, we can plot out the posterior distributions of the intercept and slope. How do these compare to the `glm` output?
+
 ```{r}
+
 plot(inla_glm, plot.fixed.effects = TRUE,
      plot.random.effects = FALSE,
      plot.hyperparameters = FALSE,
      plot.predictor = FALSE)
+
 ```
+
+Note that there is no separate estimate of residual variance in a binomial model. 
 
 ## Mixed-effects models
 
+Next, we'll estimate a mixed-effects model for the Gap Minder data, with a random intercept. First, we'll build a comparison model using `lmer()` from the **lme4** package. We'll again model the trend of life expectancy over time within the dataset as a linear fixed effect:
+
 ```{r}
+
 fit_lmer <- lmer(lifeExp ~ year2 + (1 | country), gap)
 summary(fit_lmer)
+
 ```
 
+In INLA, additional random effects can be added with the `f()` function. These include a large number of effects, including groups (as here) and spatial and temporal effects (see below). The format is `f(ID, model)`, where `ID` is an index in the data set identifying groups or other structures and `model` is the type of random effect. Here, we'll use the `iid` model with assumes that model errors are i.i.d. within countries. 
+
 ```{r eval=FALSE}
+
 inla_lmer <- inla(lifeExp ~ year2 + f(country, model = "iid"), 
-                  data = gap)
+                  data = gap,
+                 control.compute = list(dic = TRUE, waic = TRUE),
+                 control.predictor = list(compute = TRUE))
+
 ```
 
 ```{r}
 summary(inla_lmer)
 ```
 
+Check that the fixed effects are similar to those from `lmer()`. Agai, you can plot these:
+
 ```{r eval=FALSE}
+
 plot(inla_lmer, plot.fixed.effects = TRUE,
      plot.random.effects = FALSE,
      plot.hyperparameters = FALSE,
      plot.predictor = FALSE)
+
 ```
 
 ```{r fig.width=6.5, fig.height=4., echo=FALSE}
@@ -213,24 +295,16 @@ img <- readPNG("inla.plots/lmer-1.png")
 grid.raster(img)
 ```
 
-```{r eval=FALSE}
-plot(inla_lmer, plot.fixed.effects = FALSE,
-     plot.random.effects = TRUE,
-     plot.hyperparameters = FALSE,
-     plot.predictor = FALSE, cex = 1)
-```
-
-```{r fig.width=6.5, fig.height=4., echo=FALSE}
-img <- readPNG("inla.plots/lmer-2.png")
-grid.raster(img)
-```
+If we plot the hyperparameters, we now get the posterior distribution for the residual variance and the variance explained by the random intercepts. 
 
 ```{r eval=FALSE}
+
 plot(inla_lmer, plot.fixed.effects = FALSE,
      plot.random.effects = FALSE,
      plot.hyperparameters = TRUE,
      plot.predictor = FALSE, 
      plot.prior = TRUE)
+
 ```
 
 ```{r fig.width=6.5, fig.height=4., echo=FALSE}
@@ -238,26 +312,69 @@ img <- readPNG("inla.plots/lmer-3.png")
 grid.raster(img)
 ```
 
-# Spatial models
-
-Read in the data
+We can compare these by extracting these values and back converting to variance. First, the `lmer()` effects
 
 ```{r}
+
+VarCorr(fit_lmer)
+
+```
+
+```{r}
+
+inla_lmer$summary.hyperpar
+
+# Residual s.d.
+sqrt(1 / 0.078)
+# Intercept s.d.
+sqrt(1 / 0.0082)
+
+```
+
+We can get the random effect for any country (the offset from the grand mean intercept). These are in `inla_lmer$summary.random`. Each row has the country name (this was the index used in the `f()` function) as well as the summary of the posterior distribution for that country. To find the random effect for Japan:
+
+```{r}
+
+rowid <- which(inla_lmer$summary.random$country == "Japan")
+inla_lmer$summary.random$country[rowid, ]
+
+```
+Indicating that Japan's life expectancy is about 15 years above the global average over the period Gap observations, and the 2.5 and 97.5 percentile indicate that this is credible higher than average. We can also plot the marginal distribution of this estimate (this is the distribution), by extracting the relevant values from the `inla_lmer$marginals.random`:
+
+```{r}
+
+japan_re <- inla_lmer$marginals.random$country[[rowid]]
+plot(japan_re, type = 'l', xlab = "LifeExp", ylab = "p")
+
+```
+
+# Spatial models
+
+We'll now turn to building spatial models with INLA. In the *nuforc.zip* file there is a shapefile with the counts of UFO sightings for US states between 1990 and 2019. Let's load this now:
+
+```{r}
+
 ufos <- st_read("../datafiles/nuforc/ufo_sf_annual.shp")
+
 ```
 
 ```{r echo=FALSE}
 load("ufo_models.RData")
 ```
 
-Select only 2014
+This contains quite a lot of information, but our models, we'll need the count data (`count`) and the population size. We'll subset out only 2014 using **dplyr** (you can also do this with `ufos_2014 <- subset(ufos, year == 2014)`):
 
 ```{r}
+
 ufos_2014 <- ufos %>%
   filter(year == 2014)
+
 ```
 
+And now use **tmap** to map out the counts and population size:
+
 ```{r}
+
 p1 <- tm_shape(ufos_2014) + tm_fill("count", style = "jenks") +
   tm_borders() +
   tm_layout(main.title = "UFO sightings 2014")
@@ -267,6 +384,7 @@ p2 <- tm_shape(ufos_2014) + tm_fill("population", style = "jenks") +
   tm_layout(main.title = "State population 2014")
 
 tmap_arrange(p1, p2)
+
 ```
 
 ## Basic linear regression
@@ -498,6 +616,26 @@ ufo_inla_rr2 <- inla(count ~ lairports +
 summary(ufo_inla_rr2)
 ```
 
+# Files used in lab
+
+## Irish Education data set: *irished.csv*
+| Column header | Variable |
+| --- | --- |
+| sex | Sex of student (male = 0; female = 1) |
+| DVRT | Vocal reasoning test score |
+| fathocc | Prestige score of fathers occupation |
+| lvcert | Taken leaving certificate (yes = 1; no = 0) |
+| schltype | School type |
+
+## GapMinder Dataset: *gapminderData5.csv*
+| Column header | Variable |
+| --- | --- |
+| country | Country |
+| year | Year |
+| pop | Population |
+| continent | Continent/Region |
+| lifeExp | Life expectancy (yrs) |
+| gdpPercap | Per Capita GDP (USD 2007) |
 
 
 [1]: https://www.r-inla.org

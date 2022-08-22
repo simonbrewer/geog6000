@@ -1,5 +1,5 @@
 ---
-title: "GEOG 5680 6680 00 Installing R and RStudio"
+title: "GEOG 6000 00 Installing R and RStudio"
 author: | 
   | Simon Brewer
   | Geography Department
@@ -34,7 +34,7 @@ To install R on Windows, click the "Download R for Windows" link, then click "ba
 
 ### Mac
 
-To install R on a Mac, click the “Download R for Mac” link, then download the package link (`R-4.0.0.pkg`). Once this has downloaded, click on the file to run the installer. There are some options during the installation, but I'd recommend using the defaults for these. If your computer requires a password before installing new programs, you’ll need it here.
+To install R on a Mac, click the “Download R for Mac” link, then download the package link (`R-4.2.0.pkg`). Once this has downloaded, click on the file to run the installer. There are some options during the installation, but I'd recommend using the defaults for these. If your computer requires a password before installing new programs, you’ll need it here.
 
 ### Linux
 

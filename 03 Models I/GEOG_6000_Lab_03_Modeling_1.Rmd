@@ -54,7 +54,7 @@ This makes a simple barplot using a dataset of Virginia death rates by age and u
 VADeaths <- read.csv("../datafiles/VADeaths.csv", row.names = 1)
 mycol <- heat.colors(5)
 barplot(as.matrix(VADeaths), beside=T, legend = rownames(VADeaths),
-	col = mycol)
+        col = mycol)
 ```
 
 ## Dot charts
@@ -70,12 +70,12 @@ In this example, we will plot death rate by age class but with a different serie
 ```{r fig.keep='none'}
 cmp <- c(52, 57, 62, 67, 72)
 plot(cmp, VADeaths$Rural.Male, pch = 1, col = 1, ylim = c(0,70),
-	xlab = 'Age Class', ylab = 'Mortality', main = 'Virginia Death Rates')
+     xlab = 'Age Class', ylab = 'Mortality', main = 'Virginia Death Rates')
 points(cmp, VADeaths$Rural.Female, pch = 2, col = 2)
 points(cmp, VADeaths$Urban.Male, pch = 3, col = 3)
 points(cmp, VADeaths$Urban.Female, pch = 4, col = 4)
 legend("topleft", legend = c("Rural Male","Rural Female","Urban Male","Urban Female"), 
-	col = c(1,2,3,4), pch = c(1,2,3,4))
+       col = c(1,2,3,4), pch = c(1,2,3,4))
 ```
 
 ## Plotting multiple series with lines
@@ -85,23 +85,27 @@ The file *ipccScenario_1900_2100.csv* contains the results of simulations of ann
 ```{r fig.keep='none'}
 ipcc <- read.csv("../datafiles/ipccScenario_1900_2100.csv")
 plot(ipcc$yrs, ipcc$commitMed, type = 'l',lwd = 2,col = 'orange',
-	ylim = c(-1.0,3.5), main = 'IPCC Scenarios', xlab = 'Years',ylab = 'Global Temp.')
+     ylim = c(-1.0,3.5), main = 'IPCC Scenarios', xlab = 'Years',ylab = 'Global Temp.')
 lines(ipcc$yrs, ipcc$b1Med, lwd = 2, col = 'blue')
 lines(ipcc$yrs, ipcc$a1bMed, lwd = 2, col = 'green')
 lines(ipcc$yrs, ipcc$a2Med, lwd = 2, col = 'red')
 ## Add reference line at zero (h for horizontal)
 abline(h = 0, lty = 2)
 legend("topleft",legend = c("Commit","B1","A1B","A2"), 
-  lty = 1, lwd = 2, col = c('orange','blue','green','red'))
+       lty = 1, lwd = 2, col = c('orange','blue','green','red'))
 ```
 
 ## Plotting polygons
 Here, we use a polygon to plot the range of one of the scenarios of temperature change, and then overlay the median value as a line. We need to create the full set of coordinates for the polygon, which may be obtained by plotting in the order of the series for the low range, then reversing the order of the high range. 
 
 ```{r fig.keep='none'}
-plot(ipcc$yrs, ipcc$commitMed, type = 'n', ylim = c(-1.5,1.0), 
-	main = 'Commit Scenario', xlab = 'Years',ylab = 'Global Temp.')
-polygon(c(ipcc$yrs,rev(ipcc$yrs)),c(ipcc$commitLo,rev(ipcc$commitHi)), col = 'orange')
+plot(ipcc$yrs, ipcc$commitMed, type = 'l', ylim = c(-2.0,2.0), 
+     main = 'Commit Scenario', xlab = 'Years',ylab = 'Global Temp.')
+polygon(c(ipcc$yrs,
+          rev(ipcc$yrs)),
+        c(ipcc$commitLo,
+          rev(ipcc$commitHi)), 
+        col = 'orange')
 lines(ipcc$yrs, ipcc$commitMed, lwd = 2, col = 'black')
 ```
 
@@ -111,7 +115,7 @@ Polygons can also be filled with shading lines, rather than a block color.
 ## Same thing but with shading lines in polygon, rather than fill
 plot(ipcc$yrs, ipcc$commitMed, type = 'n', ylim = c(-1.5,1.0))
 polygon(c(ipcc$yrs,rev(ipcc$yrs)),c(ipcc$commitLo,rev(ipcc$commitHi)), 
-	col = 'orange', density = 20, angle = 210)
+        col = 'orange', density = 20, angle = 210)
 lines(ipcc$yrs, ipcc$commitMed, lwd = 2, col = 'orange')
 ```
 

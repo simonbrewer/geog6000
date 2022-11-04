@@ -202,7 +202,7 @@ As there are more than one selected vector, this makes a matrix. This can be inc
 
 E.sel <- fitted(sf.err)
 
-lm.sf <- lm(CRIME ~ INC + HOVAL + E.sel, 
+lm.sf <- lm(CRIME ~ lINC + lHOVAL + E.sel, 
             data = col)
 
 summary(lm.ols)

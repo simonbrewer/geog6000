@@ -243,7 +243,7 @@ div.tocify {
 
 <h1 class="title toc-ignore">GEOG 6000 Lab 10 Spatial Regression II</h1>
 <h4 class="author">Simon Brewer</h4>
-<h4 class="date">08 November, 2021</h4>
+<h4 class="date">03 November, 2022</h4>
 
 </div>
 
@@ -394,7 +394,7 @@ tm_shape(col) +
 <p>As there are more than one selected vector, this makes a matrix. This can be included in the call to <code>lm()</code> directly, but each vector will be used as an individual covariate in the new regression:</p>
 <pre class="r"><code>E.sel &lt;- fitted(sf.err)
 
-lm.sf &lt;- lm(CRIME ~ INC + HOVAL + E.sel, 
+lm.sf &lt;- lm(CRIME ~ lINC + lHOVAL + E.sel, 
             data = col)
 
 summary(lm.ols)</code></pre>
@@ -420,25 +420,25 @@ summary(lm.ols)</code></pre>
 <pre class="r"><code>summary(lm.sf)</code></pre>
 <pre><code>## 
 ## Call:
-## lm(formula = CRIME ~ INC + HOVAL + E.sel, data = col)
+## lm(formula = CRIME ~ lINC + lHOVAL + E.sel, data = col)
 ## 
 ## Residuals:
 ##     Min      1Q  Median      3Q     Max 
-## -34.105  -6.579   0.048   5.541  19.203 
+## -32.222  -5.912  -0.805   6.981  17.897 
 ## 
 ## Coefficients:
-##              Estimate Std. Error t value Pr(&gt;|t|)    
-## (Intercept)  68.54643    4.11323  16.665  &lt; 2e-16 ***
-## INC          -1.57155    0.29052  -5.409 2.47e-06 ***
-## HOVAL        -0.28168    0.08962  -3.143  0.00299 ** 
-## E.selvec4   -33.15266    9.92734  -3.340  0.00172 ** 
-## E.selvec3    24.12951    9.94142   2.427  0.01938 *  
+##             Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept)  138.074     12.632  10.930 4.00e-14 ***
+## lINC         -19.272      4.364  -4.416 6.45e-05 ***
+## lHOVAL       -14.924      3.968  -3.761 0.000496 ***
+## E.selvec4    -31.462     10.079  -3.122 0.003175 ** 
+## E.selvec3     27.076     10.079   2.686 0.010153 *  
 ## ---
 ## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
 ## 
-## Residual standard error: 9.925 on 44 degrees of freedom
-## Multiple R-squared:  0.6774, Adjusted R-squared:  0.6481 
-## F-statistic:  23.1 on 4 and 44 DF,  p-value: 2.459e-10</code></pre>
+## Residual standard error: 10.08 on 44 degrees of freedom
+## Multiple R-squared:  0.6674, Adjusted R-squared:  0.6371 
+## F-statistic: 22.07 on 4 and 44 DF,  p-value: 4.77e-10</code></pre>
 <p>Note that the coefficients have not changed from the original OLS model, but the significance of them has improved as the autocorrelation in the error term has been filtered. In addition, accounting for the extra variance has increased the R<span class="math inline">\(^2\)</span>. Finally, we re-run Moran’s <span class="math inline">\(I\)</span> test on the model residuals to check that the autocorrelation has been accounted for:</p>
 <pre class="r"><code>moran.test(residuals(lm.sf), col.listw)</code></pre>
 <pre><code>## 
@@ -447,20 +447,20 @@ summary(lm.ols)</code></pre>
 ## data:  residuals(lm.sf)  
 ## weights: col.listw    
 ## 
-## Moran I statistic standard deviate = 0.69056, p-value = 0.2449
+## Moran I statistic standard deviate = 0.3903, p-value = 0.3482
 ## alternative hypothesis: greater
 ## sample estimates:
 ## Moran I statistic       Expectation          Variance 
-##        0.04163638       -0.02083333        0.00818341</code></pre>
+##       0.014810731      -0.020833333       0.008340303</code></pre>
 <p>As these are two nested linear models, we can use <code>anova()</code> to test whether the additional complexity in the SF model has resulted in a better overall model:</p>
 <pre class="r"><code>anova(lm.ols, lm.sf)</code></pre>
 <pre><code>## Analysis of Variance Table
 ## 
 ## Model 1: CRIME ~ lINC + lHOVAL
-## Model 2: CRIME ~ INC + HOVAL + E.sel
-##   Res.Df    RSS Df Sum of Sq      F  Pr(&gt;F)    
-## 1     46 6192.9                                
-## 2     44 4334.6  2    1858.4 9.4321 0.00039 ***
+## Model 2: CRIME ~ lINC + lHOVAL + E.sel
+##   Res.Df    RSS Df Sum of Sq      F    Pr(&gt;F)    
+## 1     46 6192.9                                  
+## 2     44 4470.0  2      1723 8.4802 0.0007672 ***
 ## ---
 ## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
 <p>And the low <span class="math inline">\(p\)</span>-value suggests that we see a significant improvement in the fit.</p>

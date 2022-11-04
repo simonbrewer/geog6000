@@ -822,6 +822,8 @@ Multiple layers can be added to a plot by adding additional `geom_sf` functions.
 
 ```{r, message = FALSE}
 
+sf::sf_use_s2(FALSE)
+
 bingies_neighbors <- st_filter(NY8, binghamton)
 
 random_pnts <- st_sample(bingies_neighbors, size = 25)

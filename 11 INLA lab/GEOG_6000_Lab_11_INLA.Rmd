@@ -742,6 +742,7 @@ tm_shape(ufos_2014) + tm_fill("exc", palette = "Blues") +
   tm_layout(main.title = "Excedence probability (RR > 2)")
 
 ```
+
 For a final model, we'll add a covariate to our relative rate model, to see if there is a credible link to the rates of sightings. Here, we'll load a data set with the number of airports per state, to test if the number of sightings is linked to this (and by extension the number of flights). Load this and log transform the number of airports. 
 
 ```{r}
@@ -792,6 +793,7 @@ ggplot(plot_df, aes(x = x, y = y))  +
   theme_bw()
 
 ```
+
 # Files used in lab
 
 ## Irish Education data set: *irished.csv*

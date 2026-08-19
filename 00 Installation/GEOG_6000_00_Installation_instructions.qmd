@@ -25,7 +25,7 @@ library(grid)
 
 ## Introduction
 
-This document will walk you through installing R and RStudio on your computer for use in the class. [R][cranid] is the main piece of software, and comes with a fairly simple graphical user interface (GUI). [RStudio][rstudioid] provides a full integrated development environment (IDE), with a bunch of tools to help programming and debugging your code. These instructions are modified from the [RStudio website][instid].
+This document will walk you through installing R and RStudio on your computer for use in the class. [R][cranid] is the main piece of software, and comes with a fairly simple graphical user interface (GUI). [RStudio][rstudioid] provides a full integrated development environment (IDE), with a bunch of tools to help programming and debugging your code. These instructions are modified from the [RStudio docs][instid].
 
 NOTE: These labs were developed and tested under various versions of R up to 4.6.1
 
@@ -39,7 +39,7 @@ To install R on Windows, click the "Download R for Windows" link, then click "ba
 
 ### Mac
 
-To install R on a Mac, click the “Download R for Mac” link, then download the package link (`R-4.2.0.pkg`). Once this has downloaded, click on the file to run the installer. There are some options during the installation, but I'd recommend using the defaults for these. If your computer requires a password before installing new programs, you’ll need it here.
+To install R on a Mac, click the “Download R for Mac” link, then download the package link (`R-4.6.1.pkg`). Once this has downloaded, click on the file to run the installer. There are some options during the installation, but I'd recommend using the defaults for these. If your computer requires a password before installing new programs, you’ll need it here.
 
 ### Linux
 
@@ -47,7 +47,7 @@ R comes pre-installed on many Linux systems, but is often an older version, and 
 
 ## Using R
 
-Once you've installed R, you can start it in the usual way. On Windows machines, go to the Start Menu, scroll down until you find a folder called 'R', then click the `R` icon to get the following screen. In general, I'd recommend using the 64-bit version of R, unless your computer has relatively little memory (<4Gb ram).
+Once you've installed R, you can start it in the usual way. On Windows machines, go to the Start Menu, scroll down until you find a folder called 'R', then click the `R` icon to get the following screen.
 
 ```{r fig.width=6.5, fig.height=4., echo=FALSE}
 img <- readPNG("images/r_console_win.png")
@@ -90,9 +90,9 @@ And typing `n` when prompted to save the workspace.
 
 ## RStudio
 
-While R provides the computational engine for all the programming and analysis that you will be doing, its user interface is fairly basic. There have been several attempts to create a better interface; RStudio is probably the most widely used of these. It is designed to provide some extra tools and help in using R, and provides easier access to help documentation. Also, the RStudio interface looks the same for Windows, Mac OS, and Linux, which makes writing these labs easier. 
+While R provides the computational engine for all the programming and analysis that you will be doing, its user interface is fairly basic. There have been several attempts to create a better interface; RStudio is probably the most widely used of these. It is designed to provide some extra tools and help in using R, and provides easier access to help documentation. (Also, the RStudio interface looks the same for Windows, Mac OS, and Linux, which makes writing these labs easier.) 
 
-You can download RStudio for free from the [RStudio website][rstudioid]. Click on the 'Download' link under RStudio Desktop, and then choose the right download for your operating system. Once you've installed RStudio, you can open it like any other program on your computer—usually by clicking an icon on your desktop.
+You can download RStudio for free from the [Posit website][rstudio_dl]. Click on the 'Download' link under RStudio Desktop, and then choose the right download for your operating system. Once you've installed RStudio, you can open it like any other program on your computer—usually by clicking an icon on your desktop.
 
 ### The RStudio GUI
 
@@ -105,5 +105,6 @@ grid.raster(img)
 
 
 [cranid]: https://cran.r-project.org
-[rstudioid]: https://www.rstudio.com
+[rstudioid]: https://posit.co
+[rstudio_dl]: https://docs.posit.co/ide/user/#rstudio-ide-oss-downloads
 [instid]: https://rstudio-education.github.io/hopr/starting.html

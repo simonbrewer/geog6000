@@ -1,0 +1,37 @@
+[
+  {
+    "objectID": "GEOG_6000_00_Installation_instructions.html",
+    "href": "GEOG_6000_00_Installation_instructions.html",
+    "title": "GEOG 6000 00 Installing R and RStudio",
+    "section": "",
+    "text": "This document will walk you through installing R and RStudio on your computer for use in the class. R is the main piece of software, and comes with a fairly simple graphical user interface (GUI). RStudio provides a full integrated development environment (IDE), with a bunch of tools to help programming and debugging your code. These instructions are modified from the RStudio docs.\nNOTE: These labs were developed and tested under various versions of R up to 4.6.1"
+  },
+  {
+    "objectID": "GEOG_6000_00_Installation_instructions.html#introduction",
+    "href": "GEOG_6000_00_Installation_instructions.html#introduction",
+    "title": "GEOG 6000 00 Installing R and RStudio",
+    "section": "",
+    "text": "This document will walk you through installing R and RStudio on your computer for use in the class. R is the main piece of software, and comes with a fairly simple graphical user interface (GUI). RStudio provides a full integrated development environment (IDE), with a bunch of tools to help programming and debugging your code. These instructions are modified from the RStudio docs.\nNOTE: These labs were developed and tested under various versions of R up to 4.6.1"
+  },
+  {
+    "objectID": "GEOG_6000_00_Installation_instructions.html#installing-r",
+    "href": "GEOG_6000_00_Installation_instructions.html#installing-r",
+    "title": "GEOG 6000 00 Installing R and RStudio",
+    "section": "Installing R",
+    "text": "Installing R\nR is available through the web page of The Comprehensive R Archive Network. At the top of this webpage, you will find three three links for downloading R depending on your operating system: Windows, Mac, or Linux.\n\nWindows\nTo install R on Windows, click the “Download R for Windows” link, then click “base”. On the next page, the first link should allow you to download the latest version of R. Run the program that this downloads and step through the installation wizard that appears. The wizard will install R into your program files folders and place a shortcut in your Start menu. Note that you’ll need to have all of the appropriate administration privileges to install new software on your machine.\n\n\nMac\nTo install R on a Mac, click the “Download R for Mac” link, then download the package link (R-4.6.1.pkg). Once this has downloaded, click on the file to run the installer. There are some options during the installation, but I’d recommend using the defaults for these. If your computer requires a password before installing new programs, you’ll need it here.\n\n\nLinux\nR comes pre-installed on many Linux systems, but is often an older version, and you’ll likely want to update this. Click on the “Download R for Linux.”, which will take you to a new page giving options for some of the more widely used Linux distros: Debian, Redhat, SUSE, and Ubuntu. Clicking on any of these will take you to a new page with detailed installation instructions for that system. Note that you can also download the source code from the first page and compile it yourself. This is relatively straightforward on most Unix-type operating systems."
+  },
+  {
+    "objectID": "GEOG_6000_00_Installation_instructions.html#using-r",
+    "href": "GEOG_6000_00_Installation_instructions.html#using-r",
+    "title": "GEOG 6000 00 Installing R and RStudio",
+    "section": "Using R",
+    "text": "Using R\nOnce you’ve installed R, you can start it in the usual way. On Windows machines, go to the Start Menu, scroll down until you find a folder called ‘R’, then click the R icon to get the following screen.\n\n\n\n\n\n\n\n\n\nOn a Mac, you should be able to find the R icon in the Applications folder. Clicking on this will open a R console that should look like this:\n\n\n\n\n\n\n\n\n\nIf you’re using a Linux or Unix system, then you can start R by opening a terminal and simply typing\nR\nAnd this should start R, giving you the following screen:\n\n\n\n\n\n\n\n\n\nIn any of these windows, you can now type R commands. We’ll be using RStudio for this class (see below), but it is worth at least being familiar with the basic R interface in case you are ever working on a different computer. Just to test this, type the following in the console (you should see the cursor next to the &gt; symbol)\n6*7\nAnd you should be rewarded with the answer of 42 (don’t worry - we’ll do some things that are a little more advanced than this in the class). Now, quit R by typing\nq()\nAnd typing n when prompted to save the workspace."
+  },
+  {
+    "objectID": "GEOG_6000_00_Installation_instructions.html#rstudio",
+    "href": "GEOG_6000_00_Installation_instructions.html#rstudio",
+    "title": "GEOG 6000 00 Installing R and RStudio",
+    "section": "RStudio",
+    "text": "RStudio\nWhile R provides the computational engine for all the programming and analysis that you will be doing, its user interface is fairly basic. There have been several attempts to create a better interface; RStudio is probably the most widely used of these. It is designed to provide some extra tools and help in using R, and provides easier access to help documentation. (Also, the RStudio interface looks the same for Windows, Mac OS, and Linux, which makes writing these labs easier.)\nYou can download RStudio for free from the Posit website. Click on the ‘Download’ link under RStudio Desktop, and then choose the right download for your operating system. Once you’ve installed RStudio, you can open it like any other program on your computer—usually by clicking an icon on your desktop.\n\nThe RStudio GUI\nWhen you open RStudio, a window appears with three panels in it, as in Figure A.1. The largest pane is a console window. This is where you’ll run your R code and see results. The console window is exactly what you’d see if you ran R from a UNIX console or the Windows or Mac GUIs. Everything else you see is unique to RStudio. Hidden in the other panes are a text editor, a graphics window, a debugger, a file manager, and much more. In the next module we’ll start to explore these a little more."
+  }
+]

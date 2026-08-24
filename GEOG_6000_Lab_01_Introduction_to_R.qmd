@@ -340,8 +340,6 @@ tapply(penguin$bill_length_mm, penguin$species, mean, na.rm = TRUE)
 
 Repeat this and calculate the standard deviation per species. 
 
-
-
 # Basic plotting in R
 
 We'll now look quickly at the basic plotting functions in R. R has a wide range of plotting types, and we will look at some more complex methods later in this class. For now, we will concentrate on the basic plotting function (`plot()`) and how to simply modify this.
@@ -438,6 +436,7 @@ legend("bottomleft",
        col = c(1,2,3), 
        pch = 16)
 ```
+
 Note that we can also use the `levels()` function introduced above to help - this will give us the list of labels to be used in the title:
 
 An alternative way to look at the association between factors and a variable is, again, to use boxplots. Note that this code uses a tilde ($\sim$) between the variable and the set of factors. The tilde is often used to define dependency between two variables, and we will return to this again during the modeling part of this class. 
@@ -483,3 +482,36 @@ When you are finished with R, exit by typing `q()` in the console (or going to [
 ```{r eval=FALSE}
 load(".RData")
 ```
+
+# Where to get help
+
+
+Working in R can be frustrating, with errors and warnings popping up from you know not where. In fact, problems arise so often, troubleshooting (which usually just means Googling) should be considered an inescapable component of programming. 
+
+<br>
+
+<p align="center">
+![](https://imgs.xkcd.com/comics/wisdom_of_the_ancients.png)
+</p>
+
+<br>
+
+While today, you'll probably get most of your help on coding from ChatGPT, Claude or Gemini, there are some other resources that can be of use. Here are some of the best places to look for help:
+
+- [rdocumentation.org](https://www.rdocumentation.org/)
+- [rdrr.io](https://rdrr.io/)
+- [community.rstudio.com](https://community.rstudio.com/)
+- [stackoverflow.com](https://stackoverflow.com/)
+
+The last one there, StackOverflow (often abberviated SO), is a forum where people post their problems and other users try to help them find an answer. Coding problems are rarely unique, so you can probably find a post there where someone ran into the exact same problem you are having. RStudio Community is like SO, but with a slightly different interface (the people there are typically nicer too). The first two will help you get to descriptions of functions that detail how to use them. 
+
+Help for any function in R can also be obtained using the `help()` function:
+
+```{r, eval = FALSE}
+help(plot)
+```
+
+Which opens the relevant help page in the Help browser window (`?plot` also does this). All R functions have a similar page, and will give a brief explanation of the variable, the parameters that it takes and how these change the way it works. It is also worth scrolling down - at the bottom of the help page will be some examples of usage which you can run to get a feel for how the function works. 
+
+You can search the help pages, using `help.search(...)` or `??...`, with a text string in the place of the three dots. This will return all help pages with that string. So if you want to carry out a cluster analysis, typing `??cluster` will search for any functions that use the word cluster. Hopefully including some that are relevant to cluster analysis. 
+

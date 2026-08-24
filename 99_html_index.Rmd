@@ -1,0 +1,40 @@
+---
+title: 'GEOG 6000 Advanced Geographical Data Analysis'
+knit: (function(input_file, encoding) {
+  out_dir <- 'docs';
+  rmarkdown::render(input_file,
+ encoding=encoding,
+ output_file=file.path(dirname(input_file), out_dir, 'index.html'))})
+author:
+  - Simon Brewer^[University of Utah, simon.brewer@ess.utah.edu]
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+  html_document:
+    theme: flatly
+    df_print: paged
+    number_sections: false
+    toc: false
+    toc_float: false
+---
+
+# Introduction
+
+Geographical research increasingly generates large and complex datasets. The course is designed to introduce students to:
+
+- A suite of statistical techniques for the analysis of such datasets
+- The interpretation of results generated 
+- The appropriate (and inappropriate) use of these methods
+
+Topics will include advanced regression analysis, the analysis of multivariate datasets, spatial analysis and modeling. Theory will be taught during lectures, but emphasis will be placed on the practical application of these techniques and best-use practices in the analysis of research datasets. The majority of topics will be accompanied by lab exercises using the statistical software R, as well as take-home exercises. Students will undertake a short research project using one or more of the techniques covered in the course.
+
+
+# Labs
+
+- [Installation instructions][install]
+- Lab 1
+    - [Lab notes][lab01r]
+
+[install]: https://simonbrewer.github.io/geog5160/GEOG_5160_6160_Installation.html
+[lab01r]: https://simonbrewer.github.io/geog5160/GEOG_5160_6160_lab01.html
+
+[penguins]: https://drive.google.com/file/d/1Sb5uv2RP_gcNJDKmlEjBoSUOdETIq2Jf/view?usp=sharing

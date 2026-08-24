@@ -33,8 +33,11 @@ Topics will include advanced regression analysis, the analysis of multivariate d
 - [Installation instructions][install]
 - Lab 1
     - [Lab notes][lab01r]
+- Lab 2
+    - [Lab notes][lab02r]
 
 [install]: https://simonbrewer.github.io/geog6000/GEOG_6000_00_Installation_instructions.html
-[lab01r]: https://simonbrewer.github.io/geog5160/GEOG_5160_6160_lab01.html
+[lab01r]: https://simonbrewer.github.io/geog6000/GEOG_6000_Lab_01_Introduction_to_R.html
+[lab02r]: https://simonbrewer.github.io/geog6000/GEOG_6000_Lab_02_Inference.html
 
 [penguins]: https://drive.google.com/file/d/1Sb5uv2RP_gcNJDKmlEjBoSUOdETIq2Jf/view?usp=sharing

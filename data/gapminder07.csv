@@ -1,0 +1,134 @@
+country,year,continent,region,pop,lifeExp,gdpPercap,infant_mortality,fertility
+Albania,2007,Europe,Southern Europe,3600523,76.423,5937.029526,16.7,1.8
+Algeria,2007,Africa,Northern Africa,33333216,72.301,6223.367465,26.4,2.66
+Angola,2007,Africa,Middle Africa,12420476,42.731,4797.231267,117.1,6.52
+Argentina,2007,Americas,South America,40301927,75.32,12779.37964,14.1,2.25
+Australia,2007,Oceania,Australia and New Zealand,20434176,81.235,34435.36744,4.5,1.92
+Austria,2007,Europe,Western Europe,8199783,79.829,36126.4927,3.8,1.38
+Bahrain,2007,Asia,Western Asia,708573,75.635,29796.04834,8.5,2.29
+Bangladesh,2007,Asia,Southern Asia,150448339,64.062,1391.253792,45.9,2.44
+Belgium,2007,Europe,Western Europe,10392226,79.441,33692.60508,3.9,1.8
+Benin,2007,Africa,Western Africa,8078314,56.728,1441.284873,75.2,5.37
+Bolivia,2007,Americas,South America,9119152,65.554,3822.137084,42.2,3.55
+Bosnia and Herzegovina,2007,Europe,Southern Europe,4552198,74.852,7446.298803,7.1,1.21
+Botswana,2007,Africa,Southern Africa,1639131,50.728,12569.85177,45.5,2.91
+Brazil,2007,Americas,South America,190010647,72.39,9065.800825,17.1,1.94
+Bulgaria,2007,Europe,Eastern Europe,7322858,73.005,10680.79282,12.3,1.4
+Burkina Faso,2007,Africa,Western Africa,14326203,52.295,1217.032994,79.2,6.12
+Burundi,2007,Africa,Eastern Africa,8390505,49.58,430.0706916,72.7,6.57
+Cambodia,2007,Asia,South-Eastern Asia,14131858,59.723,1713.778686,46.5,3.1
+Cameroon,2007,Africa,Middle Africa,17696293,50.43,2042.09524,73.1,5.24
+Canada,2007,Americas,Northern America,33390141,80.653,36319.23501,5.1,1.66
+Central African Republic,2007,Africa,Middle Africa,4369038,44.741,706.016537,106.9,4.9
+Chad,2007,Africa,Middle Africa,10238807,50.651,1704.063724,98.1,6.9
+Chile,2007,Americas,South America,16284741,78.553,13171.63885,7.6,1.9
+China,2007,Asia,Eastern Asia,1318683096,72.961,4959.114854,17.2,1.53
+Colombia,2007,Americas,South America,44227550,72.889,7006.580419,17.3,2.45
+Comoros,2007,Africa,Eastern Africa,710960,65.152,986.1478792,67.9,5.11
+"Congo, Dem. Rep.",2007,Africa,Middle Africa,64606759,46.462,277.5518587,91.5,6.55
+"Congo, Rep.",2007,Africa,Middle Africa,3800610,55.322,3632.557798,53.1,5.11
+Costa Rica,2007,Americas,Central America,4133884,78.782,9645.06142,8.9,1.95
+Cote d'Ivoire,2007,Africa,Western Africa,18013409,48.328,1544.750112,84.1,4.93
+Croatia,2007,Europe,Southern Europe,4493312,75.748,14619.22272,5.3,1.41
+Cuba,2007,Americas,Caribbean,11416987,78.273,8948.102923,4.8,1.52
+Czech Republic,2007,Europe,Eastern Europe,10228744,76.486,22833.30851,3.9,1.39
+Denmark,2007,Europe,Northern Europe,5468120,78.332,35278.41874,3.7,1.85
+Djibouti,2007,Africa,Eastern Africa,496374,54.791,2082.481567,67.5,3.83
+Dominican Republic,2007,Americas,Caribbean,9319622,72.235,6025.374752,29.1,2.69
+Ecuador,2007,Americas,South America,13755680,74.994,6873.262326,23.1,2.77
+Egypt,2007,Africa,Northern Africa,80264543,71.338,5581.180998,27.1,2.99
+El Salvador,2007,Americas,Central America,6939688,71.878,5728.353514,19.2,2.35
+Equatorial Guinea,2007,Africa,Middle Africa,551201,51.579,12154.08975,86.3,5.39
+Eritrea,2007,Africa,Eastern Africa,4906585,58.04,641.3695236,43.7,5.27
+Ethiopia,2007,Africa,Eastern Africa,76511887,52.947,690.8055759,61,5.35
+Finland,2007,Europe,Northern Europe,5238460,79.313,33207.0844,2.9,1.83
+France,2007,Europe,Western Europe,61083916,80.657,30470.0167,3.6,1.96
+Gabon,2007,Africa,Middle Africa,1454867,56.735,13206.48452,47.4,4.3
+Gambia,2007,Africa,Western Africa,1688359,59.448,752.7497265,54.5,5.8
+Germany,2007,Europe,Western Europe,82400996,79.406,32170.37442,3.7,1.36
+Ghana,2007,Africa,Western Africa,22873338,60.022,1327.60891,54.4,4.26
+Greece,2007,Europe,Southern Europe,10706290,79.483,27538.41188,4.4,1.43
+Guatemala,2007,Americas,Central America,12572928,70.259,5186.050003,31.2,4.2
+Guinea,2007,Africa,Western Africa,9947814,56.007,942.6542111,79,5.42
+Guinea-Bissau,2007,Africa,Western Africa,1472041,46.388,579.231743,83.3,5.32
+Haiti,2007,Americas,Caribbean,8502814,60.916,1201.637154,62.7,3.58
+Honduras,2007,Americas,Central America,7483763,70.198,3548.330846,23.2,3.34
+"Hong Kong, China",2007,Asia,Eastern Asia,6980412,82.208,39724.97867,17.2,1.02
+Hungary,2007,Europe,Eastern Europe,9956108,73.338,18008.94444,6.5,1.32
+Iceland,2007,Europe,Northern Europe,301931,81.757,36180.78919,2.2,2.11
+India,2007,Asia,Southern Asia,1110396331,64.698,2452.210407,51.9,2.69
+Indonesia,2007,Asia,South-Eastern Asia,223547000,70.65,3540.651564,30.9,2.49
+Iran,2007,Asia,Southern Asia,69453570,70.964,11605.71449,19.4,1.87
+Iraq,2007,Asia,Western Asia,27499638,59.545,4471.061906,31.8,4.41
+Ireland,2007,Europe,Northern Europe,4109086,78.885,40675.99635,3.9,2
+Israel,2007,Asia,Western Asia,6426679,80.745,25523.2771,4.1,2.91
+Italy,2007,Europe,Southern Europe,58147733,80.546,28569.7197,3.6,1.37
+Jamaica,2007,Americas,Caribbean,2780132,72.567,7320.880262,16.5,2.41
+Japan,2007,Asia,Eastern Asia,127467972,82.603,31656.06806,2.6,1.33
+Jordan,2007,Asia,Western Asia,6053193,72.535,4519.461171,19.3,3.64
+Kenya,2007,Africa,Eastern Africa,35610177,54.11,1463.249282,49.5,4.82
+Kuwait,2007,Asia,Western Asia,2505559,77.588,47306.98978,9.8,2.67
+Lebanon,2007,Asia,Western Asia,3921278,71.993,10461.05868,10.4,1.62
+Lesotho,2007,Africa,Southern Africa,2012649,42.592,1569.331442,84.3,3.41
+Liberia,2007,Africa,Western Africa,3193942,45.678,414.5073415,76.9,5.28
+Libya,2007,Africa,Northern Africa,6036914,73.952,12057.49928,17.3,2.69
+Madagascar,2007,Africa,Eastern Africa,19167654,59.443,1044.770126,47.9,4.87
+Malawi,2007,Africa,Eastern Africa,13327079,48.303,759.3499101,64.5,5.84
+Malaysia,2007,Asia,South-Eastern Asia,24821286,74.241,12451.6558,6.9,2.09
+Mali,2007,Africa,Western Africa,12031795,54.467,1042.581557,90.1,6.81
+Mauritania,2007,Africa,Western Africa,3270065,64.164,1803.151496,73.1,4.99
+Mauritius,2007,Africa,Eastern Africa,1250882,72.801,10956.99112,14.1,1.63
+Mexico,2007,Americas,Central America,108700891,76.195,11977.57496,15.8,2.38
+Mongolia,2007,Asia,Eastern Asia,2874127,66.803,3095.772271,30.6,2.32
+Montenegro,2007,Europe,Southern Europe,684736,74.543,9253.896111,8.2,1.73
+Morocco,2007,Africa,Northern Africa,33757175,71.164,3820.17523,31.9,2.4
+Mozambique,2007,Africa,Eastern Africa,19951656,42.082,823.6856205,81.5,5.59
+Namibia,2007,Africa,Southern Africa,2055080,52.906,4811.060429,42.7,3.44
+Nepal,2007,Asia,Southern Asia,28901790,63.785,1091.359778,42,3.05
+Netherlands,2007,Europe,Western Europe,16570613,79.762,36797.93332,4.2,1.72
+New Zealand,2007,Oceania,Australia and New Zealand,4115771,80.204,25185.00911,5.3,2.11
+Nicaragua,2007,Americas,Central America,5675356,72.899,2749.320965,24.4,2.76
+Niger,2007,Africa,Western Africa,12894865,56.867,619.6768924,75.2,7.59
+Nigeria,2007,Africa,Western Africa,135031164,46.859,2013.977305,90.3,6.02
+Norway,2007,Europe,Northern Europe,4627926,80.196,49357.19017,3,1.9
+Oman,2007,Asia,Western Asia,3204897,75.64,22316.19287,10.4,2.89
+Pakistan,2007,Asia,Southern Asia,169270617,65.483,2605.94758,77.4,3.65
+Panama,2007,Americas,Central America,3242173,75.537,9809.185636,18.5,2.64
+Paraguay,2007,Americas,South America,6667147,71.752,4172.838464,22.4,3.12
+Peru,2007,Americas,South America,28674757,71.421,7408.905561,19,2.61
+Philippines,2007,Asia,South-Eastern Asia,91077287,71.688,3190.481016,26.4,3.33
+Poland,2007,Europe,Eastern Europe,38518241,75.563,15389.92468,6,1.31
+Portugal,2007,Europe,Southern Europe,10642836,78.098,20509.64777,3.3,1.37
+Puerto Rico,2007,Americas,Caribbean,3942491,78.746,19328.70901,6.6,1.71
+Romania,2007,Europe,Eastern Europe,22276056,72.476,10808.47561,15.3,1.33
+Rwanda,2007,Africa,Eastern Africa,8860588,46.242,863.0884639,56.8,5.17
+Saudi Arabia,2007,Asia,Western Asia,27601038,72.777,21654.83194,16,3.05
+Senegal,2007,Africa,Western Africa,12267493,63.062,1712.472136,51.9,5.14
+Serbia,2007,Europe,Southern Europe,10150265,74.002,9786.534714,7.1,1.42
+Sierra Leone,2007,Africa,Western Africa,6144562,42.568,862.5407561,120.5,5.23
+Singapore,2007,Asia,South-Eastern Asia,4553009,79.972,47143.17964,2.3,1.29
+Slovak Republic,2007,Europe,Eastern Europe,5447502,74.663,18678.31435,7.8,1.29
+Slovenia,2007,Europe,Southern Europe,2009245,77.926,25768.25759,3.2,1.4
+South Africa,2007,Africa,Southern Africa,43997828,49.339,9269.657808,48.6,2.58
+Spain,2007,Europe,Southern Europe,40448191,80.941,28821.0637,4.4,1.4
+Sri Lanka,2007,Asia,Southern Asia,20378239,72.396,3970.095407,10.7,2.31
+Sudan,2007,Africa,Northern Africa,42292929,58.556,2602.394995,57.1,4.87
+Swaziland,2007,Africa,Southern Africa,1133066,39.613,4513.480643,74.7,3.76
+Sweden,2007,Europe,Northern Europe,9031088,80.884,33859.74835,2.7,1.89
+Switzerland,2007,Europe,Western Europe,7554661,81.701,37506.41907,4.1,1.46
+Syria,2007,Asia,Western Asia,19314747,74.143,4184.548089,14.8,3.24
+Tanzania,2007,Africa,Eastern Africa,38139640,52.517,1107.482182,51.5,5.59
+Thailand,2007,Asia,South-Eastern Asia,65068149,70.616,7458.396327,14,1.5
+Togo,2007,Africa,Western Africa,5701579,58.42,882.9699438,64.1,4.92
+Trinidad and Tobago,2007,Americas,Caribbean,1056608,69.819,18008.50924,22.8,1.79
+Tunisia,2007,Africa,Northern Africa,10276158,73.923,7092.923025,17.5,2.04
+Turkey,2007,Europe,Western Asia,71158647,71.777,8458.276384,20.2,2.17
+Uganda,2007,Africa,Eastern Africa,29170398,51.542,1056.380121,59.2,6.43
+United Kingdom,2007,Europe,Northern Europe,60776238,79.425,33203.26128,4.9,1.84
+United States,2007,Americas,Northern America,301139947,78.242,42951.65309,6.6,2.12
+Uruguay,2007,Americas,South America,3447496,76.384,10611.46299,11.5,2.12
+Venezuela,2007,Americas,South America,26084662,73.747,11415.80569,15,2.56
+Vietnam,2007,Asia,South-Eastern Asia,85262356,74.249,2441.576404,21.4,1.88
+West Bank and Gaza,2007,Asia,Western Asia,4018332,73.422,3025.349798,21.3,4.48
+Zambia,2007,Africa,Eastern Africa,11746035,42.384,1271.211593,61.3,5.91
+Zimbabwe,2007,Africa,Eastern Africa,12311143,43.487,469.7092981,59.9,3.9

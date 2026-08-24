@@ -23,6 +23,8 @@ library(png)
 library(grid)
 ```
 
+# Introduction
+
 In this lab, we will introduce the basic functionality of R, together with some simple plotting functions. We will be using the following files for these examples:
 
 - A dataset of morphological measurements of three species of penguin *penguins.csv*

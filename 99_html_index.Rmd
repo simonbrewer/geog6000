@@ -6,7 +6,7 @@ knit: (function(input_file, encoding) {
  encoding=encoding,
  output_file=file.path(dirname(input_file), out_dir, 'index.html'))})
 author:
-  - Simon Brewer^[University of Utah, simon.brewer@ess.utah.edu]
+  - Simon Brewer^[School of Environment, Society and Sustainability, University of Utah, simon.brewer@ess.utah.edu]
 date: "`r format(Sys.time(), '%d %B, %Y')`"
 output:
   html_document:
@@ -33,11 +33,24 @@ Topics will include advanced regression analysis, the analysis of multivariate d
 - [Installation instructions][install]
 - Lab 1
     - [Lab notes][lab01r]
+    - [Penguins dataset][penguins]
 - Lab 2
     - [Lab notes][lab02r]
+    - [Irish Education dataset][irished]
+    - [Body temperature dataset][normtemp]
+    - [Soil porosity dataset][soilporo]
+    - [Land-cover and elevation dataset][landcover]
+    - [Dissolved oxygen measurements from an estuary][maxdo]
+
 
 [install]: https://simonbrewer.github.io/geog6000/GEOG_6000_00_Installation_instructions.html
 [lab01r]: https://simonbrewer.github.io/geog6000/GEOG_6000_Lab_01_Introduction_to_R.html
 [lab02r]: https://simonbrewer.github.io/geog6000/GEOG_6000_Lab_02_Inference.html
 
-[penguins]: https://drive.google.com/file/d/1Sb5uv2RP_gcNJDKmlEjBoSUOdETIq2Jf/view?usp=sharing
+[penguins]: https://drive.google.com/file/d/1Xuk1wqGeJJZ__LHerIn8ghFhA0OmGHOH/view?usp=sharing
+[irished]: https://drive.google.com/file/d/1OFEvB0pYtLUsD30b1FB79FMHlqo4o235/view?usp=sharing
+[normtemp]: https://drive.google.com/file/d/1IfK3stapqe52EhFZSzP47aVS-NWQ-ecW/view?usp=sharing
+[soilporo]: https://drive.google.com/file/d/1oEN33fGuIsxW89wDVp_j4ehBlsELkcf-/view?usp=sharing
+[landcover]: https://drive.google.com/file/d/19fd8ZX9l_otHuV6nY9wFz833MQoyfak0/view?usp=sharing
+[maxdo]: https://drive.google.com/file/d/1XkUZVWqgu7HYCkr7kiJy5wpmqSXR1PCX/view?usp=drive_link
+

@@ -25,7 +25,7 @@ library(grid)
 
 # Introduction
 
-ook at using R for statistical inference tests. Before starting the lab, you will need to set up a new folder for your working directory. In the previous lab, you should have set up a `geog6000` folder and a folder for the data files (`data`). For this class, the labs will assume that you have your files organized according to the following structure:
+In this lab, we're going to take a look at using R for statistical inference tests. Before starting the lab, you will need to set up a new folder for your working directory. In the previous lab, you should have set up a `geog6000` folder and a folder for the data files (`data`). For this class, the labs will assume that you have your files organized according to the following structure:
 
 ```
 +-- geog6000

@@ -34,7 +34,7 @@ Before starting the lab, you will need to set up a new folder for your working d
 
 We will be using the following files for today's examples:
 
-- A simple dataset with two variables: *regrex1.csv*
+- A simple dataset with two variables: *regrex.csv*
 - A dataset of death rates in Virginia according to age, sex and social groups *VADeaths.csv*
 - Simulations of annual global temperature from the fourth IPCC report *ipccScenario_1900_2100.csv*
 - A DEM of Maunga Whau volcano *volcanodem.txt*

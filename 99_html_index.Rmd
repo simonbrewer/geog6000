@@ -44,8 +44,20 @@ Topics will include advanced regression analysis, the analysis of multivariate d
 - Lab 3
     - [Lab notes][lab03r]
     - [Using Quarto][lab03br]
+    - [A simple regression dataset (*regrex.csv*)][regrex]
+    - [Death rates in Virginia][virginia]
+    - [IPCC simulated annual global temperature][ipcc1]
+    - [Maunga Whau DEM][volcano]
+
 - Lab 4
     - [Lab notes][lab04r]
+    - [Southern California runoff][socalro]
+    - [Child and mother IQ][childiq]
+    - [Irish Education dataset][irished]
+    - [Body temperature dataset][normtemp]
+    - [US state characteristics][us_state]
+    - [R script to simulate coin tosses][coinr]
+
 
 
 [install]: https://simonbrewer.github.io/geog6000/GEOG_6000_00_Installation_instructions.html
@@ -60,5 +72,12 @@ Topics will include advanced regression analysis, the analysis of multivariate d
 [normtemp]: https://drive.google.com/file/d/1IfK3stapqe52EhFZSzP47aVS-NWQ-ecW/view?usp=sharing
 [soilporo]: https://drive.google.com/file/d/1oEN33fGuIsxW89wDVp_j4ehBlsELkcf-/view?usp=sharing
 [landcover]: https://drive.google.com/file/d/19fd8ZX9l_otHuV6nY9wFz833MQoyfak0/view?usp=sharing
-[maxdo]: https://drive.google.com/file/d/1XkUZVWqgu7HYCkr7kiJy5wpmqSXR1PCX/view?usp=drive_link
-
+[maxdo]: https://drive.google.com/file/d/1XkUZVWqgu7HYCkr7kiJy5wpmqSXR1PCX/view?usp=sharing
+[regrex]: https://drive.google.com/file/d/1YUmoiJLtiXIL5k-G4N6ILXik762nxPIE/view?usp=sharing
+[virginia]: https://drive.google.com/file/d/1jl95_YLSiQqvi_0De4xJ_ZFc3WbUZEbZ/view?usp=sharing
+[ipcc1]: https://drive.google.com/file/d/1VMvh1THqbCutiyGGrWsDFisQB1kZAcHs/view?usp=sharing
+[volcano]: https://drive.google.com/file/d/1Lo4DdH6mspBuNRJJBZnjT5RXuBdojQlr/view?usp=sharing
+[socalro]: https://drive.google.com/file/d/1nK4WbnWzF2oyFPUjya9x0cog6NlbACWy/view?usp=sharing
+[childiq]: https://drive.google.com/file/d/1QRlMg3WG-Uwhpj1mrGH6bZoOW6Dq3fZx/view?usp=sharing
+[us_state]: https://drive.google.com/file/d/10o6kGfVhQ5iLc0WO2-O5HwocEXpm0ou5/view?usp=sharing
+[coinr]: https://drive.google.com/file/d/1qVn-U1hbNDi2jkZZqfhQmUhkaL-giKon/view?usp=sharing

@@ -40,25 +40,40 @@ Topics will include advanced regression analysis, the analysis of multivariate d
     - [Body temperature dataset][normtemp]
     - [Soil porosity dataset][soilporo]
     - [Land-cover and elevation dataset][landcover]
-    - [Dissolved oxygen measurements][maxdo]
+    - [Dissolved oxygen measurement dataset][maxdo]
 - Lab 3
     - [Lab notes][lab03r]
-    - [Using Quarto][lab03br]
+    - [Using Quarto (optional)][lab03br]
     - [A simple regression dataset (*regrex.csv*)][regrex]
-    - [Death rates in Virginia][virginia]
-    - [IPCC simulated annual global temperature][ipcc1]
+    - [Death rates in Virginia dataset][virginia]
+    - [IPCC simulated annual global temperature dataset][ipcc1]
     - [Maunga Whau DEM][volcano]
 
 - Lab 4
     - [Lab notes][lab04r]
-    - [Southern California runoff][socalro]
-    - [Child and mother IQ][childiq]
+    - [Southern California runoff dataset][socalro]
+    - [Child and mother IQ dataset][childiq]
     - [Irish Education dataset][irished]
     - [Body temperature dataset][normtemp]
-    - [US state characteristics][us_state]
+    - [US state characteristics dataset][us_state]
     - [R script to simulate coin tosses][coinr]
-
-
+- Lab 5
+    - [Lab notes][lab05r]
+    - [Using ggplot2 (optional)][lab05br]
+    - [Irish Education dataset][irished]
+    - [Honor Student Award dataset][hsa]
+    - [Turbine failure dataset][turbines]
+    - [Mediterranean bird species dataset][island2]
+    - [Penguins dataset][penguins]
+    - [Orange tree dataset][orange]
+    - [Gapminder dataset][gapminder]
+    - [Death rates in Virginia dataset][virginia]
+- Lab 6
+    - [Lab notes][lab06r]
+    - [Math achievement dataset][mathach]
+    - [Species introduction dataset][species_intro]
+    - [Daily ozone concentration dataset][ozone]
+    - [Gapminder dataset][gapminder]
 
 [install]: https://simonbrewer.github.io/geog6000/GEOG_6000_00_Installation_instructions.html
 [lab01r]: https://simonbrewer.github.io/geog6000/GEOG_6000_Lab_01_Introduction_to_R.html
@@ -66,6 +81,9 @@ Topics will include advanced regression analysis, the analysis of multivariate d
 [lab03r]: https://simonbrewer.github.io/geog6000/GEOG_6000_Lab_03_Modeling_1.html
 [lab03br]: https://simonbrewer.github.io/geog6000/GEOG_6000_Lab_03b_Reproducible_Research_R.html
 [lab04r]: https://simonbrewer.github.io/geog6000/GEOG_6000_Lab_04_Modeling_2.html
+[lab05r]: https://simonbrewer.github.io/geog6000/GEOG_6000_Lab_05_Models_3.html
+[lab05br]: https://simonbrewer.github.io/geog6000/GEOG_6000_Lab_05b_Plotting_with_ggplot2.html
+[lab06r]: https://simonbrewer.github.io/geog6000/GEOG_6000_Lab_06_Models_4.html
 
 [penguins]: https://drive.google.com/file/d/1Xuk1wqGeJJZ__LHerIn8ghFhA0OmGHOH/view?usp=sharing
 [irished]: https://drive.google.com/file/d/1OFEvB0pYtLUsD30b1FB79FMHlqo4o235/view?usp=sharing
@@ -81,3 +99,11 @@ Topics will include advanced regression analysis, the analysis of multivariate d
 [childiq]: https://drive.google.com/file/d/1QRlMg3WG-Uwhpj1mrGH6bZoOW6Dq3fZx/view?usp=sharing
 [us_state]: https://drive.google.com/file/d/10o6kGfVhQ5iLc0WO2-O5HwocEXpm0ou5/view?usp=sharing
 [coinr]: https://drive.google.com/file/d/1qVn-U1hbNDi2jkZZqfhQmUhkaL-giKon/view?usp=sharing
+[hsa]: https://drive.google.com/file/d/1Z4oC7N264bQLnQX-xEQf6agywLqo4X5z/view?usp=sharing
+[turbines]: https://drive.google.com/file/d/1cSG8qkZ_oJMQ9goWe9o5OtZdcMEZ3Jc7/view?usp=sharing
+[island2]: https://drive.google.com/file/d/1JcwjP_fT4BaDvU9nvs6T1yyEIwyfA2zQ/view?usp=sharing
+[orange]: https://drive.google.com/file/d/1hbmR-6nPMMleLclqSCfO0o6rrcLJIxN2/view?usp=sharing
+[gapminder]: https://drive.google.com/file/d/13R0mVaV92US7LsfWRV0gICHvthSxnCNN/view?usp=sharing
+[mathach]: https://drive.google.com/file/d/1TELYyaE8CIWEkJkSDLIMcs-dHKGajP0q/view?usp=sharing
+[species_intro]: https://drive.google.com/file/d/19T6Db7NRBtFIWjmSL56iRlAYrus2q7vP/view?usp=sharing
+[ozone]: https://drive.google.com/file/d/1Gj6yI938BB4nloqz0GPoI70tffDlQ6Ku/view?usp=sharing

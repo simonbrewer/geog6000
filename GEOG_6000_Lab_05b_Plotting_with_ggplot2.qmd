@@ -48,7 +48,7 @@ We'll use several datasets in this lab:
 
 - A dataset of morphological measurements of three species of penguin *penguins.csv*
 - a dataset on the growth of five Orange trees (*orange.csv*) 
-- Gapminder data on countries population, GDP and life expectancy for the past 60 years (*gapminderData.csv*)
+- Gapminder data on countries population, GDP and life expectancy for the past 60 years (*gapminderData5.csv*)
 - The VADeaths dataset (*VADeaths.csv*), showing death rates in West Virginia 
 
 You will need to download these files from Canvas, and move them from your `Downloads` folder to the `datafiles` folder that you made previously. Then load these data sets and use `str()` and `names()` to look at what they contain:

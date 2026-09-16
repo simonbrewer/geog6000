@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 <meta name="author" content="Simon Brewer">
-<meta name="dcterms.date" content="2026-08-25">
+<meta name="dcterms.date" content="2026-09-16">
 
 <title>GEOG 6000 Lab 04 Modeling II</title>
 <style>
@@ -4234,7 +4234,7 @@ window.Quarto = {
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">August 25, 2026</p>
+      <p class="date">September 16, 2026</p>
     </div>
   </div>
   
@@ -4316,8 +4316,8 @@ window.Quarto = {
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">source</span>(<span class="st">&quot;./data/cointoss.r&quot;</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>[1] &quot;Heads: 49&quot;
-[1] &quot;Tails: 51&quot;</code></pre>
+<pre><code>[1] &quot;Heads: 47&quot;
+[1] &quot;Tails: 53&quot;</code></pre>
 </div>
 </div>
 <p>This uses a for loop to simulate 100 coin tosses. In each iteration, a random number (between 0 and 1) is created, if this is over 0.5, this is taken to be ‘heads’ and a counter is increased by 1. Finally, the script prints out the number of ‘heads’ and the number of tails. The script uses a number of new functions: <code>runif()</code>, which selects a number from a uniform random distribution between 0 and 1, and <code>paste()</code> which pastes together character strings and variables for screen output.</p>
@@ -4850,7 +4850,7 @@ F-statistic: 42.84 on 3 and 430 DF,  p-value: &lt; 2.2e-16</code></pre>
 <li>Use the <code>step()</code> function to perform automatic stepwise model building. Report the R code you used</li>
 <li>Describe the final model obtained, together with its AIC score</li>
 <li>From the <code>summary()</code> function, report the goodness-of-fit (<span class="math inline">\(F\)</span>-statistic and associated <span class="math inline">\(p\)</span>-value) and the <span class="math inline">\(R^2\)</span></li>
-<li>Using the final model you obtain, make a prediction for the life expectancy in Utah in 2009, given an increase in population size to approximately 2 785 000 in 2009, increase in high school graduation (known) to 75% and a change in murder rate to 1.3/100 000. To do this you will need to make a new dataframe. This can be done easily by selecting the appropriate row from statedata (<code>newstate &lt;- statedata[44,]</code>), then adjusting the values directly (<code>newstate[2] &lt;- 2785</code>). Give the new expectancy plus 95% confidence interval</li>
+<li>Using the final model you obtain, make a prediction for the life expectancy in Utah in 2009, given an increase in population size to approximately 2 785 000 in 2009, increase in high school graduation (known) to 75% and a change in murder rate to 1.3/100 000. To do this you will need to make a new dataframe. This can be done easily by selecting the appropriate row from statedata (<code>newstate &lt;- statedata[44,]</code>), then adjusting the values directly (<code>newstate[2] &lt;- 2785</code>). Give the new expectancy plus 95% prediction interval</li>
 <li>Do the same for California. 2009 population = 36 962 000; 2009 high school graduation = 68.3%; 2009 murder rate = 5.3/100 000 (figures are approximate)</li>
 </ul></li>
 <li>The file <em>normtemp.csv</em> contains measurements of body temperature from 130 healthy human subjects, as well as their weight and sex. Use this data to model body temperatures as a function of both weight and sex. You will need to convert the <code>sex</code> variable into a factor in order for R to recognize this as a dummy variable (<code>bodytemp$sex &lt;- factor(bodytemp$sex, labels = c(&quot;male&quot;, &quot;female&quot;))</code>). You should also center the weight variable by subtracting the mean.

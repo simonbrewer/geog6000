@@ -62,6 +62,7 @@ Topics will include advanced regression analysis, the analysis of multivariate d
     - [Using ggplot2 (optional)][lab05br]
     - [Irish Education dataset][irished]
     - [Honor Student Award dataset][hsa]
+    - [Hemlock dataset][tsuga]
     - [Turbine failure dataset][turbines]
     - [Mediterranean bird species dataset][island2]
     - [Penguins dataset][penguins]
@@ -107,3 +108,4 @@ Topics will include advanced regression analysis, the analysis of multivariate d
 [mathach]: https://drive.google.com/file/d/1TELYyaE8CIWEkJkSDLIMcs-dHKGajP0q/view?usp=sharing
 [species_intro]: https://drive.google.com/file/d/19T6Db7NRBtFIWjmSL56iRlAYrus2q7vP/view?usp=sharing
 [ozone]: https://drive.google.com/file/d/1Gj6yI938BB4nloqz0GPoI70tffDlQ6Ku/view?usp=sharing
+[tsuga]: https://drive.google.com/file/d/14CupXJoiJ1ARvmEhTp2SBMsrXCJ3dVYs/view?usp=sharing

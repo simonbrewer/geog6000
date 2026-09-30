@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 <meta name="author" content="Simon Brewer">
-<meta name="dcterms.date" content="2026-08-26">
+<meta name="dcterms.date" content="2026-09-30">
 
 <title>GEOG 6000 Lab 06 Modeling 4</title>
 <style>
@@ -4231,7 +4231,7 @@ window.Quarto = {
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">August 26, 2026</p>
+      <p class="date">September 30, 2026</p>
     </div>
   </div>
   
@@ -4320,76 +4320,73 @@ mathach_{ij} &amp; = &amp; \gamma_{00} + \gamma_{01} meanses_{j} + \gamma_{02} s
 \end{array}
 \end{equation}\]</span></p>
 <p>Note that the centered SES scores have an interaction term with mean SES and sector, and we include both the slope of the centered SES/Math relationship and the intercept as random effects.</p>
-<p>To build this model in R, load the <strong>nlme</strong> library, and use the <code>lme()</code> function:</p>
+<p>To build this model in R, load the <strong>lme4</strong> library, and use the <code>lmer()</code> function:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(nlme)</span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>math.lme1 <span class="ot">&lt;-</span> <span class="fu">lme</span>(mathach <span class="sc">~</span> meanses <span class="sc">*</span> cses <span class="sc">+</span> sector <span class="sc">*</span> cses, </span>
-<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>                 <span class="at">random =</span> <span class="sc">~</span> cses <span class="sc">|</span> school, </span>
-<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>                 <span class="at">data =</span> MathAch)</span>
-<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(math.lme1)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(lme4)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Loading required package: Matrix</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>math_lme1 <span class="ot">&lt;-</span> <span class="fu">lmer</span>(mathach <span class="sc">~</span> meanses <span class="sc">*</span> cses <span class="sc">+</span> sector <span class="sc">*</span> cses <span class="sc">+</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>                    (cses <span class="sc">|</span> school), </span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>                  <span class="at">data =</span> MathAch)</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(math_lme1)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>Linear mixed-effects model fit by REML
-  Data: MathAch 
-       AIC      BIC    logLik
-  46523.66 46592.45 -23251.83
+<pre><code>Linear mixed model fit by REML [&#39;lmerMod&#39;]
+Formula: mathach ~ meanses * cses + sector * cses + (cses | school)
+   Data: MathAch
+
+REML criterion at convergence: 46503.7
+
+Scaled residuals: 
+     Min       1Q   Median       3Q      Max 
+-3.15926 -0.72319  0.01704  0.75444  2.95822 
 
 Random effects:
- Formula: ~cses | school
- Structure: General positive-definite, Log-Cholesky parametrization
-            StdDev    Corr  
-(Intercept) 1.5426481 (Intr)
-cses        0.3178419 0.391 
-Residual    6.0598009       
+ Groups   Name        Variance Std.Dev. Corr 
+ school   (Intercept)  2.380   1.5426        
+          cses         0.101   0.3179   0.39 
+ Residual             36.721   6.0598        
+Number of obs: 7185, groups:  school, 160
 
-Fixed effects:  mathach ~ meanses * cses + sector * cses 
-                        Value Std.Error   DF  t-value p-value
-(Intercept)         12.127931 0.1992951 7022 60.85414   0e+00
-meanses              5.332878 0.3691743  157 14.44542   0e+00
-cses                 2.945043 0.1555906 7022 18.92815   0e+00
-sectorCatholic       1.226578 0.3062783  157  4.00478   1e-04
-meanses:cses         1.039249 0.2988794 7022  3.47715   5e-04
-cses:sectorCatholic -1.642680 0.2397649 7022 -6.85121   0e+00
- Correlation: 
-                    (Intr) meanss cses   sctrCt mnss:c
-meanses              0.256                            
-cses                 0.075  0.019                     
-sectorCatholic      -0.699 -0.356 -0.053              
-meanses:cses         0.019  0.074  0.293 -0.026       
-cses:sectorCatholic -0.052 -0.027 -0.696  0.077 -0.351
+Fixed effects:
+                    Estimate Std. Error t value
+(Intercept)          12.1279     0.1993  60.856
+meanses               5.3329     0.3692  14.446
+cses                  2.9450     0.1556  18.928
+sectorCatholic        1.2266     0.3063   4.005
+meanses:cses          1.0393     0.2989   3.477
+cses:sectorCatholic  -1.6427     0.2398  -6.851
 
-Standardized Within-Group Residuals:
-        Min          Q1         Med          Q3         Max 
--3.15926307 -0.72319714  0.01704114  0.75443403  2.95823102 
-
-Number of Observations: 7185
-Number of Groups: 160 </code></pre>
+Correlation of Fixed Effects:
+            (Intr) meanss cses   sctrCt mnss:c
+meanses      0.256                            
+cses         0.075  0.019                     
+sectorCthlc -0.699 -0.356 -0.053              
+meanses:css  0.019  0.074  0.293 -0.026       
+css:sctrCth -0.052 -0.027 -0.696  0.077 -0.351</code></pre>
 </div>
 </div>
 <p>The output from the <code>summary()</code> command consists of several sections:</p>
 <ul>
 <li>The first panel gives the AIC (Akaike information criterion) and BIC (Bayesian information criterion), which can be used for model selection, along with the log of the maximized restricted likelihood.</li>
 <li>The next panel displays estimates of the variance and covariance parameters for the random effects, in the form of standard deviations and correlations (see below for interpretation)</li>
-<li>The table of fixed effects is similar to output from <code>lm()</code>; to interpret the coefficients in this table, refer to the hierarchical form of the model given in the equation above.
-<ul>
+<li>The table of fixed effects is similar to output from <code>lm()</code>; to interpret the coefficients in this table, refer to the hierarchical form of the model given in the equation above.</li>
 <li><code>(Intercept)</code>: The grand mean intercept - the average math achievement score in public schools (for a perfectly average student in a perfectly average public school)</li>
 <li><code>sectorCatholic</code>: Difference of average math achievement in Catholic schools. So all else being equal, students at Catholic schools do better</li>
 <li><code>cses</code>: The grand mean slope - average slope in public schools (i.e. the rate of increase in math score for a unit increase in centered SES, for students in a perfectly average public school)</li>
 <li><code>cses:sectorCatholic</code>: Difference of average slope in Catholic schools. All else being equal, student math scores are less affected by their SES level in Catholic schools as the slope is lower.</li>
 <li><code>meanses</code>: Relationship of schools’ average level of math achievement to their average level of SES. In other words, this tells us how the school-level characteristics are related to each other. For a one unit increase in mean school SES, the average school math score increases by about 5.3 points (note that this is the same for both sectors)</li>
 <li><code>meanses:cses</code>: Within school slope change for one unit increase in mean SES. This final coefficient tells us about the impact of the mean school level SES on the relationhsip between math and SES for individuals at that school. As this is positive, this implies that as the overall mean SES of a school increases, the within school effect of SES on math score also increases.</li>
-</ul></li>
 </ul>
 <p>We can check to see how the variance in the dataset is partitioned among the levels of the model, using the <code>VarCorr()</code> function.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">VarCorr</span>(math.lme1)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(<span class="fu">VarCorr</span>(math_lme1), <span class="at">comp =</span> <span class="fu">c</span>(<span class="st">&quot;Variance&quot;</span>, <span class="st">&quot;Std.Dev&quot;</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>school = pdLogChol(cses) 
-            Variance   StdDev    Corr  
-(Intercept)  2.3797632 1.5426481 (Intr)
-cses         0.1010235 0.3178419 0.391 
-Residual    36.7211868 6.0598009       </code></pre>
+<pre><code> Groups   Name        Variance Std.Dev. Corr  
+ school   (Intercept)  2.37958 1.54259        
+          cses         0.10104 0.31787  0.391 
+ Residual             36.72123 6.05980        </code></pre>
 </div>
 </div>
 <p>The first column gives the variance partitioned across the random effects. The total variance in the model is the sum of the first column (<span class="math inline">\(2.38 + 0.01 + 36.72 \approx 39.11\)</span>). Knowing this, we can calculate the ICC or variance explained by each of the random effects:</p>
@@ -4402,31 +4399,53 @@ Residual    36.7211868 6.0598009       </code></pre>
 </section>
 <section id="testing-random-effects" class="level2">
 <h2 class="anchored" data-anchor-id="testing-random-effects">Testing random effects</h2>
-<p>We can now use this model to test if the inclusion of random effects makes a significant difference to the model. This can simply be done by deleting the random effects from the previous model, and using <code>anova()</code> to compare the models (using the log-likelihood score). To do this, we use a new function: <code>update()</code> which allows you to take an existing model and add or delete terms. This is often preferable to writing out a complete new model, especially when the model has a large number of terms. First remove the slope of cses as a random effect across schools (i.e. use a single slope for all schools), by updating the random effect part of the model to only include the intercept (<span class="math inline">\(\sim 1\)</span>):</p>
+<p>We can now use this model to test if the inclusion of random effects makes a significant difference to the model. This can simply be done by deleting the random effects from the previous model, and using <code>anova()</code> to compare the models (using the log-likelihood score). To do this, we use a new function: <code>update()</code> which allows you to take an existing model and add or delete terms. This is often preferable to writing out a complete new model, especially when the model has a large number of terms. First remove the slope of cses as a random effect across schools (i.e. use a single slope for all schools) to make this a random intercept model:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>math.lme2 <span class="ot">&lt;-</span> <span class="fu">update</span>(math.lme1, <span class="at">random =</span> <span class="sc">~</span> <span class="dv">1</span> <span class="sc">|</span> school)</span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="fu">anova</span>(math.lme1, math.lme2)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>math_lme2 <span class="ot">=</span> <span class="fu">lmer</span>(mathach <span class="sc">~</span> meanses <span class="sc">*</span> cses <span class="sc">+</span> sector <span class="sc">*</span> cses <span class="sc">+</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>                   (<span class="dv">1</span> <span class="sc">|</span> school), </span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>                 <span class="at">data =</span> MathAch)</span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a><span class="fu">anova</span>(math_lme1, math_lme2)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>refitting model(s) with ML (instead of REML)</code></pre>
+</div>
 <div class="cell-output cell-output-stdout">
-<pre><code>          Model df      AIC      BIC    logLik   Test  L.Ratio p-value
-math.lme1     1 10 46523.66 46592.45 -23251.83                        
-math.lme2     2  8 46520.79 46575.82 -23252.39 1 vs 2 1.124097    0.57</code></pre>
+<pre><code>Data: MathAch
+Models:
+math_lme2: mathach ~ meanses * cses + sector * cses + (1 | school)
+math_lme1: mathach ~ meanses * cses + sector * cses + (cses | school)
+          npar   AIC   BIC logLik -2*log(L)  Chisq Df Pr(&gt;Chisq)
+math_lme2    8 46513 46568 -23249     46497                     
+math_lme1   10 46516 46585 -23248     46496 1.0016  2     0.6061</code></pre>
 </div>
 </div>
 <p>The anova results show no significant change in the model when this effect is excluded, suggesting that the variation of slopes among schools is not a significant effect to keep in a final model. This fits what we saw in the amount of variance explained: only a tiny amount (<span class="math inline">\(\sim 0.26\%\)</span>) was explained setting the slope to a random effect.</p>
 <p>Now do the same, but exclude the random effect of intercepts between schools. As intercepts are included by default, we need to use the following specification (<span class="math inline">\(-1\)</span>) to remove them:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>math.lme3 <span class="ot">&lt;-</span> <span class="fu">update</span>(math.lme1, <span class="at">random =</span> <span class="sc">~</span> cses <span class="sc">-</span> <span class="dv">1</span> <span class="sc">|</span> school)</span>
-<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="fu">anova</span>(math.lme1, math.lme3)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>math_lme3 <span class="ot">=</span> <span class="fu">lmer</span>(mathach <span class="sc">~</span> meanses <span class="sc">*</span> cses <span class="sc">+</span> sector <span class="sc">*</span> cses <span class="sc">+</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>                   (<span class="sc">-</span><span class="dv">1</span> <span class="sc">+</span> cses <span class="sc">|</span> school), </span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>                 <span class="at">data =</span> MathAch)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>boundary (singular) fit: see help(&#39;isSingular&#39;)</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="fu">anova</span>(math_lme1, math_lme3)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>refitting model(s) with ML (instead of REML)</code></pre>
+</div>
 <div class="cell-output cell-output-stdout">
-<pre><code>          Model df      AIC      BIC    logLik   Test  L.Ratio p-value
-math.lme1     1 10 46523.66 46592.45 -23251.83                        
-math.lme3     2  8 46740.23 46795.26 -23362.11 1 vs 2 220.5634  &lt;.0001</code></pre>
+<pre><code>Data: MathAch
+Models:
+math_lme3: mathach ~ meanses * cses + sector * cses + (-1 + cses | school)
+math_lme1: mathach ~ meanses * cses + sector * cses + (cses | school)
+          npar   AIC   BIC logLik -2*log(L)  Chisq Df Pr(&gt;Chisq)    
+math_lme3    8 46729 46784 -23357     46713                         
+math_lme1   10 46516 46585 -23248     46496 216.69  2  &lt; 2.2e-16 ***
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
 </div>
 </div>
 <p>This time, there is a significant change in the model, but the metrics of goodness-of-fit (AIC, BIC, log-likelihood) show that the new model is worse. In this case, including the intercept as a random effect results in a better model.</p>
-<p>We can conclude from this that the mean SES varies across schools, but the relationship between SES and math scores shows only negligible differences.</p>
+<p>We can conclude from this that the average SES varies across schools, but the relationship between SES and math scores shows only negligible differences.</p>
 </section>
 </section>
 <section id="generalized-hierarchical-linear-models" class="level1">
@@ -4435,9 +4454,9 @@ math.lme3     2  8 46740.23 46795.26 -23362.11 1 vs 2 220.5634  &lt;.0001</code>
 <h2 class="anchored" data-anchor-id="data-1">Data</h2>
 <p>The file <em>speciesIntro2.csv</em> contains a simulated dataset related the success or failure of 60 species introduced into 4 different countries. The simple goal of this analysis is see if there is a difference in the overall success in different countries. As there are several different species per country, we include the intercept as a random effect across species. First load and examine the data:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>sppint <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="st">&quot;./data/speciesIntro2.csv&quot;</span>)</span>
-<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(sppint)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>sppint <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="st">&quot;./data/speciesIntro2.csv&quot;</span>)</span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(sppint)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>&#39;data.frame&#39;:   60 obs. of  5 variables:
  $ X       : int  1 2 3 4 5 6 7 8 9 10 ...
@@ -4449,12 +4468,12 @@ math.lme3     2  8 46740.23 46795.26 -23362.11 1 vs 2 220.5634  &lt;.0001</code>
 </div>
 <p>The table gives for each species and location the number of successful and failed introductions. As we want to model the overall success, we need to first convert this to proportion, which we can then model as a binomial process. We first calculate the sum of <em>trials</em> (the number of each species that were introduced), then divide the number of successes by this to get the proportion.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>sppint<span class="sc">$</span>total <span class="ot">=</span> sppint<span class="sc">$</span>success <span class="sc">+</span> sppint<span class="sc">$</span>failure</span>
-<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>sppint<span class="sc">$</span>prop <span class="ot">=</span> sppint<span class="sc">$</span>success <span class="sc">/</span> sppint<span class="sc">$</span>total</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>sppint<span class="sc">$</span>total <span class="ot">=</span> sppint<span class="sc">$</span>success <span class="sc">+</span> sppint<span class="sc">$</span>failure</span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>sppint<span class="sc">$</span>prop <span class="ot">=</span> sppint<span class="sc">$</span>success <span class="sc">/</span> sppint<span class="sc">$</span>total</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>And visualize the success rate as a proportion of trials:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="fu">boxplot</span>(prop <span class="sc">~</span> location, sppint)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="fu">boxplot</span>(prop <span class="sc">~</span> location, sppint)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -4469,13 +4488,13 @@ math.lme3     2  8 46740.23 46795.26 -23362.11 1 vs 2 220.5634  &lt;.0001</code>
 <p>As the success variable is proportional ([0,1]), we use the <code>glmer()</code> function from the <strong>lme4</strong>. This uses the same arguments as the <code>glm()</code> models we looked at earlier this semester, with a <code>family</code> parameter to specify the distribution of the dependent variable. As we are modeling proportions, we also need to include the <code>weights</code> argument to specify the total number of trials for each species.</p>
 <p>Note that the syntax here is a little different from the previous example; random effects are not specified as a separate parameter, but are included directly in the model formula. These are specified as an effect/variable pair; in the example below <code>(1|species)</code> means vary intercept across species groups.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(lme4)</span>
-<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>spp.glmm<span class="fl">.1</span> <span class="ot">&lt;-</span> <span class="fu">glmer</span>(prop <span class="sc">~</span> location <span class="sc">+</span> (<span class="dv">1</span><span class="sc">|</span>species), </span>
-<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>                    <span class="at">family =</span> binomial, <span class="at">weights =</span> total,</span>
-<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>                    <span class="at">data =</span> sppint)</span>
-<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(spp.glmm<span class="fl">.1</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(lme4)</span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>spp_glm_1 <span class="ot">&lt;-</span> <span class="fu">glmer</span>(prop <span class="sc">~</span> location <span class="sc">+</span> (<span class="dv">1</span><span class="sc">|</span>species), </span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a>                    <span class="at">family =</span> binomial, <span class="at">weights =</span> total,</span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a>                    <span class="at">data =</span> sppint)</span>
+<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(spp_glm_1)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Generalized linear mixed model fit by maximum likelihood (Laplace
   Approximation) [glmerMod]
@@ -4516,23 +4535,23 @@ locationchn -0.714  0.490  0.506</code></pre>
 </section>
 <section id="model-comparisons" class="level2">
 <h2 class="anchored" data-anchor-id="model-comparisons">Model comparisons</h2>
-<p>Now test if location has an impact on species success or failure, by creating a new model without location, and using anova to compare models. Note that we could also use the `update()} function to achieve this.</p>
+<p>Now test if location has an impact on species success or failure, by creating a new model without location, and using anova to compare models.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>spp.glmm<span class="fl">.2</span> <span class="ot">&lt;-</span> <span class="fu">glmer</span>(prop <span class="sc">~</span> <span class="dv">1</span> <span class="sc">+</span> (<span class="dv">1</span><span class="sc">|</span>species), </span>
-<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>                    <span class="at">family =</span> binomial, <span class="at">weights =</span> total,</span>
-<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>                    <span class="at">data =</span> sppint)</span>
-<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a><span class="co">#spp.glmm.2 = update(fit.glmm.1, .~. -location)</span></span>
-<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a><span class="fu">anova</span>(spp.glmm<span class="fl">.1</span>, spp.glmm<span class="fl">.2</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>spp_glm_2 <span class="ot">&lt;-</span> <span class="fu">glmer</span>(prop <span class="sc">~</span> <span class="dv">1</span> <span class="sc">+</span> (<span class="dv">1</span><span class="sc">|</span>species), </span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>                    <span class="at">family =</span> binomial, <span class="at">weights =</span> total,</span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>                    <span class="at">data =</span> sppint)</span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a><span class="co">#spp_glm_2 = update(fit.glmm.1, .~. -location)</span></span>
+<span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-7"><a href="#cb28-7" aria-hidden="true" tabindex="-1"></a><span class="fu">anova</span>(spp_glm_1, spp_glm_2)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Data: sppint
 Models:
-spp.glmm.2: prop ~ 1 + (1 | species)
-spp.glmm.1: prop ~ location + (1 | species)
-           npar    AIC    BIC  logLik -2*log(L)  Chisq Df Pr(&gt;Chisq)  
-spp.glmm.2    2 283.07 287.26 -139.53    279.07                       
-spp.glmm.1    5 278.70 289.18 -134.35    268.70 10.365  3    0.01571 *
+spp_glm_2: prop ~ 1 + (1 | species)
+spp_glm_1: prop ~ location + (1 | species)
+          npar    AIC    BIC  logLik -2*log(L)  Chisq Df Pr(&gt;Chisq)  
+spp_glm_2    2 283.07 287.26 -139.53    279.07                       
+spp_glm_1    5 278.70 289.18 -134.35    268.70 10.365  3    0.01571 *
 ---
 Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
 </div>
@@ -4543,7 +4562,7 @@ Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&
 <section id="generalized-additive-models" class="level1">
 <h1>Generalized Additive Models</h1>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>ozone <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="st">&#39;./data/ozone.csv&#39;</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb30"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>ozone <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="st">&#39;./data/ozone.csv&#39;</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>Generalized Additive Models (GAMs) use methods to fit the model to the data locally, using splines to account for non-linear relationships. They also include the possibility to specify the distribution family and link function for the dependent variable. Here we will fit a GAM to a dataset of ozone concentrations covering several months.</p>
 <ul>
@@ -4553,18 +4572,18 @@ Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&
 </ul>
 <p>We will now build a GAM linking ozone to air temperature and wind speed. GAMs are fit and explored using an add-on package called <strong>mgcv</strong>. Similarly to the <strong>splines</strong> packages, this is installed by default with a standard R installation, but is not loaded when R is first started. Load it now using the <code>library()</code> function:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(mgcv)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(mgcv)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>To test that it has loaded, open the help page for the <code>gam()</code> function:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="fu">help</span>(gam)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb32"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="fu">help</span>(gam)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>The <code>gam()</code> function uses the usual formula syntax in R (<span class="math inline">\(\sim\)</span>). However, the independent variables can either be specifed with a smoothing function for local fitting, or without, in which case a generalized linear fit will be obtained. The smoothing functions include <code>s()</code> for smoothing splines and <code>te()</code> for a tensor product to describe the interaction between two independent variables. By default, <code>gam()</code> chooses the number of knots in the spline using generalized cross-validation, but if needed, you can manually set knots using the <code>knot</code> parameter.</p>
 <p>We’ll build a GAM model for the ozone data, using temperature and wind speed as predictors:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>ozone.gam <span class="ot">&lt;-</span> <span class="fu">gam</span>(ozone <span class="sc">~</span> <span class="fu">s</span>(temp) <span class="sc">+</span> <span class="fu">s</span>(wind), <span class="at">data =</span> ozone)</span>
-<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(ozone.gam)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb33"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a>ozone_gam <span class="ot">&lt;-</span> <span class="fu">gam</span>(ozone <span class="sc">~</span> <span class="fu">s</span>(temp) <span class="sc">+</span> <span class="fu">s</span>(wind), <span class="at">data =</span> ozone)</span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(ozone_gam)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>
 Family: gaussian 
@@ -4597,10 +4616,10 @@ GCV = 366.09  Scale est. = 339.2     n = 111</code></pre>
 </ul>
 <p>Now plot the model obtained for temperature and ozone:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(ozone.gam, </span>
-<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>     <span class="at">resid =</span> <span class="cn">TRUE</span>, </span>
-<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>     <span class="at">pch =</span> <span class="dv">16</span>, </span>
-<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a>     <span class="at">select =</span> <span class="dv">1</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb35"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(ozone_gam, </span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>     <span class="at">resid =</span> <span class="cn">TRUE</span>, </span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a>     <span class="at">pch =</span> <span class="dv">16</span>, </span>
+<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a>     <span class="at">select =</span> <span class="dv">1</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -4614,9 +4633,9 @@ GCV = 366.09  Scale est. = 339.2     n = 111</code></pre>
 </ul>
 <p>As an alternative, we can use a perspective plot to look at the relationship of ozone to both temperature and wind speed. The viewing direction is controlled by the parameters <code>theta</code> (horizontal) and <code>phi</code> (vertical).</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb30"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="fu">vis.gam</span>(ozone.gam, </span>
-<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>        <span class="at">theta =</span> <span class="dv">230</span>, </span>
-<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a>        <span class="at">phi =</span> <span class="dv">20</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb36"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="fu">vis.gam</span>(ozone_gam, </span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a>        <span class="at">theta =</span> <span class="dv">230</span>, </span>
+<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a>        <span class="at">phi =</span> <span class="dv">20</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -4630,20 +4649,20 @@ GCV = 366.09  Scale est. = 339.2     n = 111</code></pre>
 </ul>
 <p>As the observations are from successive days over a four month period, we can try plotting the original and fitted model as a time series. We will simple make an time index vector to provide the ‘x’-variable, plot the original ozone values, then overlay the modeled values:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>timeIDX <span class="ot">&lt;-</span> <span class="fu">seq</span>(<span class="dv">1</span>, <span class="fu">length</span>(ozone<span class="sc">$</span>ozone))</span>
-<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(timeIDX, </span>
-<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a>     ozone<span class="sc">$</span>ozone, </span>
-<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a>     <span class="at">type =</span> <span class="st">&quot;l&quot;</span>, </span>
-<span id="cb31-6"><a href="#cb31-6" aria-hidden="true" tabindex="-1"></a>     <span class="at">xlab =</span> <span class="st">&quot;Time&quot;</span>, </span>
-<span id="cb31-7"><a href="#cb31-7" aria-hidden="true" tabindex="-1"></a>     <span class="at">ylab =</span> <span class="st">&quot;Ozone Conc ppb&quot;</span>)</span>
-<span id="cb31-8"><a href="#cb31-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb31-9"><a href="#cb31-9" aria-hidden="true" tabindex="-1"></a><span class="fu">lines</span>(timeIDX, <span class="fu">fitted</span>(ozone.gam), <span class="at">col =</span> <span class="dv">2</span>)</span>
-<span id="cb31-10"><a href="#cb31-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb31-11"><a href="#cb31-11" aria-hidden="true" tabindex="-1"></a><span class="fu">legend</span>(<span class="st">&quot;topleft&quot;</span>, </span>
-<span id="cb31-12"><a href="#cb31-12" aria-hidden="true" tabindex="-1"></a>       <span class="at">legend =</span> <span class="fu">c</span>(<span class="st">&quot;Obs.&quot;</span>, <span class="st">&quot;Est.&quot;</span>),</span>
-<span id="cb31-13"><a href="#cb31-13" aria-hidden="true" tabindex="-1"></a>       <span class="at">lty =</span> <span class="dv">1</span>, </span>
-<span id="cb31-14"><a href="#cb31-14" aria-hidden="true" tabindex="-1"></a>       <span class="at">col =</span> <span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">2</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb37"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a>timeIDX <span class="ot">&lt;-</span> <span class="fu">seq</span>(<span class="dv">1</span>, <span class="fu">length</span>(ozone<span class="sc">$</span>ozone))</span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(timeIDX, </span>
+<span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a>     ozone<span class="sc">$</span>ozone, </span>
+<span id="cb37-5"><a href="#cb37-5" aria-hidden="true" tabindex="-1"></a>     <span class="at">type =</span> <span class="st">&quot;l&quot;</span>, </span>
+<span id="cb37-6"><a href="#cb37-6" aria-hidden="true" tabindex="-1"></a>     <span class="at">xlab =</span> <span class="st">&quot;Time&quot;</span>, </span>
+<span id="cb37-7"><a href="#cb37-7" aria-hidden="true" tabindex="-1"></a>     <span class="at">ylab =</span> <span class="st">&quot;Ozone Conc ppb&quot;</span>)</span>
+<span id="cb37-8"><a href="#cb37-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-9"><a href="#cb37-9" aria-hidden="true" tabindex="-1"></a><span class="fu">lines</span>(timeIDX, <span class="fu">fitted</span>(ozone_gam), <span class="at">col =</span> <span class="dv">2</span>)</span>
+<span id="cb37-10"><a href="#cb37-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-11"><a href="#cb37-11" aria-hidden="true" tabindex="-1"></a><span class="fu">legend</span>(<span class="st">&quot;topleft&quot;</span>, </span>
+<span id="cb37-12"><a href="#cb37-12" aria-hidden="true" tabindex="-1"></a>       <span class="at">legend =</span> <span class="fu">c</span>(<span class="st">&quot;Obs.&quot;</span>, <span class="st">&quot;Est.&quot;</span>),</span>
+<span id="cb37-13"><a href="#cb37-13" aria-hidden="true" tabindex="-1"></a>       <span class="at">lty =</span> <span class="dv">1</span>, </span>
+<span id="cb37-14"><a href="#cb37-14" aria-hidden="true" tabindex="-1"></a>       <span class="at">col =</span> <span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">2</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -4654,9 +4673,9 @@ GCV = 366.09  Scale est. = 339.2     n = 111</code></pre>
 </div>
 <p>Finally, use the model to predict the ozone concentration for a warm, still day:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb32"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a>newclim <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">temp =</span> <span class="dv">85</span>, <span class="at">wind =</span> <span class="dv">5</span>)</span>
-<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a><span class="fu">predict</span>(ozone.gam, <span class="at">newdata =</span> newclim, <span class="at">se.fit =</span> <span class="cn">TRUE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb38"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a>newclim <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">temp =</span> <span class="dv">85</span>, <span class="at">wind =</span> <span class="dv">5</span>)</span>
+<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb38-3"><a href="#cb38-3" aria-hidden="true" tabindex="-1"></a><span class="fu">predict</span>(ozone_gam, <span class="at">newdata =</span> newclim, <span class="at">se.fit =</span> <span class="cn">TRUE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>$fit
        1 
@@ -4682,22 +4701,18 @@ $se.fit
 <li>Here’s some example code to make a line plot of <code>lifeExp</code> vs. <code>year</code> for the United States. Use this to make plots for two countries (not the United States!):</li>
 </ul>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb34"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a>gap_sub <span class="ot">&lt;-</span> <span class="fu">subset</span>(gap, country <span class="sc">==</span> <span class="st">&#39;United States&#39;</span>)</span>
-<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(gap_sub<span class="sc">$</span>year2, gap_sub<span class="sc">$</span>lifeExp, </span>
-<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a>     <span class="at">xlab =</span> <span class="st">&quot;Year&quot;</span>, <span class="at">ylab =</span> <span class="st">&quot;Life expectancy (yr)&quot;</span>,</span>
-<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a>     <span class="at">type =</span><span class="st">&#39;l&#39;</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb40"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a>gap_sub <span class="ot">&lt;-</span> <span class="fu">subset</span>(gap, country <span class="sc">==</span> <span class="st">&#39;United States&#39;</span>)</span>
+<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(gap_sub<span class="sc">$</span>year2, gap_sub<span class="sc">$</span>lifeExp, </span>
+<span id="cb40-3"><a href="#cb40-3" aria-hidden="true" tabindex="-1"></a>     <span class="at">xlab =</span> <span class="st">&quot;Year&quot;</span>, <span class="at">ylab =</span> <span class="st">&quot;Life expectancy (yr)&quot;</span>,</span>
+<span id="cb40-4"><a href="#cb40-4" aria-hidden="true" tabindex="-1"></a>     <span class="at">type =</span><span class="st">&#39;l&#39;</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <ul>
-<li>Use these data to build a simple linear model (<code>lm()</code>) of <code>lifeExp</code> as a function of <code>year</code>. Before making the model, center the <code>year</code> variable by subtracting 1952 from all values (0 now represents the year 1952)
-<ul>
+<li>Use these data to build a simple linear model (<code>lm()</code>) of <code>lifeExp</code> as a function of <code>year</code>. Before making the model, center the <code>year</code> variable by subtracting 1952 from all values (0 now represents the year 1952)</li>
 <li>Report the coefficients, their significance and a brief explanation of what each one means</li>
 <li>Give the <span class="math inline">\(F\)</span>-statistic and associated <span class="math inline">\(p\)</span>-value</li>
-</ul></li>
-<li>Now build a random intercept model using the <code>lme()</code> function, using <code>country</code> as the grouping variable for the random effect (the random effect will look something like <code>random = ~ 1 | country</code>). Report:
-<ul>
+<li>Now build a random intercept model using the <code>lme()</code> function, using <code>country</code> as the grouping variable for the random effect (the random effect will look something like <code>random = ~ 1 | country</code>). Report:</li>
 <li>The fixed effect coefficients and associated <span class="math inline">\(p\)</span>-values (see under <code>Fixed effects</code> in the <code>summary()</code> output)</li>
 <li>The reported standard deviation for the two random effects (<code>(Intercept)</code> and <code>Residual</code>)</li>
-</ul></li>
 <li>Calculate the ICC for the random intercept in this model. You will need to use <code>VarCorr()</code> to find the variance of the intercept and residual term (quick reminder, the intercept ICC is the variance of the intercept, divided by the sum of variances). Given the value you obtain, does this support the use of a random intercept model?</li>
 <li>Now build a third model with a random intercept <strong>and</strong> slope. The random effect will look something like <code>random = ~ year2 | country</code>. Show the output of <code>summary()</code> for this model.</li>
 <li>Finally, use the <code>AIC()</code> function to get the AIC for the three models (linear, random intercept and random intercept and slope). As a reminder: the AIC is a good criterion of the quality of the model, as it penalizes when extra predictors (overfitting). The models with the lowest AIC values are best. Which of your models is best?</li>

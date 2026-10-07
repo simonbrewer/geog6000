@@ -75,6 +75,12 @@ Topics will include advanced regression analysis, the analysis of multivariate d
     - [Species introduction dataset][species_intro]
     - [Daily ozone concentration dataset][ozone]
     - [Gapminder dataset][gapminder]
+- Lab 7
+    - [Lab notes][lab07r]
+    - [Boston housing dataset][boston6k]
+    - [Car dataset][cars]
+    - [US state characteristics dataset][us_state]
+    - [W North America climate dataset][wnaclim]
 
 [install]: https://simonbrewer.github.io/geog6000/GEOG_6000_00_Installation_instructions.html
 [lab01r]: https://simonbrewer.github.io/geog6000/GEOG_6000_Lab_01_Introduction_to_R.html
@@ -85,6 +91,7 @@ Topics will include advanced regression analysis, the analysis of multivariate d
 [lab05r]: https://simonbrewer.github.io/geog6000/GEOG_6000_Lab_05_Models_3.html
 [lab05br]: https://simonbrewer.github.io/geog6000/GEOG_6000_Lab_05b_Plotting_with_ggplot2.html
 [lab06r]: https://simonbrewer.github.io/geog6000/GEOG_6000_Lab_06_Models_4.html
+[lab07r]: https://simonbrewer.github.io/geog6000/GEOG_6000_Lab_07_MVA.html
 
 [penguins]: https://drive.google.com/file/d/1Xuk1wqGeJJZ__LHerIn8ghFhA0OmGHOH/view?usp=sharing
 [irished]: https://drive.google.com/file/d/1OFEvB0pYtLUsD30b1FB79FMHlqo4o235/view?usp=sharing
@@ -109,3 +116,6 @@ Topics will include advanced regression analysis, the analysis of multivariate d
 [species_intro]: https://drive.google.com/file/d/19T6Db7NRBtFIWjmSL56iRlAYrus2q7vP/view?usp=sharing
 [ozone]: https://drive.google.com/file/d/1Gj6yI938BB4nloqz0GPoI70tffDlQ6Ku/view?usp=sharing
 [tsuga]: https://drive.google.com/file/d/14CupXJoiJ1ARvmEhTp2SBMsrXCJ3dVYs/view?usp=sharing
+[boston6k]: https://drive.google.com/file/d/1n0D6fG4V6v9-JNsWu_bd9el6idPbQjf-/view?usp=sharing
+[cars]: https://drive.google.com/file/d/1N5G-PusKKwiDvQrWmLtcPHodod0YfVib/view?usp=sharing
+[wnaclim]: https://drive.google.com/file/d/1W0SwUFHByRV4ZQhrZTuFID37ELAOTEa6/view?usp=sharing

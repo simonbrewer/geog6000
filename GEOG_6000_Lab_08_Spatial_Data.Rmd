@@ -46,7 +46,7 @@ install.packages(pkgs)
 ```{r, message = FALSE}
 
 library(ggplot2)
-library(raster)
+library(terra)
 library(RColorBrewer)
 library(sf)
 library(viridis)
@@ -917,22 +917,24 @@ ggplot() +
 ```
 
 
-# Rasters
+# Raster data
 
-Up till now, we have been working with _vector_ spatial data. These are geometries composed of points defined by their coordinates. An alternative form of spatial data is known as a _raster_. This is gridded data. It takes the form of a rectangle composed of squares of equal size, which are sometimes called 'cells' or 'pixels'. Each cell stores some kind of value. 
+Previously, we were working with _vector_ spatial data. These are geometries composed of points defined by their coordinates. An alternative form of spatial data is known as a _raster_. This is gridded data. It takes the form of a rectangle composed of squares of equal size, which are sometimes called 'cells' or 'pixels'. Each cell stores some kind of value. 
 
-This simplifies the geometry, which can be specified by two pieces of information: the spatial extent of the raster and the resolution of the cells. Here we create a blank raster using the `raster` function, and assign random values to each cell:
+This simplifies the geometry, which can be specified by two pieces of information: the spatial extent of the raster and the resolution of the cells. Here we create a blank raster with 10 rows and 10 columns, with a resolution of 10x10 using the `rast()` function. We then assign random values to each cell:
 
 ```{r, echo = TRUE}
 
-r <- raster(nrow = 10, ncol = 10)
+r <- rast(nrow = 10, ncol = 10, 
+          xmin = 0, xmax = 100, 
+          ymin = 0, ymax = 100)
 
 r[] <- runif(n = 100)
 
 r
 ```
 
-`raster` objects can be plotted using the base `plot()` command:
+`rast` objects can be plotted using the base `plot()` command:
 
 ```{r}
 
@@ -940,159 +942,143 @@ plot(r)
 
 ```
 
-The **raster** package offers a wide array of functions for dealing with gridded data, including the ability to read from many widely used file formats, like remote sensing images (e.g. GeoTiffs), NetCDF, and HDF formats. We will use it here to work with gridded air temperature data (*air.mon.ltm.nc*) from the [NCAR NCEP reanalysis project](https://www.cpc.ncep.noaa.gov/products/wesley/reanalysis.html). This is the long term means for each month from 1981-2010. The file has 12 layers (one per month) and one variable (*air*). 
+The **terra** package offers a wide array of functions for dealing with gridded data, including the ability to read from many widely used file formats, like remote sensing images (e.g. GeoTiffs), NetCDF, and HDF formats. We will use it here to work with a Landsat 8 scene collected on June 14, 2017. The subset covers the area between Concord and Stockton, in California, USA. The files are contained in the zip file *rs.zip*. Download this (if you haven't already) and unzip it in your `data` folder. 
 
-<br>
-
-### Read and Write Rasters
-
-To read in gridded data, use the `raster()` function. 
-
-```{r, eval = FALSE}
-
-air_temp <- raster("./data/air.mon.ltm.nc")
-
-```
-
-Note that we have only read the first layer (January). R will tell you that it loaded the variable called *air*. To avoid this message you can specify this directly, which is important for files containing multiple variables:
+We will also need the shapefile of California places (*ca_places.zip*), so download and unzip this as well. We'll read this in before starting:
 
 ```{r}
 
-air_temp <- raster("./data/air.mon.ltm.nc", varname = "air")
-
-air_temp
+ca_places <- st_read("./data/ca_places/ca_places.shp", quiet = TRUE)
 
 ```
 
 <br>
 
-We can write `raster` objects back to file using `writeRaster()` (I'll bet you never thought it would be called that). Here we write out to a TIFF format. You can see the full list of available formats for reading and writing by running the `writeFormats()` function in the console. 
+## Read and Write Rasters
+
+To read in gridded data, use the `rast()` function. This will read in the Near Infrared (NIR) channel (`B5`)
+
+```{r, eval = TRUE}
+
+b5 <- rast("./data/rs/LC08_044034_20170614_B5.tif")
+
+b5
+
+```
+
+When we print the `rast` object created, the second line of the output lists the dimensions of the data. Note that here, this has 1245 rows, 1497 columns and 1 layer. This also shows the resolution (30x30 m), the extent, the CRS and the a brief summary of the data. 
+
+We can write `rast` objects back to file using `writeRaster()` (I'll bet you never thought it would be called that). You can write out to any format supported by [GDAL][gdalfiles]. Here we write out to a TIFF format. You can see the full list of available formats for reading and writing by running the `writeFormats()` function in the console. We'll use this again after having worked with the data.
 
 ```{r, eval = FALSE}
 
-writeRaster(air_temp, filename = "./data/air_temp.tif")
+writeRaster(b5, 
+            filename = "./b5.tif",
+            overwrite = TRUE)
 
 ```
 
 
 <br>
 
-### Raster CRS
+## Raster CRS
 
-Set CRS:
+As with the `sf` objects, we can check the coordinate reference system of the file we just read. This does not print very well, but if you look at the end you'll see a reference to the EPSG code (32610). 
 
 ```{r, message = FALSE, warning = FALSE}
 
-crs(air_temp) <- "+proj=longlat +ellps=WGS84 +towgs84=0,0,0 +no_defs "
+crs(b5)
 
 ```
 
-Again, this should not be used to _change_ the CRS, only set it. 
+If the CRS is not set, you can set it using the `crs()` function and an EPSG code. For example, the following code would set the CRS to WGS84 (**don't run this as the CRS is already defined**)
 
-<br>
+```{r, message = FALSE, warning = FALSE, eval = FALSE}
 
-Get CRS:
-
-```{r}
-
-crs(air_temp)
+crs(b5) <- "EPSG:4326"
 
 ```
 
-Also, note that `crs` is for rasters, `st_crs` for vectors. 
+Again, this should not be used to _change_ the CRS, only set it. Note that `crs` is for `rast` objects, `st_crs` for vectors. 
 
 <br>
 
-Transform CRS:
+You can transform the CRS for a raster layer using `project()`. This can again use a EPSG type code. 
 
 ```{r, warning = FALSE}
 
-weird_crs <- crs("+proj=tmerc +lat_0=0 +lon_0=15 +k=0.999923 +x_0=5500000 +y_0=0 +ellps=GRS80 +units=m +no_defs")
+b5_wgs84 <- project(b5, "EPSG:4326")
 
-air_temp_weird_crs <- projectRaster(air_temp, crs = weird_crs)
-
-crs(air_temp_weird_crs)
+crs(b5_wgs84)
 
 ```
 
-Note that **raster** still uses the PROJ4-string syntax. It's a holdover from its original development.  
-
-<br>
-
-### Basic Plotting
-
-`air_temp` is a raster object and has information about grid spacing, coordinates etc. Note that the description of the object tells you whether it is held in memory (small raster files) or on disk.
+We'll keep the Landsat data in its UTM projection (10N), and reproject the CA place data to match:
 
 ```{r}
 
-plot(air_temp, main = "NCEP NCAR January LTM Tair")
+ca_places <- st_transform(ca_places, 32610)
 
 ```
 
 <br>
 
-And you should be able to see the outline of the continents. By default, NCAR NetCDF files have longitudes running from 0 to 360. We can convert this to the more commonly used (and UK-centric :) ) -180 to 180 by the function `rotate()`. We can also use a different color palette and overlay country polygons:
+## Basic Plotting
+
+You can make a simple plot using the `plot()` function:
 
 ```{r}
 
-air_temp = rotate(air_temp)
+plot(b5, main = "Landsat 8 (B2)")
 
-# using RColorBrewer
-my.pal <- brewer.pal(n = 9, name = "OrRd")
-
-plot(air_temp, 
-     main = "NCEP NCAR January LTM Tair", 
-     col = my.pal)
-
-countries <- st_read("./data/ne_50m_admin_0_countries/ne_50m_admin_0_countries.shp", 
-                     quiet = TRUE)
-
-plot(st_geometry(countries), add = TRUE)
+plot(st_geometry(ca_places), add = TRUE)
 
 ```
 
-To see other color palettes in the **RColorBrewer** package, run `display.brewer.all()` in the console. You can find out more details and explore visualizations with these palettes [here](https://colorbrewer2.org/).
-
 <br>
 
-### Summary Statistics
+## Summary Statistics
 
 The function `cellStats()` can be used to calculate most summary statistics for a raster layer. So to get the mean global temperature (and standard deviation):
 
 ```{r}
 
-cellStats(air_temp, mean)
+global(b5, mean)
 
-cellStats(air_temp, sd)
+global(b5, sd)
 
 ```
 
 <br>
 
-### Subset Rasters
+## Subset Rasters
 
 If we want to use only a subset of the original raster layer, the function `crop()` will extract only the cells in a given region. This can be defined using another raster object or Spatial* object, or by defining an `extent` object:
 
 ```{r}
 
 # extent method
-canada_ext <- extent(c(xmin = -142, 
-                       xmax = -52, 
-                       ymin = 41,
-                       ymax = 84))
+my_ext <- ext(c(xmin = 612500, 
+                    xmax = 617500, 
+                    ymin = 4196000,
+                    ymax = 4201000))
 
-# this produces a slightly different result because I rounded the coordinates
-canada_air_temp <- crop(air_temp, canada_ext)
+b5_sub <- crop(b5, my_ext)
 
-# spatial method
-canada <- subset(countries, NAME == "Canada")
+plot(b5_sub)
 
-canada_air_temp <- crop(air_temp, canada)
+```
 
-# plot
-plot(canada_air_temp, main = "NCEP NCAR January LTM Tair", col = my.pal)
+We can also use an `sf` object to crop the data. Here, we'll extract the polygon for Bethel Island from the `ca_places` object, and use this to crop the raster:
 
-plot(st_geometry(canada), add = TRUE)
+```{r}
+
+bethel = subset(ca_places, NAME == "Bethel Island")
+
+b5_sub <- crop(b5, bethel)
+
+plot(b5_sub)
+plot(st_geometry(bethel), add = TRUE)
 
 ```
 
@@ -1100,184 +1086,213 @@ Note that `crop` subsets the original raster to the extent of Canada's borders, 
 
 ```{r}
 
-canada_air_temp <- mask(canada_air_temp, mask = canada)
+b5_sub <- mask(b5_sub, mask = bethel)
 
-# plot
-plot(canada_air_temp, main = "NCEP NCAR January LTM Tair", col = my.pal)
-
-plot(st_geometry(canada), add = TRUE)
+plot(b5_sub)
+plot(st_geometry(bethel), add = TRUE)
 
 ```
+
+## Extract Data
+
+Values can be extracted from individual locations (or sets of locations) using `extract()`. This can take a set of coordinates in matrix form, or use a Spatial* object. To get the reflectance value at 615000 E, 4199000 N:
+
+```{r}
+
+extract(b5, cbind(615000,4199000))
+
+```
+
+You can also extract for multiple locations. Let's generate a set of random points in Bethel Island, and then sample the reflectance value for each of these. 
+
+```{r}
+
+random_pnts <- st_sample(bethel, size = 20)
+
+extract(b5, st_coordinates(random_pnts))
+
+```
+
+You can also extract values within a polygon, by replacing the point coordinates with a `sf` polygon:
+
+```{r}
+
+b5_bethel <- extract(b5, bethel)
+
+head(b5_bethel)
+
+```
+
+By default, this returns the value of all pixels within the polygon. By adding the `fun=` argument, you can easily calculate summary statistics:
+
+```{r}
+
+extract(b5, bethel, fun = 'median')
+
+```
+
+Note that if the `sf` object has multiple polygons, it will return the summary statistic for each one. Let's now extract the values for a different place (Oakley), and then we can compare them. We do this in a couple of steps. First get the polygon for Oakley, then extract using the two polygons combined.
+
+```{r}
+
+oakley = subset(ca_places, NAME == "Oakley")
+
+b5_bethel_oakley <- extract(b5, rbind(bethel, oakley))
+
+names(b5_bethel_oakley) <- c("ID", "B5")
+
+```
+
+We'll visualize the difference with **ggplot2**, which shows higher NIR reflectance values for Bethel, likely indicating higher vegetation cover.
+
+```{r}
+
+ggplot(b5_bethel_oakley, aes(x = B5, fill = as.factor(ID))) +
+  geom_histogram(alpha = 0.7, position = 'identity')
+
+```
+
 
 <br>
 
-### Extract Data
+# Raster Stacks
 
-Values can be extracted from individual locations (or sets of locations) using `extract()`. This can take a set of coordinates in matrix form, or use a Spatial* object. To get the January temperature of Salt Lake City:
+The `b2` raster represents a single band from the Landsat 8 scene. More usefully, we can load several bands and combine them into a single object. Here, we'll load the blue (B2), green (B3), red (B4), and infrared (B5) bands :
+
+```{r}
+# Blue
+b2 <- rast('./data/rs/LC08_044034_20170614_B2.tif')
+# Green
+b3 <- rast('./data/rs/LC08_044034_20170614_B3.tif')
+# Red
+b4 <- rast('./data/rs/LC08_044034_20170614_B4.tif')
+# Near Infrared (NIR)
+b5 <- rast('./data/rs/LC08_044034_20170614_B5.tif')
+```
+
+Now we'll create a raster stack with all 4 of these:
 
 ```{r}
 
-extract(air_temp, cbind(-111.9,40.76))
+s <- c(b5, b4, b3, b2)
+
+s
 
 ```
 
-By default this gives you the value of the cell in which the point falls. The value can equally be estimated by bilinear interpolation from the four closest cells with `method='bilinear'`:
+The metadata now shows that this contains 4 layers. You can also make the stack directly by passing a list of file names:
 
 ```{r}
 
-extract(air_temp, cbind(-111.9,40.76), method = 'bilinear')
+filenames <- paste0('./data/rs/LC08_044034_20170614_B', 1:11, ".tif")
+
+landsat <- rast(filenames)
+
+landsat
 
 ```
 
-We created a simple feature object earlier with the location of samples in Western North America (`wna_climate`). We can now use this, and the raster layer to get the January temperature for all locations. 
+This now contains all bands representing reflection intensity in the following wavelengths: Ultra Blue, Blue, Green, Red, Near Infrared (NIR), Shortwave Infrared (SWIR) 1, Shortwave Infrared (SWIR) 2, Panchromatic, Cirrus, Thermal Infrared (TIRS) 1, Thermal Infrared (TIRS) 2.
+
+If we now use the `extract()` function with this object, it will return values for all bands in the stack:
 
 ```{r}
 
-wna_air_temp_df <- extract(air_temp, 
-                           wna_climate, 
-                           method = 'bilinear',
-                           df = TRUE) 
-
-head(wna_air_temp_df)
+extract(landsat, cbind(615000,4199000))
 
 ```
 
-`df = TRUE` tells the function to return the extracted values as a data.frame, which has two columns the raster cell ID and the value in that cell.
+```{r}
+par(mfrow = c(2,2))
+plot(b2, main = "Blue", col = gray(0:100 / 100))
+plot(b3, main = "Green", col = gray(0:100 / 100))
+plot(b4, main = "Red", col = gray(0:100 / 100))
+plot(b5, main = "NIR", col = gray(0:100 / 100))
+```
 
-This same approach allows you to extract pixels by polygon overlays. 
+The values in each layer range from 0 to 1, and the same scale has been used for each band, showing clearly the difference in reflectance for this set of wavelengths. For example, vegetation reflects more energy in NIR than other wavelengths and thus appears brighter. In contrast, water absorbs most of the energy in the NIR wavelength and it appears dark
+
+# Composite images
+
+The bands can be combined to form composite images. Here, we'll use the red, green and blue bands make a true color image. This uses the concatenation function (`c()`), and the order of the bands is important (R, then G, then B):
 
 ```{r}
 
-china <- subset(countries, NAME == "China")
+landsatRGB <- c(b4, b3, b2)
 
-china_air_temp_df <- extract(air_temp, china, df = TRUE)
-
-head(china_air_temp_df)
+plotRGB(landsatRGB, stretch = "lin")
 
 ```
 
-When this function is used with a set of polygons, the output is in a list, but we can retrieve whatever we want from that list.
+We can also make a false color composite with the NIR, red and green bands, where bright reds indicate vegetation cover:
+
+Another popular image visualization method in remote sensing is known "false color" image in which NIR, red, and green bands are combined. This representation is popular as it makes it easy to see the vegetation (in red).
 
 ```{r}
 
-two_countries <- rbind(china, canada)
-
-china_tjan <- extract(air_temp, two_countries)[[1]]
-
-hist(china_tjan)
+landsatFCC <- c(b5, b4, b3)
+plotRGB(landsatFCC, stretch="lin")
 
 ```
 
-The `extract()` function also takes an argument `fun`. This allows you to calculate a summary statistic for each set of pixels that is extracted (i.e. one per polygon). Here, we'll use this with `countries` to get an average value of January temperature. We add this back as a new column in the countries object, and then plot it:
+# Raster algebra
+
+**terra** makes it easy to carry out simple raster algebraic operations. Eahc band or layer is treated a 2D array which makes it possible to add, subtract, multiply, divide, etc. As a simple example here, we can calculate the NDVI for the Landsat scene as 
+
+\[
+NDVI = (NIR - R) / (NIR + R)
+\]
+
+NIR is band 5 and red is band 4:
+
 
 ```{r}
 
-countries$Jan_Tmp <- extract(air_temp, countries, fun = mean)[,1]
+ndvi <- (b5 - b4) / (b5 + b4)
 
-ggplot(countries) +
-  geom_sf(aes(fill = Jan_Tmp)) +
-  labs(fill = "Temperature",
-       title = "Country average January temperature")
+plot(ndvi, col=rev(terrain.colors(10)), main = "NDVI")
 
 ```
 
-<br>
-
-### Raster Stacks
-
-A useful extension to the basic raster functions is the use of stacks. These are a stack of raster layers which represent different variables, but have the same spatial extent and resolution. We can then read in and store all 12 months from the NetCDF file, and then work with this. We read these in with `stack()` and crop them.
+We can also make a quick histogram of values to look for any outliers:
 
 ```{r}
 
-air_temp_stk <- stack("./data/air.mon.ltm.nc", varname = "air")
-
-air_temp_stk <- rotate(air_temp_stk)
-
-myext <- extent(c(-130,-60,25,50))
-
-air_temp_stk <- crop(air_temp_stk, myext)
+hist(ndvi, main = "NDVI")
 
 ```
 
-You can retrieve the a subset of rasters from the stack like you would values from a vector:
+We can then use the results to carry out some simple classification.
+
+- Vegetation (NDVI > 0.4). The `clamp` function masks all value otuside of a range (here below 0.4)
 
 ```{r}
 
-air_temp_substk <- air_temp_stk[[1:3]]
+veg = clamp(ndvi, lower=0.4, values=FALSE)
 
-air_temp_substk
+plot(veg)
 
 ```
 
-By typing the name of the stack object, we can see that this has 12 layers, each with 280 cells and the extent, etc. The names attributed to each layer are often unreadable, so we can add our own names:
+- Croplands (corresponding to the peak in NDVI values):
 
 ```{r}
 
-names(air_temp_stk) <- paste("TAS", month.abb)
+crops = ndvi > 0.25 & ndvi < 0.3 
 
-names(air_temp_stk)
+plot(crops)
 
 ```
 
-And now you can also pull out rasters by name:
+
+And water bodies (NDVI < 0):
 
 ```{r}
 
-# method 1
-air_temp_jan <- air_temp_stk$TAS.Jan
+water = ndvi < 0
 
-# method 2
-air_temp_jan <- air_temp_stk[["TAS.Jan"]]
+plot(water)
 
 ```
 
-A useful feature of raster `stack`s is that any of the functions we used previously with one layer will be used across all layers when applied to the `stack.` The `plot()` function, for example, returns a grid with one plot per layer. Setting the `zlim` argument ensures that all figures use the same range of colors:
-
-```{r}
-
-plot(air_temp_stk, 
-     col = my.pal, 
-     zlim = c(-35, 35))
-
-```
-
-Adding a shapefile (or other spatial information) is a little more complex. We create a simple function to plot the country borders, then include this as an `addfun` in the call to `plot()`:
-
-```{r}
-
-addBorder = function(){ plot(as_Spatial(countries), add = TRUE) }
-
-plot(air_temp_stk, 
-     col = my.pal, 
-     zlim = c(-35,35), 
-     addfun = addBorder)
-
-```
-
-The `cellStats()` function now returns the mean (or other statistic) for all layers, allowing a quick look at the seasonal cycle of average air temperature.
-
-```{r}
-
-tavg <- cellStats(air_temp_stk, mean)
-
-plot(1:12, tavg, 
-     type = 'l', 
-     xlab = "Month", 
-     ylab = "Avg T (C)")
-
-```
-
-And we can do the same for an individual location using `extract()`:
-
-```{r fig.keep='none'}
-
-slc.tavg <- extract(air_temp_stk, cbind(-111.9,40.76), method = 'bilinear')
-
-plot(1:12, 
-     slc.tavg, 
-     type = 'l', 
-     xlab = "Month", 
-     ylab = "Avg T (C)")
-
-```
 

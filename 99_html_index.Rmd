@@ -81,6 +81,24 @@ Topics will include advanced regression analysis, the analysis of multivariate d
     - [Car dataset][cars]
     - [US state characteristics dataset][us_state]
     - [W North America climate dataset][wnaclim]
+- Lab 8
+    - [Lab notes][lab08r]
+    - [Optional lab on visualization][lab08br]
+    - [NetCDF file of air temperatures][boston6k]
+    - [Shapefile of California places][caplaces]
+    - [Temperature dataset for Oregon][oregon]
+    - [New York state shapefile][ny_data]
+    - [Digital elevation map from Switzerland][swiss_dem]
+    - [Landsat 8 scene from California][rszip]
+    - [W North America climate dataset][wnaclim]
+
+
+Temperature dataset for Oregon in shapefile format: oregon.zip
+New York state polygon data in a shapefile: NY_Data.zip
+Digital elevation map from Switzerland: swiss_dem.grd
+A shapefile of California places: ca_places.zip
+A Landsat 8 scene from California: rs.zip
+
 
 [install]: https://simonbrewer.github.io/geog6000/GEOG_6000_00_Installation_instructions.html
 [lab01r]: https://simonbrewer.github.io/geog6000/GEOG_6000_Lab_01_Introduction_to_R.html
@@ -92,6 +110,8 @@ Topics will include advanced regression analysis, the analysis of multivariate d
 [lab05br]: https://simonbrewer.github.io/geog6000/GEOG_6000_Lab_05b_Plotting_with_ggplot2.html
 [lab06r]: https://simonbrewer.github.io/geog6000/GEOG_6000_Lab_06_Models_4.html
 [lab07r]: https://simonbrewer.github.io/geog6000/GEOG_6000_Lab_07_MVA.html
+[lab08r]: https://simonbrewer.github.io/geog6000/GEOG_6000_Lab_08_Spatial_Data.html
+[lab08br]: https://simonbrewer.github.io/geog6000/GEOG_6000_Lab_08b_Spatial_Data_Visualization.html
 
 [penguins]: https://drive.google.com/file/d/1Xuk1wqGeJJZ__LHerIn8ghFhA0OmGHOH/view?usp=sharing
 [irished]: https://drive.google.com/file/d/1OFEvB0pYtLUsD30b1FB79FMHlqo4o235/view?usp=sharing
@@ -119,3 +139,9 @@ Topics will include advanced regression analysis, the analysis of multivariate d
 [boston6k]: https://drive.google.com/file/d/1n0D6fG4V6v9-JNsWu_bd9el6idPbQjf-/view?usp=sharing
 [cars]: https://drive.google.com/file/d/1N5G-PusKKwiDvQrWmLtcPHodod0YfVib/view?usp=sharing
 [wnaclim]: https://drive.google.com/file/d/1W0SwUFHByRV4ZQhrZTuFID37ELAOTEa6/view?usp=sharing
+[airltm]: https://drive.google.com/file/d/1F_QIMVRptDWZChSe0hzHNYEjh9vZF0Bx/view?usp=sharing
+[caplaces]: https://drive.google.com/file/d/1JoAoOjdQcp_j2zCju1YE2Kx8ifxAKoBz/view?usp=sharing
+[oregon]: https://drive.google.com/file/d/1Nxumq9uaq2eC-yFWvtMpIY3xqcZUwx6P/view?usp=sharing
+[ny_data]: https://drive.google.com/file/d/1ugMlbAhsYN3a9uFHGhVSVBK8ffIeUAZC/view?usp=sharing
+[swiss_dem]: https://drive.google.com/file/d/1r-xlVwV7arDDVc7-6poJJjgAakfyyfhm/view?usp=sharing
+[rszip]: https://drive.google.com/file/d/1Pg9-r33EN0-nXf2Jz2HTjjSVlbCvktI1/view?usp=sharing

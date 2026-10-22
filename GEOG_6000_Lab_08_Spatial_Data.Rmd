@@ -1,13 +1,20 @@
 ---
 title: "GEOG 6000 Lab 08 Spatial Data in R"
-author: "Simon Brewer and Blake Vernon"
-date: "`r format(Sys.time(), '%d %B, %Y')`"
-output:
-  html_document:
+author: 
+  - name: "Simon Brewer and Blake Vernon"
+    email: simon.brewer@ess.utah.edu
+    affiliations:
+      - name: University of Utah
+        address: 260 S Central Campus Drive
+        city: Salt Lake City
+        state: UT
+        postal-code: 84112
+date: last-modified
+format:
+  html:
     toc: true
-    toc_float: true
-    fig_caption: true
----
+    embed-resources: true
+editor: source---
 
 ```{r include = FALSE}
 

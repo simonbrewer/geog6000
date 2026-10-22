@@ -24,7 +24,8 @@ Before starting the lab, you will need to set up a new folder for your working d
 - Temperature dataset for Oregon in shapefile format: *oregon.zip*
 - New York state polygon data in a shapefile: *NY_Data.zip*
 - Digital elevation map from Switzerland: *swiss_dem.grd*
-- A NetCDF file of global monthly air temperature: *air.mon.ltm.nc*
+- A shapefile of California places: *ca_places.zip*
+- A Landsat 8 scene from California: *rs.zip*
 
 You will need to download these files from Canvas, and move them from your `Downloads` folder to the `data` folder that you made previously. Make sure to unzip the zip files so that R can access the content. Note that on Windows, you will need to right-click on the file and select 'Extract files'.  
 
@@ -968,7 +969,7 @@ b5
 
 When we print the `rast` object created, the second line of the output lists the dimensions of the data. Note that here, this has 1245 rows, 1497 columns and 1 layer. This also shows the resolution (30x30 m), the extent, the CRS and the a brief summary of the data. 
 
-We can write `rast` objects back to file using `writeRaster()` (I'll bet you never thought it would be called that). You can write out to any format supported by [GDAL][gdalfiles]. Here we write out to a TIFF format. You can see the full list of available formats for reading and writing by running the `writeFormats()` function in the console. We'll use this again after having worked with the data.
+We can write `rast` objects back to file using `writeRaster()`. You can write out to any format supported by [GDAL][gdalfiles]. Here we write out to a TIFF format. You can see the full list of available formats for reading and writing by running the `writeFormats()` function in the console. We'll use this again after having worked with the data.
 
 ```{r, eval = FALSE}
 

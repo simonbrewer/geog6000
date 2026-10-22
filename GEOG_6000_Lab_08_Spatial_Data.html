@@ -1480,7 +1480,7 @@ border-radius: 0px;
 
 <h1 class="title toc-ignore">GEOG 6000 Lab 08 Spatial Data in R</h1>
 <h4 class="author">Simon Brewer and Blake Vernon</h4>
-<h4 class="date">21 October, 2026</h4>
+<h4 class="date">22 October, 2026</h4>
 
 </div>
 
@@ -1505,8 +1505,8 @@ following files will be used in this lab, all available on Canvas:</p>
 <li>New York state polygon data in a shapefile:
 <em>NY_Data.zip</em></li>
 <li>Digital elevation map from Switzerland: <em>swiss_dem.grd</em></li>
-<li>A NetCDF file of global monthly air temperature:
-<em>air.mon.ltm.nc</em></li>
+<li>A shapefile of California places: <em>ca_places.zip</em></li>
+<li>A Landsat 8 scene from California: <em>rs.zip</em></li>
 </ul>
 <p>You will need to download these files from Canvas, and move them from
 your <code>Downloads</code> folder to the <code>data</code> folder that
@@ -2072,14 +2072,14 @@ geometry</code></pre>
 
 head(attributes)</code></pre>
 <pre><code>## # A tibble: 6 × 5
-##   elevation  tann coords_x1 coords_x2  rando
-##       &lt;int&gt; &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;  &lt;dbl&gt;
-## 1       846   9.6     -121.      44.9 0.0464
-## 2        96  12.5     -120.      45.7 0.568 
-## 3       543  11.1     -123.      42.2 0.309 
-## 4         2  10.3     -124.      46.2 0.433 
-## 5      1027   7.6     -118.      44.8 0.535 
-## 6      1050   8.4     -118.      44.8 0.876</code></pre>
+##   elevation  tann coords_x1 coords_x2 rando
+##       &lt;int&gt; &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt; &lt;dbl&gt;
+## 1       846   9.6     -121.      44.9 0.463
+## 2        96  12.5     -120.      45.7 0.776
+## 3       543  11.1     -123.      42.2 0.505
+## 4         2  10.3     -124.      46.2 0.865
+## 5      1027   7.6     -118.      44.8 0.580
+## 6      1050   8.4     -118.      44.8 0.396</code></pre>
 <p>Note: this is actually a special sort of <code>data.frame</code>
 called a <code>tibble</code>. Not important to know about here, but does
 print slightly differently.</p>
@@ -2371,8 +2371,7 @@ of the output lists the dimensions of the data. Note that here, this has
 1245 rows, 1497 columns and 1 layer. This also shows the resolution
 (30x30 m), the extent, the CRS and the a brief summary of the data.</p>
 <p>We can write <code>rast</code> objects back to file using
-<code>writeRaster()</code> (I’ll bet you never thought it would be
-called that). You can write out to any format supported by
+<code>writeRaster()</code>. You can write out to any format supported by
 [GDAL][gdalfiles]. Here we write out to a TIFF format. You can see the
 full list of available formats for reading and writing by running the
 <code>writeFormats()</code> function in the console. We’ll use this

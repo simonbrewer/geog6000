@@ -91,6 +91,12 @@ Topics will include advanced regression analysis, the analysis of multivariate d
     - [Digital elevation map from Switzerland][swiss_dem]
     - [Landsat 8 scene from California][rszip]
     - [W North America climate dataset][wnaclim]
+- Lab 8
+    - [Lab notes][lab09r]
+    - [Rainfall data for Switzerland][swiss_ppt]
+    - [The Meuse floddplain dataset][meuse]
+    - [Temperature dataset for Oregon][oregon]
+    - [Natural Earth shapefile of country borders][ne_countries]
 
 
 Temperature dataset for Oregon in shapefile format: oregon.zip
@@ -112,6 +118,7 @@ A Landsat 8 scene from California: rs.zip
 [lab07r]: https://simonbrewer.github.io/geog6000/GEOG_6000_Lab_07_MVA.html
 [lab08r]: https://simonbrewer.github.io/geog6000/GEOG_6000_Lab_08_Spatial_Data.html
 [lab08br]: https://simonbrewer.github.io/geog6000/GEOG_6000_Lab_08b_Spatial_Data_Visualization.html
+[lab09r]: https://simonbrewer.github.io/geog6000/GEOG_6000_Lab_09_Geostatistics_1.html
 
 [penguins]: https://drive.google.com/file/d/1Xuk1wqGeJJZ__LHerIn8ghFhA0OmGHOH/view?usp=sharing
 [irished]: https://drive.google.com/file/d/1OFEvB0pYtLUsD30b1FB79FMHlqo4o235/view?usp=sharing
@@ -145,3 +152,6 @@ A Landsat 8 scene from California: rs.zip
 [ny_data]: https://drive.google.com/file/d/1ugMlbAhsYN3a9uFHGhVSVBK8ffIeUAZC/view?usp=sharing
 [swiss_dem]: https://drive.google.com/file/d/1r-xlVwV7arDDVc7-6poJJjgAakfyyfhm/view?usp=sharing
 [rszip]: https://drive.google.com/file/d/1Pg9-r33EN0-nXf2Jz2HTjjSVlbCvktI1/view?usp=sharing
+[swiss_ppt]: https://drive.google.com/file/d/1a-vuoeEC0U9BDwGXbZ16mygIPFCP5YyF/view?usp=sharing
+[meuse]: https://drive.google.com/file/d/1EnZPCpKMSI77eo3eBh1T_Ze5t-uMmmZP/view?usp=sharing
+[ne_countries]: https://drive.google.com/file/d/1_EcFni5vPiUlBYLdVnXpRHz6PLBHCruJ/view?usp=sharing

@@ -94,7 +94,7 @@ Topics will include advanced regression analysis, the analysis of multivariate d
 - Lab 8
     - [Lab notes][lab09r]
     - [Rainfall data for Switzerland][swiss_ppt]
-    - [The Meuse floddplain dataset][meuse]
+    - [The Meuse floodplain dataset][meuse]
     - [Temperature dataset for Oregon][oregon]
     - [Natural Earth shapefile of country borders][ne_countries]
 

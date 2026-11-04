@@ -725,27 +725,25 @@ It may help to add other shapefiles to your maps for this exercise. The followin
 - *ne_50m_lakes.zip*
 - *ne_50m_populated_places.zip*
 
-To overlay multiple shapefiles, we can make use of the `reset` and `add` arguments when plotting `sf` objects. Start by reading in the three extra layers:
-
-```{r, eval = FALSE}
+```{r, eval = TRUE}
 
 ozone.sf <- st_read("./data/mwozone/ozone.shp")
 st_crs(ozone.sf) <- 4326
 
 ```
 
-```{r, eval = FALSE}
+```{r, eval = TRUE}
 
 ## Read data
-states <- st_read("./data/ne_50m_admin_1_states_provinces/ne_50m_admin_1_states_provinces_shp.shp")
-lakes <- st_read("./data/ne_50m_lakes/ne_50m_lakes.shp")
-places <- st_read("./data/ne_50m_populated_places/ne_50m_populated_places.shp")
+states <- st_read("./data/ne_50m_admin_1_states_provinces/ne_50m_admin_1_states_provinces_shp.shp", quiet = TRUE)
+lakes <- st_read("./data/ne_50m_lakes/ne_50m_lakes.shp", quiet = TRUE)
+places <- st_read("./data/ne_50m_populated_places/ne_50m_populated_places.shp", quiet = TRUE)
 
 ```
 
 Now we plot the layers. Each time we add the argument `reset = TRUE` to tell R to keep the same basic plot outline. For the second (and subsequent plots) we also set `add = TRUE` to prevent R from resetting the plot. 
 
-```{r, eval = FALSE}
+```{r, eval = TRUE}
 
 plot(st_geometry(ozone.sf), reset = FALSE)
 plot(st_geometry(lakes), reset = FALSE, add = TRUE, col = "lightblue")
@@ -756,7 +754,7 @@ plot(ozone.sf["ozone"], add = TRUE, pch = 16)
 
 Better plots with multiple layer can be made by using the `geom_sf` function from **ggplot2**:
 
-```{r, eval = FALSE}
+```{r, eval = TRUE}
 
 places <- cbind(places, st_coordinates(st_centroid(places)))
 
@@ -773,7 +771,7 @@ ggplot() +
 
 Alternatively you can use the **tmap** package to make a better plot:
 
-```{r, eval = FALSE}
+```{r, eval = TRUE}
 
 library(tmap)
 
@@ -783,9 +781,11 @@ tm_shape(lakes, bbox = mybbox) +
   tm_shape(states) + 
   tm_borders() +
   tm_shape(ozone.sf) + 
-  tm_symbols(col = "ozone", size = 0.5, palette = "viridis") +
+  tm_symbols(fill = "ozone", size = 0.75, 
+             fill.scale = tm_scale_continuous(values = "viridis"),
+    fill.legend = tm_legend(title = "Ozone conc (ppb)")) +
   tm_shape(places) + 
-  tm_text("NAME", size = 0.75)
+  tm_labels("NAME", size = 0.75, bgcol = 'white', bgcol_alpha = 0.5)
 
 ```
 

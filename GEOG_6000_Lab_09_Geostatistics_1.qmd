@@ -27,7 +27,7 @@ library(grid)
 
 In this lab, we will go through the steps of a geostatistical analysis, using a set of precipitation data for Switzerland, and the data set of soil samples from a floodplain near the Meuse river in the Netherlands. 
 
-Before starting the lab, you will need to set up a new folder for your working directory. Go to your `geog6000` folder now and create a new folder for today's class called `lab12`. The following files will be used in this lab, all available on Canvas:  
+Before starting the lab, you will need to set up a new folder for your working directory. Go to your `geog6000` folder now and create a new folder for today's class called `lab09`. The following files will be used in this lab, all available on Canvas:  
 
 - *swiss_ppt.zip*. This contains a set of point observations of rainfall in Switzerland
 - *meuse.zip*. This contains the shapefiles for the Meuse soil sample data set as well as the river borders 
@@ -79,7 +79,7 @@ For the Swiss data, there are three files we need. The first of these contains p
 swiss <- read.csv("./data/swiss_ppt/swiss_ppt.csv")
 head(swiss)
 
-swiss.sf <- st_as_sf(swiss, 
+swiss_sf <- st_as_sf(swiss, 
                      coords = c("x", "y"),
                      crs = 2056)
 ```
@@ -89,10 +89,10 @@ Next we'll load a digital elevation model for Switzerland: *swiss_dem.asc* as a 
 
 ```{r}
 
-swiss.dem <- read_stars("./data/swiss_ppt//swiss_dem.asc")
-st_crs(swiss.dem) <- 2056
+swiss_dem <- read_stars("./data/swiss_ppt/swiss_dem.asc")
+st_crs(swiss_dem) <- 2056
 
-plot(swiss.dem)
+plot(swiss_dem)
 
 ```
 
@@ -102,8 +102,8 @@ And finally, we'll load the shapefile of country borders (*ne_50m_admin_0_countr
 
 countries <- st_read("./data/ne_50m_admin_0_countries/ne_50m_admin_0_countries.shp")
 
-swiss.bord <- subset(countries, NAME == "Switzerland")
-swiss.bord <- st_transform(swiss.bord, 2056)
+swiss_bord <- subset(countries, NAME == "Switzerland")
+swiss_bord <- st_transform(swiss_bord, 2056)
 
 ```
 
@@ -111,11 +111,11 @@ And finally, we'll plot the data and country outline:
 
 ```{r}
 
-plot(swiss.sf["ppt"], 
+plot(swiss_sf["ppt"], 
      reset = FALSE, 
      pch = 16)
 
-plot(st_geometry(swiss.bord), add = TRUE)
+plot(st_geometry(swiss_bord), add = TRUE)
 
 ```
 
@@ -124,21 +124,21 @@ Or alternatively, we can plot with **ggplot2**:
 ```{r}
 
 ggplot() + 
-  geom_sf(data = swiss.bord) +
-  geom_sf(data = swiss.sf, aes(col = ppt), size = 2.5) +
+  geom_sf(data = swiss_bord) +
+  geom_sf(data = swiss_sf, aes(col = ppt), size = 2.5) +
   theme_bw()
 
 ```
 
 ## Meuse soil sample dataset
 
-Now load the Meuse datasets. Here, we'll just load the points data from a shapefile (*meuse.shp*) and a shapefile of the river for plotting (*meuseriv.shp*). 
+Now load the Meuse datasets. Here, we'll just load the points data from a shapefile (*meuse.shp*) and a shapefile of the river for plotting (*meuse_riv.shp*). 
 
 ```{r}
 
 meuse <- st_read("./data/meuse/meuse.shp", quiet = TRUE)
 
-meuseriv <- st_read("./data/meuse/meuseriv.shp", quiet = TRUE)
+meuse_riv <- st_read("./data/meuse/meuseriv.shp", quiet = TRUE)
 
 ```
 
@@ -153,7 +153,7 @@ plot(meuse["zinc"],
      cex = 1.25, 
      reset = FALSE)
 
-plot(meuseriv, 
+plot(meuse_riv, 
      add = TRUE, 
      col = NA)
 
@@ -181,7 +181,7 @@ plot(meuse["zinc"],
      cex = 1.25, 
      reset = FALSE)
 
-plot(meuseriv, 
+plot(meuse_riv, 
      add = TRUE, 
      col = NA)
 
@@ -193,9 +193,9 @@ We will now use the `variogram()` function to build a sample variogram for the l
 
 ```{r}
 
-mzinc.var <- variogram(lzinc ~ 1, data = meuse)
+mzinc_var <- variogram(lzinc ~ 1, data = meuse)
 
-plot(mzinc.var, plot.numbers = TRUE, pch = '+')
+plot(mzinc_var, plot.numbers = TRUE, pch = '+')
 
 ```
 
@@ -203,21 +203,21 @@ We can specify the number of lags to be included by using two parameters, which 
 
 ```{r}
 
-mzinc.var2 <- variogram(lzinc ~ 1, 
+mzinc_var2 <- variogram(lzinc ~ 1, 
                         data = meuse, 
                         cutoff = 1200, 
                         width = 50)
 
-plot(mzinc.var2, plot.numbers = TRUE, pch = '+')
+plot(mzinc_var2, plot.numbers = TRUE, pch = '+')
 
 ```
 
 Now use the `variogram()` function to build a sample variogram for the Swiss precipitation data. 
 ```{r}
 
-ppt.var <- variogram(ppt ~ 1, swiss.sf)
+ppt_var <- variogram(ppt ~ 1, swiss_sf)
 
-plot(ppt.var, plot.numbers = TRUE)
+plot(ppt_var, plot.numbers = TRUE)
 
 ```
 
@@ -246,12 +246,12 @@ modNugget <- 0.1
 modRange <- 1100
 modSill <- 0.6
 
-mzinc.vgm1 <- vgm(psill = modSill, 
+mzinc_vgm1 <- vgm(psill = modSill, 
                   model = "Cir", 
                   range = modRange, 
                   nugget = modNugget)
 
-plot(mzinc.var, mzinc.vgm1, main = "Meuse zinc variogram")
+plot(mzinc_var, mzinc_vgm1, main = "Meuse zinc variogram")
 
 ```
 
@@ -259,9 +259,9 @@ The model only fits approximately to the sample variogram, so we can now use an 
 
 ```{r}
 
-mzinc.vgm2 <- fit.variogram(mzinc.var, mzinc.vgm1)
+mzinc_vgm2 <- fit.variogram(mzinc_var, mzinc_vgm1)
 
-plot(mzinc.var, mzinc.vgm2, main = "Meuse zinc variogram")
+plot(mzinc_var, mzinc_vgm2, main = "Meuse zinc variogram")
 
 ```
 
@@ -269,7 +269,7 @@ You can see the final fitted parameters of the variogram by typing the name of t
 
 ```{r}
 
-mzinc.vgm2
+mzinc_vgm2
 
 ```
 
@@ -283,14 +283,14 @@ modNugget <- 10
 modRange <- 75000
 modSill <- 140
 
-ppt.vgm1 <- vgm(psill = modSill, 
+ppt_vgm1 <- vgm(psill = modSill, 
                 model = "Sph", 
                 range = modRange, 
                 nugget = modNugget)
 
-ppt.vgm2 <- fit.variogram(ppt.var, ppt.vgm1)
+ppt_vgm2 <- fit.variogram(ppt_var, ppt_vgm1)
 
-plot(ppt.var, ppt.vgm2, main = "Swiss precip. variogram")
+plot(ppt_var, ppt_vgm2, main = "Swiss precip. variogram")
 
 ```
 
@@ -310,10 +310,10 @@ See `?krige` for other parameters.
 
 ```{r}
 
-ppt.pred.ok <- krige(ppt ~ 1, 
-                     locations = swiss.sf, 
-                     newdata = swiss.dem, 
-                     model = ppt.vgm2, 
+ppt_pred_ok <- krige(ppt ~ 1, 
+                     locations = swiss_sf, 
+                     newdata = swiss_dem, 
+                     model = ppt_vgm2, 
                      nmax = 40)
 
 ```
@@ -324,7 +324,7 @@ Now we make a plot of the predictions. The output from the `krige()` function is
 
 ```{r}
 
-names(ppt.pred.ok)
+names(ppt_pred_ok)
 
 ```
 
@@ -332,7 +332,7 @@ To see the predicted values, we can simply plot the first of these:
 
 ```{r}
 
-plot(ppt.pred.ok, main = "Interpolated precipitation values (OK)")
+plot(ppt_pred_ok, main = "Interpolated precipitation values (OK)")
 
 ```
 
@@ -341,10 +341,10 @@ We can add some color to this image using a couple of add-on packages (you'll ne
 ```{r}
 
 nbreaks <- 11
-my.pal <- rev(magma(10))
+my_pal <- rev(magma(10))
 
-plot(ppt.pred.ok, 
-     col = my.pal,
+plot(ppt_pred_ok, 
+     col = my_pal,
      main = "Interpolated precipitation values (OK)")
 
 ```
@@ -353,9 +353,9 @@ And here's an example using the [RColorBrewer][rcbID] package (use the `display.
 
 ```{r}
 
-my.pal <- brewer.pal(9, "Blues")
+my_pal <- brewer.pal(9, "Blues")
 
-plot(ppt.pred.ok, col = my.pal,
+plot(ppt_pred_ok, col = my_pal,
      main = "Interpolated precipitation values (OK)")
 
 ```
@@ -364,7 +364,7 @@ And we can equally plot the prediction errors:
 
 ```{r}
 
-plot(ppt.pred.ok["var1.var"], 
+plot(ppt_pred_ok["var1.var"], 
      main = "Interpolated precipitation prediction error (OK)")
 
 ```
@@ -375,13 +375,13 @@ To assess the performance of our kriging model, we use a $n$-fold cross-validati
 
 ```{r}
 
-ppt.cv.ok <- krige.cv(ppt ~ 1, 
-                      locations = swiss.sf, 
-                      model = ppt.vgm2, 
+ppt_cv_ok <- krige.cv(ppt ~ 1, 
+                      locations = swiss_sf, 
+                      model = ppt_vgm2, 
                       nmax = 40, 
                       nfold = 5)
 
-head(ppt.cv.ok)
+head(ppt_cv_ok)
 
 ```
 
@@ -399,10 +399,10 @@ We can calculate two statistics from this: the root mean squared error of predic
 ```{r}
 
 ## RMSEP
-sqrt(mean(ppt.cv.ok$residual^2))
+sqrt(mean(ppt_cv_ok$residual^2))
 
 ##R2P
-cor(ppt.cv.ok$observed, ppt.cv.ok$var1.pred)^2
+cor(ppt_cv_ok$observed, ppt_cv_ok$var1.pred)^2
 
 ```
 
@@ -412,7 +412,7 @@ The output of `krige.cv()` contains, for each observation, the predicted value w
 
 ```{r}
 
-sp::bubble(as_Spatial(ppt.cv.ok)[,"residual"], pch = 16)
+sp::bubble(as_Spatial(ppt_cv_ok)[,"residual"], pch = 16)
 
 ```
 
@@ -422,7 +422,7 @@ Finally, we can produce a plot of residuals against predicted values to look for
 
 ```{r}
 
-plot(ppt.cv.ok$var1.pred, ppt.cv.ok$residual, 
+plot(ppt_cv_ok$var1.pred, ppt_cv_ok$residual, 
      xlab = 'PPT Predicted Values', 
      ylab = 'PPT Residuals')
 

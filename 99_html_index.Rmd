@@ -106,6 +106,12 @@ Topics will include advanced regression analysis, the analysis of multivariate d
     - [Natural Earth shapefile of lake outlines][ne_lakes]
     - [Natural Earth shapefile of populated places][ne_places]
     - [Midwest Ozone Concentration][mwozone]
+- Lab 11
+    - [Lab notes][lab11r]
+    - [Boston housing values shapefile][bostr]
+    - [Columbus OH crime rates][columbus]
+    - [New York state shapefile][ny_data]
+    - [Used car dataset][used_cars]
 
 [install]: https://simonbrewer.github.io/geog6000/GEOG_6000_00_Installation_instructions.html
 [lab01r]: https://simonbrewer.github.io/geog6000/GEOG_6000_Lab_01_Introduction_to_R.html
@@ -121,6 +127,7 @@ Topics will include advanced regression analysis, the analysis of multivariate d
 [lab08br]: https://simonbrewer.github.io/geog6000/GEOG_6000_Lab_08b_Spatial_Data_Visualization.html
 [lab09r]: https://simonbrewer.github.io/geog6000/GEOG_6000_Lab_09_Geostatistics_1.html
 [lab10r]: https://simonbrewer.github.io/geog6000/GEOG_6000_Lab_10_Geostatistics_2.html
+[lab11r]: https://simonbrewer.github.io/geog6000/GEOG_6000_Lab_11_Spatial_Regression_1.html
 
 [penguins]: https://drive.google.com/file/d/1Xuk1wqGeJJZ__LHerIn8ghFhA0OmGHOH/view?usp=sharing
 [irished]: https://drive.google.com/file/d/1OFEvB0pYtLUsD30b1FB79FMHlqo4o235/view?usp=sharing
@@ -160,4 +167,6 @@ Topics will include advanced regression analysis, the analysis of multivariate d
 [ne_countries]: https://drive.google.com/file/d/1_EcFni5vPiUlBYLdVnXpRHz6PLBHCruJ/view?usp=sharing
 [ne_lakes]: https://drive.google.com/file/d/1tn7llUak5YMzwyO4pNYTyWjw67WhyVRx/view?usp=sharing
 [ne_places]: https://drive.google.com/file/d/12e_iL8aeSj8le0WpBSTjb6WtPfoKRirP/view?usp=sharing
-
+[bostr]: https://drive.google.com/file/d/1lsWCu1Ic52UzrS4LuhnkO7MkuLAZ6n24/view?usp=sharing
+[columbus]: https://drive.google.com/file/d/1FyIdYXe3TJ2l_BbCo4K33cXza1p0ptKh/view?usp=sharing
+[used_cars]: https://drive.google.com/file/d/1IC00g0fNJwFNxuIO17ZvcrG9qeIMuQhE/view?usp=sharing

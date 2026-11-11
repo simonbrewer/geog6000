@@ -55,7 +55,7 @@ install.packages(pkgs)
 
 ```
 
-```{r}
+```{r message=FALSE, warning=FALSE}
 
 library(RColorBrewer)
 library(sf)
@@ -372,10 +372,12 @@ Now let's plot these results. First the $z$-scores:
 ```{r, fig.width = 10}
 
 tm_shape(boston) + 
-  tm_fill("zscore", palette = "Reds", style = "jenks", n = 6) +
+  tm_polygons(fill="zscore", 
+              fill.scale = tm_scale_intervals(values = "brewer.reds", style = "jenks"),
+              fill.legend = tm_legend(orientation = "landscape",
+                                      position = tm_pos_out("center", "bottom"))) +
   tm_borders() +
-  tm_layout(main.title = "Local Moran's I (z-scores)",
-            legend.position = c("left", "bottom"))
+  tm_title("Local Moran's I (z-scores)")
 
 ```
 
@@ -386,12 +388,11 @@ For the $p$-values, we'll convert these into a binary vector, with ones if the $
 boston$pval.bin <- as.factor(ifelse(boston$pval < 0.05, "Significant", "Not-significant"))
 
 tm_shape(boston) + 
-  tm_fill("pval.bin") +
+  tm_polygons(fill="pval.bin",
+              fill.legend = tm_legend(orientation = "landscape",
+                                      position = tm_pos_out("center", "bottom"))) +
   tm_borders() +
-  tm_layout(main.title = "Local Moran's I (z-scores)",
-            main.title.size = 1,
-            legend.position = c("left", "bottom"))
-
+  tm_title("Local Moran's I (p-values)")
 
 ```
 
@@ -406,14 +407,15 @@ boston$lG <- as.numeric(localG(boston$logCMEDV, boston.listwGs))
 
 The output is the $G^*$ statistic, converted to a $z$-score. Now we plot the results. 
 
-```{r, fig.width = 10}
+```{r, fig.width = 10, message=FALSE}
 
 tm_shape(boston) + 
-  tm_fill("lG", palette = "RdYlBu", style = "jenks", n = 6) +
+  tm_polygons(fill="lG", 
+              fill.scale = tm_scale_intervals(values = "-brewer.rd_yl_bu", style = "jenks"),
+              fill.legend = tm_legend(orientation = "landscape",
+                                      position = tm_pos_out("center", "bottom"))) +
   tm_borders() +
-  tm_layout(main.title = "Local Getis-Ord G(*) hot/cold spots",
-            main.title.size = 1,
-            legend.position = c("left", "bottom"))
+  tm_title("Local Getis-Ord G(*) values")
 
 ```
 
@@ -432,12 +434,12 @@ boston$lG.sig <- factor(boston$lG.sig, labels=c("Cold", "Not-significant", "Hot"
 ```{r, fig.width = 10}
 
 tm_shape(boston) + 
-  tm_fill("lG.sig", palette = "-RdYlBu", style = "jenks", n = 6) +
+  tm_polygons(fill="lG.sig", 
+              fill.scale = tm_scale_categorical(values = "-brewer.rd_yl_bu"),
+              fill.legend = tm_legend(orientation = "landscape",
+                                      position = tm_pos_out("center", "bottom"))) +
   tm_borders() +
-  tm_layout(main.title = "Local Getis-Ord G(*) hot/cold spots",
-            main.title.size = 1,
-            legend.position = c("left", "bottom"))
-
+  tm_title("Local Getis-Ord G(*) hot/cold spots")
 
 ```
 

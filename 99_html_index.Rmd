@@ -112,6 +112,11 @@ Topics will include advanced regression analysis, the analysis of multivariate d
     - [Columbus OH crime rates][columbus]
     - [New York state shapefile][ny_data]
     - [Used car dataset][used_cars]
+- Lab 12
+    - [Lab notes][lab12r]
+    - [Boston housing values shapefile][bostr]
+    - [Columbus OH crime rates][columbus]
+    - [South US Poverty Data][south]
 
 [install]: https://simonbrewer.github.io/geog6000/GEOG_6000_00_Installation_instructions.html
 [lab01r]: https://simonbrewer.github.io/geog6000/GEOG_6000_Lab_01_Introduction_to_R.html
@@ -128,6 +133,7 @@ Topics will include advanced regression analysis, the analysis of multivariate d
 [lab09r]: https://simonbrewer.github.io/geog6000/GEOG_6000_Lab_09_Geostatistics_1.html
 [lab10r]: https://simonbrewer.github.io/geog6000/GEOG_6000_Lab_10_Geostatistics_2.html
 [lab11r]: https://simonbrewer.github.io/geog6000/GEOG_6000_Lab_11_Spatial_Regression_1.html
+[lab12r]: https://simonbrewer.github.io/geog6000/GEOG_6000_Lab_12_Spatial_Regression_2.html
 
 [penguins]: https://drive.google.com/file/d/1Xuk1wqGeJJZ__LHerIn8ghFhA0OmGHOH/view?usp=sharing
 [irished]: https://drive.google.com/file/d/1OFEvB0pYtLUsD30b1FB79FMHlqo4o235/view?usp=sharing
@@ -170,3 +176,4 @@ Topics will include advanced regression analysis, the analysis of multivariate d
 [bostr]: https://drive.google.com/file/d/1lsWCu1Ic52UzrS4LuhnkO7MkuLAZ6n24/view?usp=sharing
 [columbus]: https://drive.google.com/file/d/1FyIdYXe3TJ2l_BbCo4K33cXza1p0ptKh/view?usp=sharing
 [used_cars]: https://drive.google.com/file/d/1IC00g0fNJwFNxuIO17ZvcrG9qeIMuQhE/view?usp=sharing
+[south]: https://drive.google.com/file/d/12xKMReOX4SUBcuiIWMz3If33xOsq7aVf/view?usp=sharing
